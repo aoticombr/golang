@@ -1,4 +1,4 @@
-package GODDATASET
+package godataset
 
 type DataType uint8
 

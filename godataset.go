@@ -1,4 +1,4 @@
-package GODDATASET
+package godataset
 
 import (
 	"database/sql"
