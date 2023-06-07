@@ -1,4 +1,4 @@
-package github.com/aoticombr/godataset
+package GODDATASET
 
 import (
 	"database/sql"
