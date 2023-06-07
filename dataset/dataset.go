@@ -25,7 +25,7 @@ type DataSet struct {
 	IndexFieldNames  string
 }
 
-func New(db *sql.DB) *DataSet {
+func GetDataSetNew(db *sql.DB) *DataSet {
 	var dataSet DataSet
 
 	dataSet.DB = db
