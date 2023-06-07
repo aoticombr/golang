@@ -1,4 +1,4 @@
-package GODATASET
+package github.com/aoticombr/godataset
 
 type DataType uint8
 

@@ -1,4 +1,4 @@
-package GODATASET
+package github.com/aoticombr/godataset
 
 import (
 	"strings"
