@@ -1,4 +1,4 @@
-module GODATASET
+module github.com/aoticombr/godataset
 
 go 1.20
 
