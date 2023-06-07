@@ -1,6 +1,7 @@
 package dataset
 
 import (
+	sql "database/sql"
 	"strings"
 	"time"
 )
@@ -8,7 +9,7 @@ import (
 type Field struct {
 	name       string
 	caption    string
-	dataType   DataType
+	dataType   *sql.ColumnType
 	Value      any
 	dataMask   string
 	valueTrue  string

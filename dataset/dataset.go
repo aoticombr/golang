@@ -142,6 +142,7 @@ func (ds *DataSet) GetSql() (sql string) {
 }
 
 func (ds *DataSet) Scan(list *sql.Rows) {
+	columntypes, _ := list.ColumnTypes()
 	fields, _ := list.Columns()
 	for list.Next() {
 		columns := make([]interface{}, len(fields))
@@ -161,7 +162,7 @@ func (ds *DataSet) Scan(list *sql.Rows) {
 		for i, value := range columns {
 			row[fields[i]] = Field{name: fields[i],
 				caption:    fields[i],
-				dataType:   DataType(Text),
+				dataType:   columntypes[i],
 				Value:      value,
 				dataMask:   "",
 				valueTrue:  "",
