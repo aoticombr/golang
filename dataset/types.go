@@ -1,4 +1,4 @@
-package godataset
+package dataset
 
 type DataType uint8
 

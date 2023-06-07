@@ -1,4 +1,4 @@
-package godataset
+package dataset
 
 import (
 	"database/sql"

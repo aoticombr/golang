@@ -1,4 +1,4 @@
-package godataset
+package dataset
 
 type Parameter struct {
 	value any
