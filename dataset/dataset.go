@@ -3,7 +3,6 @@ package dataset
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/google/uuid"
@@ -39,7 +38,7 @@ func GetDataSetNew(db *sql.DB) *DataSet {
 	return &dataSet
 }
 
-func (ds *DataSet) Open() {
+func (ds *DataSet) Open() error {
 	ds.Rows = nil
 	ds.Index = 0
 	ds.Recno = 0
@@ -56,14 +55,15 @@ func (ds *DataSet) Open() {
 	rows, err := ds.DB.Query(vsql, param...)
 
 	if err != nil {
-		panic("Error to execute query. " + err.Error())
+		return err
 	}
 
-	defer func(rows *sql.Rows) {
+	defer func(rows *sql.Rows) error {
 		err := rows.Close()
 		if err != nil {
-			log.Printf("could not close the given rows %v\n", err)
+			return err
 		}
+		return nil
 	}(rows)
 
 	ds.Scan(rows)
@@ -74,6 +74,7 @@ func (ds *DataSet) Open() {
 		ds.Recno = 1
 		ds.Eof = ds.Count == 1
 	}
+	return nil
 }
 
 func (ds *DataSet) Exec() error {

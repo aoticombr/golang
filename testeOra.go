@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 
-	ora "github.com/aoticombr/godataset/connection/ora"
+	ora "github.com/aoticombr/godataset/connection"
 	ds "github.com/aoticombr/godataset/dataset"
 )
 
 func main() {
 
-	conn := ora.GetConnOra()
+	conn, _ := ora.GetConn(ora.ORA)
+	defer conn.FreeAndNil()
 	q := ds.GetDataSetNew(conn.GetDB())
 	q.AddSql("SELECT * FROM CONTASPAGAR where rownum <= 10")
 	q.Open()
