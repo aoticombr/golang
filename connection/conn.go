@@ -23,6 +23,10 @@ func (co *Conn) Commit(tx *sql.Tx) {
 func (co *Conn) Rollback(tx *sql.Tx) {
 	tx.Rollback()
 }
+func (co *Conn) Exec(tx *sql.Tx, sql string, arg ...any) (sql.Result, error) {
+	res, err := tx.Exec(sql, arg)
+	return res, err
+}
 
 func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
 	co.config = cf
