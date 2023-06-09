@@ -2,7 +2,6 @@ package dataset
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -24,7 +23,7 @@ type DataSet struct {
 	IndexFieldNames  string
 }
 
-func GetDataSetNew(db *sql.DB) *DataSet {
+func GetDataSet(db *sql.DB) *DataSet {
 	var dataSet DataSet
 
 	dataSet.DB = db
@@ -77,29 +76,31 @@ func (ds *DataSet) Open() error {
 	return nil
 }
 
-func (ds *DataSet) Exec() error {
+func (ds *DataSet) StartTransaction() (*sql.Tx, error) {
+	tx, err := ds.DB.Begin()
+	return tx, err
+}
+func (ds *DataSet) Commit(tx *sql.Tx) {
+	tx.Commit()
+}
+func (ds *DataSet) Rollback(tx *sql.Tx) {
+	tx.Rollback()
+}
+func (ds *DataSet) ExecTransact(tx *sql.Tx) (sql.Result, error) {
 	var param []any
-
 	for _, prm := range ds.Param {
 		param = append(param, prm.value)
 	}
-
+	res, err := tx.Exec(ds.GetSql(), param...)
+	return res, err
+}
+func (ds *DataSet) ExecDirect() (sql.Result, error) {
+	var param []any
+	for _, prm := range ds.Param {
+		param = append(param, prm.value)
+	}
 	result, err := ds.DB.Exec(ds.GetSql(), param...)
-
-	if err != nil {
-		return err
-	}
-
-	affected, err := result.RowsAffected()
-
-	if err != nil {
-		return err
-	}
-
-	if affected == 0 {
-		return fmt.Errorf("error to execute query: %w", err)
-	}
-	return nil
+	return result, err
 }
 
 func (ds *DataSet) AddSql(sql string) *DataSet {
