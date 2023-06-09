@@ -12,6 +12,18 @@ type Conn struct {
 	db     *sql.DB
 }
 
+func (co *Conn) StartTransaction() (*sql.Tx, error) {
+	tx, err := co.db.Begin()
+
+	return tx, err
+}
+func (co *Conn) Commit(tx *sql.Tx) {
+	tx.Commit()
+}
+func (co *Conn) Rollback(tx *sql.Tx) {
+	tx.Rollback()
+}
+
 func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
 	co.config = cf
 	return co
