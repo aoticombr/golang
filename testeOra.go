@@ -8,7 +8,7 @@ func main() {
 	//logLevel := flag.String("log", "ERROR", "Logging level")
 	//flag.Parse()
 	//logger, _ := log.NewLogger(*logLevel, os.Stdout, "[DEVRAIZ]")
-	save.GetLog().SaveLog("aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa")
+	save.GetLog().SaveLog("aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa")
 	save.GetLog().SaveLog("bbbb")
 	save.GetLog().SaveLog("ccc")
 	// logger.Info("Download", "Download", "Download", "Download", "Download", "Download", "Download")
