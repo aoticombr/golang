@@ -1,28 +1,26 @@
 package types
 
-import (
-	"strings"
-)
+import "strings"
 
-type Strings struct {
+type stringslist struct {
 	itens []string
 }
 
-func (s *Strings) Append(value string) *Strings {
+func (s *stringslist) Append(value string) *stringslist {
 	s.itens = append(s.itens, value)
 	return s
 }
-func (s *Strings) Clear() *Strings {
+func (s *stringslist) Clear() *stringslist {
 	s.itens = nil
 	return s
 }
-func (s *Strings) Add(value string) *Strings {
+func (s *stringslist) Add(value string) *stringslist {
 	s.itens = append(s.itens, value)
 	return s
 }
-func (s *Strings) Count() int {
+func (s *stringslist) Count() int {
 	return len(s.itens)
 }
-func (s *Strings) Text() string {
+func (s *stringslist) Text() string {
 	return strings.Join(s.itens, " ")
 }
