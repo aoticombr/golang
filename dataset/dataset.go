@@ -108,6 +108,9 @@ func (ds *DataSet) AddSql(sql string) *DataSet {
 
 	return ds
 }
+func (ds *DataSet) ClearSql() {
+	ds.Sql = nil
+}
 
 func (ds *DataSet) GetSql() (sql string) {
 	for i, s := range ds.Sql {
