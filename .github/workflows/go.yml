@@ -22,7 +22,7 @@ jobs:
         go-version: 1.19
 
     - name: Build
-      run: go build testeOra.go -v ./...
+      run: go build .
 
     - name: Test
-      run: go test testeOra.go -v ./...
+      run: go build .
