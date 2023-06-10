@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-type Variant interface{}
-
 type Field struct {
 	Name       string
 	Caption    string

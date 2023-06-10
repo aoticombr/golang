@@ -13,9 +13,7 @@ type Conn struct {
 }
 
 func (co *Conn) StartTransaction() (*sql.Tx, error) {
-	tx, err := co.db.Begin()
-
-	return tx, err
+	return co.db.Begin()
 }
 func (co *Conn) Commit(tx *sql.Tx) {
 	tx.Commit()
@@ -24,8 +22,7 @@ func (co *Conn) Rollback(tx *sql.Tx) {
 	tx.Rollback()
 }
 func (co *Conn) Exec(tx *sql.Tx, sql string, arg ...any) (sql.Result, error) {
-	res, err := tx.Exec(sql, arg)
-	return res, err
+	return tx.Exec(sql, arg)
 }
 
 func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
@@ -35,7 +32,7 @@ func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
 func (co *Conn) GetDB() *sql.DB {
 	return co.db
 }
-func (co *Conn) FreeAndNil() {
+func (co *Conn) Disconnect() {
 	co.db.Close()
 }
 
