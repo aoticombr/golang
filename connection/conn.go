@@ -1,4 +1,4 @@
-package ora
+package connection
 
 import (
 	"database/sql"

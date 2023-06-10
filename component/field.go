@@ -1,4 +1,4 @@
-package dataset
+package component
 
 import (
 	sql "database/sql"

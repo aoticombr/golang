@@ -2,15 +2,15 @@ package dataset
 
 import (
 	"database/sql"
-	"github.com/aoticombr/go/component"
+	cp "github.com/aoticombr/go/component"
 	"github.com/google/uuid"
 	"strings"
 )
 
 type DataSet struct {
 	DB               *sql.DB
-	Sql              stringslist
-	Rows             []map[string]Field
+	sql              cp.stringslist
+	Rows             []map[string]cp.Field
 	Param            map[string]Parameter
 	Eof              bool
 	Index            int
@@ -104,22 +104,15 @@ func (ds *DataSet) ExecDirect() (sql.Result, error) {
 }
 
 func (ds *DataSet) AddSql(sql string) *DataSet {
-	ds.Sql = append(ds.Sql, sql)
-
+	ds.sql.Add(sql)
 	return ds
 }
 func (ds *DataSet) ClearSql() {
-	ds.Sql = nil
+	ds.sql.Clear()
 }
 
 func (ds *DataSet) GetSql() (sql string) {
-	for i, s := range ds.Sql {
-		if i != len(ds.Sql)-1 {
-			sql = sql + s + " \n"
-		} else {
-			sql = sql + s
-		}
-	}
+	sql += ds.sql.Text()
 
 	if ds.MasterSouce != nil {
 		var sqlWhereMasterDetail string
