@@ -13,19 +13,21 @@ type DataSet struct {
 	Sql        cp.Strings
 	rows       cp.Rows
 	param      cp.Params
-	//eof        bool
-	index int
-	recno int
-	count int
+	index      int
+	recno      int
 }
 
 func (ds *DataSet) Eof() bool {
 	eof := true
-	if ds.count == 0 {
+	if ds.Count() == 0 {
 		return true
 	}
-	eof = ds.recno > ds.count
+	eof = ds.recno > ds.Count()
 	return eof
+}
+func (ds *DataSet) Count() int {
+	count := len(ds.rows)
+	return count
 }
 func (ds *DataSet) GetParams() []any {
 	var param []any
@@ -38,7 +40,6 @@ func (ds *DataSet) Open() error {
 	ds.rows = nil
 	ds.index = 0
 	ds.recno = 0
-	ds.count = 0
 	rows, err := ds.Connection.GetDB().Query(ds.Sql.Text(), ds.GetParams()...)
 
 	if err != nil {
@@ -54,8 +55,6 @@ func (ds *DataSet) Open() error {
 	}(rows)
 
 	ds.scan(rows)
-
-	ds.count = len(ds.rows)
 
 	ds.First()
 	return nil
@@ -128,7 +127,7 @@ func (ds *DataSet) FieldByName(fieldName string) cp.Field {
 func (ds *DataSet) Locate(key string, value any) bool {
 
 	ds.First()
-	for ds.Eof() == false {
+	for !ds.Eof() {
 		switch value.(type) {
 		case string:
 			if ds.FieldByName(key).Value == value {
@@ -147,30 +146,27 @@ func (ds *DataSet) Locate(key string, value any) bool {
 func (ds *DataSet) First() {
 	ds.index = 0
 	ds.recno = 0
-	if ds.count > 0 {
+	if ds.Count() > 0 {
 		ds.recno = 1
 	}
 }
 func (ds *DataSet) Next() {
 	if !ds.Eof() {
-		//if ds.recno < ds.count {
 		ds.index++
 		ds.recno++
-		//}
 	}
 }
 func (ds *DataSet) IsEmpty() bool {
-	return ds.count == 0
+	return ds.Count() == 0
 }
 func (ds *DataSet) IsNotEmpty() bool {
-	return ds.count > 0
+	return ds.Count() > 0
 }
 func GetDataSet(pconn *conn.Conn) *DataSet {
 	ds := &DataSet{
 		Connection: pconn,
 		index:      0,
 		recno:      0,
-		count:      0,
 		param:      make(map[string]cp.Parameter),
 	}
 	return ds
