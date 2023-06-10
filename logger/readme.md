@@ -22,31 +22,7 @@ func main() {
 	// logger.Debug("Debug================")
 	// logger.Warning("Warning================")
 	// logger.Fatal("Fatal================")
-	//conn, _ := ora.GetConn(ora.ORA)
-	//defer conn.FreeAndNil()
-	// q := ds.GetDataSet(conn)
-	// q.Sql.Add("SELECT * FROM CONTASPAGAR where rownum <= 10")
-	// q.Open()
-	// q.First()
-	// fmt.Println("q.Eof():", q.Eof())
-	// for !q.Eof() {
-	// 	fmt.Println(
-	// 		//	q.FieldByName("cdcontaspagar").AsInt64(),
-	// 		q.FieldByName("valor").AsFloat(),
-	// 		//q.FieldByName("juros").AsString()
-	// 	)
-	// 	q.Next()
-	// }
-	// fmt.Println("q.Eof():", q.Eof())
-	// q.First()
-	// for !q.Eof() {
-	// 	fmt.Println(
-	// 		//	q.FieldByName("cdcontaspagar").AsInt64(),
-	// 		q.FieldByName("valor").AsFloat(),
-	// 		//q.FieldByName("juros").AsString()
-	// 	)
-	// 	q.Next()
-	// }
+	
 	executablePath, err := os.Executable()
 	if err != nil {
 		// Lidar com o erro, se necessário

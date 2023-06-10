@@ -3,9 +3,9 @@ package logger
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -44,16 +44,23 @@ var (
 		"CRITICAL": LEVEL_CRITICAL,
 	}
 	// NoOp is the NO-OP logger
-	NoOp, _ = NewLogger("CRITICAL", ioutil.Discard, "")
+	//NoOp, _ = NewLogger("CRITICAL", ioutil.Discard, "")
 )
 
 // NewLogger creates and returns a Logger object
-func NewLogger(level string, out io.Writer, prefix string) (Logger, error) {
+func NewLogger(level string, out io.Writer, prefix string, logDir string) (Logger, error) {
+	// Crie o caminho completo para o arquivo de log
+	logFilePath := filepath.Join(logDir, "app.log")
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return defaultLogger, err
+	}
 	l, ok := logLevels[strings.ToUpper(level)]
 	if !ok {
 		return defaultLogger, ErrInvalidLogLevel
 	}
-	return logger{Level: l, Prefix: prefix, Logger: log.New(out, "", log.LstdFlags)}, nil
+	return logger{Level: l, Prefix: prefix, Logger: log.New(logFile, "", log.LstdFlags)}, nil
+	//return logger{Level: l, Prefix: prefix, Logger: log.New(out, "", log.LstdFlags)}, nil
 }
 
 type logger struct {
