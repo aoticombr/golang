@@ -1,4 +1,4 @@
-module github.com/aoticombr/godataset
+module github.com/aoticombr/go
 
 go 1.20
 

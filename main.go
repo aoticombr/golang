@@ -1,7 +1,7 @@
 package main
 
 import (
-	save "github.com/aoticombr/godataset/file"
+	save "github.com/aoticombr/go/file"
 )
 
 func main() {

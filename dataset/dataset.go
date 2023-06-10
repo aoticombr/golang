@@ -2,14 +2,14 @@ package dataset
 
 import (
 	"database/sql"
-	"strings"
-
+	"github.com/aoticombr/go/component"
 	"github.com/google/uuid"
+	"strings"
 )
 
 type DataSet struct {
 	DB               *sql.DB
-	Sql              []string
+	Sql              stringslist
 	Rows             []map[string]Field
 	Param            map[string]Parameter
 	Eof              bool
