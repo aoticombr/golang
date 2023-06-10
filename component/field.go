@@ -10,16 +10,16 @@ import (
 )
 
 type Field struct {
-	name       string
-	caption    string
-	dataType   *sql.ColumnType
+	Name       string
+	Caption    string
+	DataType   *sql.ColumnType
 	Value      any
-	dataMask   string
-	valueTrue  string
-	valueFalse string
-	visible    bool
-	order      int
-	index      int
+	DataMask   string
+	ValueTrue  string
+	ValueFalse string
+	Visible    bool
+	Order      int
+	Index      int
 }
 
 func (field Field) AsString() string {
@@ -168,3 +168,5 @@ func (field Field) AsDateTime() time.Time {
 	}
 	return field.Value.(time.Time)
 }
+
+type Rows []map[string]Field

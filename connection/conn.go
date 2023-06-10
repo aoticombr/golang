@@ -2,6 +2,7 @@ package connection
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/lib/pq"
 	_ "github.com/sijms/go-ora/v2"
@@ -42,7 +43,9 @@ func (co *Conn) FreeAndNil() {
 func GetConn(d Drive) (*Conn, error) {
 	conn := &Conn{}
 	conn.SetConfig(GetConfigOra(d).Load())
-	db, err := sql.Open("oracle", conn.config.GetUrl())
+	url := conn.config.GetUrl()
+	fmt.Println(url)
+	db, err := sql.Open("oracle", url)
 	if err != nil {
 		return nil, err
 	}

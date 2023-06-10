@@ -2,56 +2,42 @@ package dataset
 
 import (
 	"database/sql"
-	cp "github.com/aoticombr/go/component"
-	"github.com/google/uuid"
 	"strings"
+
+	cp "github.com/aoticombr/go/component"
+	conn "github.com/aoticombr/go/connection"
 )
 
 type DataSet struct {
-	DB               *sql.DB
-	sql              cp.stringslist
-	Rows             []map[string]cp.Field
-	Param            map[string]Parameter
-	Eof              bool
-	Index            int
-	Recno            int
-	Count            int
-	DetailFields     string
-	MasterSouce      *DataSet
-	MasterFields     string
-	MasterDetailList map[string]MasterDetails
-	IndexFieldNames  string
+	Connection *conn.Conn
+	Sql        cp.Strings
+	rows       cp.Rows
+	param      cp.Params
+	eof        bool
+	index      int
+	recno      int
+	count      int
 }
 
-func GetDataSet(db *sql.DB) *DataSet {
-	var dataSet DataSet
+func (ds *DataSet) Eof() bool {
+	return ds.eof
+}
 
-	dataSet.DB = db
-
-	dataSet.Index = 0
-	dataSet.Recno = 0
-	dataSet.Count = 0
-	dataSet.Eof = true
-	dataSet.Param = make(map[string]Parameter)
-
-	return &dataSet
+func (ds *DataSet) GetParams() []any {
+	var param []any
+	for _, prm := range ds.param {
+		param = append(param, prm.Value)
+	}
+	return param
 }
 
 func (ds *DataSet) Open() error {
-	ds.Rows = nil
-	ds.Index = 0
-	ds.Recno = 0
-	ds.Count = 0
-	ds.Eof = true
-
-	vsql := ds.GetSql()
-
-	var param []any
-	for _, prm := range ds.Param {
-		param = append(param, prm.value)
-	}
-
-	rows, err := ds.DB.Query(vsql, param...)
+	ds.rows = nil
+	ds.index = 0
+	ds.recno = 0
+	ds.count = 0
+	ds.eof = true
+	rows, err := ds.Connection.GetDB().Query(ds.Sql.Text(), ds.GetParams()...)
 
 	if err != nil {
 		return err
@@ -67,17 +53,17 @@ func (ds *DataSet) Open() error {
 
 	ds.Scan(rows)
 
-	ds.Count = len(ds.Rows)
+	ds.count = len(ds.rows)
 
-	if ds.Count > 0 {
-		ds.Recno = 1
-		ds.Eof = ds.Count == 1
+	if ds.count > 0 {
+		ds.recno = 1
+		ds.eof = ds.count == 1
 	}
 	return nil
 }
 
 func (ds *DataSet) StartTransaction() (*sql.Tx, error) {
-	tx, err := ds.DB.Begin()
+	tx, err := ds.Connection.GetDB().Begin()
 	return tx, err
 }
 func (ds *DataSet) Commit(tx *sql.Tx) {
@@ -87,56 +73,12 @@ func (ds *DataSet) Rollback(tx *sql.Tx) {
 	tx.Rollback()
 }
 func (ds *DataSet) ExecTransact(tx *sql.Tx) (sql.Result, error) {
-	var param []any
-	for _, prm := range ds.Param {
-		param = append(param, prm.value)
-	}
-	res, err := tx.Exec(ds.GetSql(), param...)
+	res, err := tx.Exec(ds.Sql.Text(), ds.GetParams()...)
 	return res, err
 }
 func (ds *DataSet) ExecDirect() (sql.Result, error) {
-	var param []any
-	for _, prm := range ds.Param {
-		param = append(param, prm.value)
-	}
-	result, err := ds.DB.Exec(ds.GetSql(), param...)
+	result, err := ds.Connection.GetDB().Exec(ds.Sql.Text(), ds.GetParams()...)
 	return result, err
-}
-
-func (ds *DataSet) AddSql(sql string) *DataSet {
-	ds.sql.Add(sql)
-	return ds
-}
-func (ds *DataSet) ClearSql() {
-	ds.sql.Clear()
-}
-
-func (ds *DataSet) GetSql() (sql string) {
-	sql += ds.sql.Text()
-
-	if ds.MasterSouce != nil {
-		var sqlWhereMasterDetail string
-		mf := strings.Split(ds.MasterFields, ";")
-		df := strings.Split(ds.DetailFields, ";")
-
-		for i := 0; i < len(mf); i++ {
-			aliasHash, _ := uuid.NewUUID()
-			alias := strings.Replace(aliasHash.String(), "-", "", -1)
-			if i == len(mf)-1 {
-				sqlWhereMasterDetail = sqlWhereMasterDetail + df[i] + " = :" + alias
-			} else {
-				sqlWhereMasterDetail = sqlWhereMasterDetail + df[i] + " = :" + alias + " and "
-			}
-
-			ds.ParamByName(alias, ds.MasterSouce.FieldByName(mf[i]).Value)
-		}
-
-		if sqlWhereMasterDetail != "" {
-			sql = "select * from (" + sql + ") where " + sqlWhereMasterDetail
-		}
-	}
-
-	return sql
 }
 
 func (ds *DataSet) Scan(list *sql.Rows) {
@@ -155,42 +97,43 @@ func (ds *DataSet) Scan(list *sql.Rows) {
 			panic(err)
 		}
 
-		row := make(map[string]Field)
+		row := make(map[string]cp.Field)
 
 		for i, value := range columns {
-			row[fields[i]] = Field{name: fields[i],
-				caption:    fields[i],
-				dataType:   columntypes[i],
+			row[fields[i]] = cp.Field{
+				Name:       fields[i],
+				Caption:    fields[i],
+				DataType:   columntypes[i],
 				Value:      value,
-				dataMask:   "",
-				valueTrue:  "",
-				valueFalse: "",
-				visible:    true,
-				order:      i + 1,
-				index:      i,
+				DataMask:   "",
+				ValueTrue:  "",
+				ValueFalse: "",
+				Visible:    true,
+				Order:      i + 1,
+				Index:      i,
 			}
 		}
 
-		ds.Rows = append(ds.Rows, row)
+		ds.rows = append(ds.rows, row)
 	}
 }
 
 func (ds *DataSet) ParamByName(paramName string, paramValue any) *DataSet {
 
-	ds.Param[paramName] = Parameter{value: paramValue}
+	ds.param[paramName] = cp.Parameter{Value: paramValue}
 
 	return ds
 }
 
-func (ds *DataSet) FieldByName(fieldName string) Field {
+func (ds *DataSet) FieldByName(fieldName string) cp.Field {
 	field := strings.ToUpper(fieldName)
-	return ds.Rows[ds.Index][field]
+	return ds.rows[ds.index][field]
 }
 
 func (ds *DataSet) Locate(key string, value any) bool {
 
 	ds.First()
-	for ds.Eof == false {
+	for ds.eof == false {
 		switch value.(type) {
 		case string:
 			if ds.FieldByName(key).Value == value {
@@ -208,33 +151,45 @@ func (ds *DataSet) Locate(key string, value any) bool {
 }
 
 func (ds *DataSet) First() {
-	ds.Index = 0
-	ds.Recno = 0
-	if ds.Count > 0 {
-		ds.Index = 0
-		ds.Recno = 1
-		ds.Eof = ds.Count == 0
+	ds.index = 0
+	ds.recno = 0
+	if ds.count > 0 {
+		ds.index = 0
+		ds.recno = 1
+		ds.eof = ds.count == 0
 	} else {
-		ds.Eof = true
+		ds.eof = true
 	}
 }
 
 func (ds *DataSet) Next() {
-	if !ds.Eof {
-		if ds.Recno < ds.Count {
-			ds.Eof = ds.Count == ds.Recno
-			ds.Index++
-			ds.Recno++
+	if !ds.eof {
+		if ds.recno < ds.count {
+			ds.eof = ds.count == ds.recno
+			ds.index++
+			ds.recno++
 		} else {
-			ds.Eof = true
+			ds.eof = true
 		}
 	}
 }
 
 func (ds *DataSet) IsEmpty() bool {
-	return ds.Count == 0
+	return ds.count == 0
 }
 
 func (ds *DataSet) IsNotEmpty() bool {
-	return ds.Count > 0
+	return ds.count > 0
+}
+
+func GetDataSet(pconn *conn.Conn) *DataSet {
+	ds := &DataSet{
+		Connection: pconn,
+		index:      0,
+		recno:      0,
+		count:      0,
+		eof:        true,
+		param:      make(map[string]cp.Parameter),
+	}
+	return ds
 }

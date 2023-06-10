@@ -22,12 +22,12 @@ func main() {
 	// logger.Warning("Warning================")
 	// logger.Fatal("Fatal================")
 	conn, _ := ora.GetConn(ora.ORA)
-	defer conn.FreeAndNil()
-	q := ds.GetDataSetNew(conn.GetDB())
-	q.AddSql("SELECT * FROM CONTASPAGAR where rownum <= 10")
+	//defer conn.FreeAndNil()
+	q := ds.GetDataSet(conn)
+	q.Sql.Add("SELECT * FROM CONTASPAGAR where rownum <= 10")
 	q.Open()
 	q.First()
-	for !q.Eof {
+	for !q.Eof() {
 		fmt.Println(
 			//	q.FieldByName("cdcontaspagar").AsInt64(),
 			q.FieldByName("valor").AsFloat(),

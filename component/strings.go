@@ -2,25 +2,25 @@ package component
 
 import "strings"
 
-type stringslist struct {
+type Strings struct {
 	itens []string
 }
 
-func (s *stringslist) Append(value string) *stringslist {
+func (s *Strings) Append(value string) *Strings {
 	s.itens = append(s.itens, value)
 	return s
 }
-func (s *stringslist) Clear() *stringslist {
+func (s *Strings) Clear() *Strings {
 	s.itens = nil
 	return s
 }
-func (s *stringslist) Add(value string) *stringslist {
+func (s *Strings) Add(value string) *Strings {
 	s.itens = append(s.itens, value)
 	return s
 }
-func (s *stringslist) Count() int {
+func (s *Strings) Count() int {
 	return len(s.itens)
 }
-func (s *stringslist) Text() string {
+func (s *Strings) Text() string {
 	return strings.Join(s.itens, " ")
 }
