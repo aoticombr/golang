@@ -1,7 +1,7 @@
 package component
 
 type Parameter struct {
-	Value Variant
+	Value interface{}
 }
 
 type Params map[string]Parameter
