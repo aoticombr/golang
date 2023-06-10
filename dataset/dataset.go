@@ -18,12 +18,7 @@ type DataSet struct {
 }
 
 func (ds *DataSet) Eof() bool {
-	eof := true
-	if ds.Count() == 0 {
-		return true
-	}
-	eof = ds.Recno > ds.Count()
-	return eof
+	return ds.Count() == 0 || ds.Recno > ds.Count()
 }
 func (ds *DataSet) Count() int {
 	return len(ds.rows)
@@ -45,13 +40,7 @@ func (ds *DataSet) Open() error {
 		return err
 	}
 
-	defer func(rows *sql.Rows) error {
-		err := rows.Close()
-		if err != nil {
-			return err
-		}
-		return nil
-	}(rows)
+	defer rows.Close()
 
 	ds.scan(rows)
 
@@ -60,8 +49,7 @@ func (ds *DataSet) Open() error {
 }
 
 func (ds *DataSet) StartTransaction() (*sql.Tx, error) {
-	tx, err := ds.Connection.GetDB().Begin()
-	return tx, err
+	return ds.Connection.GetDB().Begin()
 }
 func (ds *DataSet) Commit(tx *sql.Tx) {
 	tx.Commit()
@@ -70,12 +58,10 @@ func (ds *DataSet) Rollback(tx *sql.Tx) {
 	tx.Rollback()
 }
 func (ds *DataSet) ExecTransact(tx *sql.Tx) (sql.Result, error) {
-	res, err := tx.Exec(ds.Sql.Text(), ds.GetParams()...)
-	return res, err
+	return tx.Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) ExecDirect() (sql.Result, error) {
-	result, err := ds.Connection.GetDB().Exec(ds.Sql.Text(), ds.GetParams()...)
-	return result, err
+	return ds.Connection.GetDB().Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) scan(list *sql.Rows) {
 	columntypes, _ := list.ColumnTypes()
@@ -87,9 +73,7 @@ func (ds *DataSet) scan(list *sql.Rows) {
 			columns[i] = &columns[i]
 		}
 
-		err := list.Scan(columns...)
-
-		if err != nil {
+		if err := list.Scan(columns...); err != nil {
 			panic(err)
 		}
 
@@ -124,20 +108,18 @@ func (ds *DataSet) FieldByName(fieldName string) cp.Field {
 	return ds.rows[ds.index][field]
 }
 func (ds *DataSet) Locate(key string, value any) bool {
-
 	ds.First()
 	for !ds.Eof() {
-		switch value.(type) {
+		switch v := value.(type) {
 		case string:
-			if ds.FieldByName(key).Value == value {
+			if ds.FieldByName(key).Value == v {
 				return true
 			}
 		default:
-			if ds.FieldByName(key).Value == value {
+			if ds.FieldByName(key).Value == v {
 				return true
 			}
 		}
-
 		ds.Next()
 	}
 	return false
