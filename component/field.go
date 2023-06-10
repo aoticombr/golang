@@ -1,7 +1,7 @@
 package component
 
 import (
-	sql "database/sql"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -9,11 +9,13 @@ import (
 	"time"
 )
 
+type Variant interface{}
+
 type Field struct {
 	Name       string
 	Caption    string
 	DataType   *sql.ColumnType
-	Value      any
+	Value      Variant
 	DataMask   string
 	ValueTrue  string
 	ValueFalse string
@@ -23,7 +25,6 @@ type Field struct {
 }
 
 func (field Field) AsString() string {
-
 	switch fieldValue := field.Value.(type) {
 	case time.Time:
 		layout := "02/01/2006 15:04:05"
@@ -36,23 +37,14 @@ func (field Field) AsString() string {
 		return fieldValue
 	default:
 		t := reflect.TypeOf(field.Value)
-		s := fmt.Sprintf("Unable to convert data type to string,Tipo: %v\n ", t)
-		panic(s)
+		panic(fmt.Sprintf("Unable to convert data type to string, Tipo: %v\n", t))
 	}
 }
 
 func (field Field) AsInt() int {
 	switch value := field.Value.(type) {
-	case int:
-		return int(value)
-	case int8:
-		return int(int8(value))
-	case int16:
-		return int(int16(value))
-	case int32:
-		return int(int32(value))
-	case int64:
-		return int(int64(value))
+	case int, int8, int16, int32, int64:
+		return int(reflect.ValueOf(value).Int())
 	default:
 		panic("Unable to convert data type to int")
 	}
@@ -60,24 +52,17 @@ func (field Field) AsInt() int {
 
 func (field Field) AsInt64() int64 {
 	switch value := field.Value.(type) {
-	case int:
-		return int64(field.Value.(int))
-	case int8:
-		return int64(value)
-	case int16:
-		return int64(value)
-	case int32:
-		return int64(value)
-	case int64:
-		return value
+	case int, int8, int16, int32, int64:
+		return reflect.ValueOf(value).Int()
 	case string:
-		valueInt, err := convertStringToInt64(value)
+		valueInt, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return 0
 		}
 		return valueInt
+	default:
+		return 0
 	}
-	return 0
 }
 
 func (field Field) AsFloat() float32 {
@@ -89,77 +74,54 @@ func (field Field) AsFloat() float32 {
 	case string:
 		floatValue, err := strconv.ParseFloat(value, 32)
 		if err != nil {
-			panic("Erro ao converter valor string para float32")
+			panic("Error converting string value to float32")
 		}
 		return float32(floatValue)
 	default:
 		t := reflect.TypeOf(field.Value)
-		s := fmt.Sprintf("Unable to convert data type to float32,Tipo: %v\n ", t)
-		panic(s)
+		panic(fmt.Sprintf("Unable to convert data type to float32, Tipo: %v\n", t))
 	}
-}
-
-func convertStringToInt64(value string) (int64, error) {
-	number, err := strconv.Atoi(value)
-	if err != nil {
-		return 0, err
-	}
-	return int64(number), nil
 }
 
 func (field Field) AsFloat64() float64 {
-
 	switch value := field.Value.(type) {
 	case float32:
-		return float64(float32(value))
+		return float64(value)
 	case float64:
 		return value
 	case string:
-		floatValue, err := strconv.ParseFloat(value, 32)
+		floatValue, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			panic("Erro ao converter valor string para float32")
+			panic("Error converting string value to float64")
 		}
-		return float64(floatValue)
+		return floatValue
+	default:
+		return 0
 	}
-	return 0
 }
 
 func (field Field) AsBool() bool {
 	if field.Value != nil {
-		switch field.Value.(type) {
-		case int:
-			return field.Value.(int) == 1
-		case int8:
-			return field.Value.(int8) == 1
-		case int16:
-			return field.Value.(int16) == 1
-		case int32:
-			return field.Value.(int32) == 1
-		case int64:
-			return field.Value.(int64) == 1
+		switch value := field.Value.(type) {
+		case int, int8, int16, int32, int64:
+			return reflect.ValueOf(value).Int() == 1
 		case string:
-			value := strings.ToUpper(strings.Trim(field.Value.(string), " "))
-			if value == "1" || value == "S" || value == "Y" {
-				return true
-			} else {
-				return false
-			}
+			v := strings.ToUpper(strings.TrimSpace(value))
+			return v == "1" || v == "S" || v == "Y"
 		default:
-			panic("Unable to convert data type to int")
+			panic("Unable to convert data type to bool")
 		}
-	} else {
-		return false
 	}
-
+	return false
 }
 
 func (field Field) AsDateTime() time.Time {
 	if field.Value != nil {
-		switch field.Value.(type) {
+		switch value := field.Value.(type) {
 		case time.Time:
-			return field.Value.(time.Time)
+			return value
 		default:
-			panic("Unable to convert data type to float64")
+			panic("Unable to convert data type to time.Time")
 		}
 	}
 	return field.Value.(time.Time)
