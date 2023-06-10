@@ -14,7 +14,7 @@ type DataSet struct {
 	rows       cp.Rows
 	param      cp.Params
 	index      int
-	recno      int
+	Recno      int
 }
 
 func (ds *DataSet) Eof() bool {
@@ -22,12 +22,11 @@ func (ds *DataSet) Eof() bool {
 	if ds.Count() == 0 {
 		return true
 	}
-	eof = ds.recno > ds.Count()
+	eof = ds.Recno > ds.Count()
 	return eof
 }
 func (ds *DataSet) Count() int {
-	count := len(ds.rows)
-	return count
+	return len(ds.rows)
 }
 func (ds *DataSet) GetParams() []any {
 	var param []any
@@ -39,7 +38,7 @@ func (ds *DataSet) GetParams() []any {
 func (ds *DataSet) Open() error {
 	ds.rows = nil
 	ds.index = 0
-	ds.recno = 0
+	ds.Recno = 0
 	rows, err := ds.Connection.GetDB().Query(ds.Sql.Text(), ds.GetParams()...)
 
 	if err != nil {
@@ -145,15 +144,15 @@ func (ds *DataSet) Locate(key string, value any) bool {
 }
 func (ds *DataSet) First() {
 	ds.index = 0
-	ds.recno = 0
+	ds.Recno = 0
 	if ds.Count() > 0 {
-		ds.recno = 1
+		ds.Recno = 1
 	}
 }
 func (ds *DataSet) Next() {
 	if !ds.Eof() {
 		ds.index++
-		ds.recno++
+		ds.Recno++
 	}
 }
 func (ds *DataSet) IsEmpty() bool {
@@ -166,7 +165,7 @@ func GetDataSet(pconn *conn.Conn) *DataSet {
 	ds := &DataSet{
 		Connection: pconn,
 		index:      0,
-		recno:      0,
+		Recno:      0,
 		param:      make(map[string]cp.Parameter),
 	}
 	return ds
