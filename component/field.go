@@ -151,7 +151,6 @@ func (field Field) AsBool() bool {
 		return false
 	}
 
-	return field.Value.(bool)
 }
 
 func (field Field) AsDateTime() time.Time {
@@ -162,9 +161,6 @@ func (field Field) AsDateTime() time.Time {
 		default:
 			panic("Unable to convert data type to float64")
 		}
-	} else {
-		data, _ := time.Parse(time.DateTime, time.DateTime)
-		return data
 	}
 	return field.Value.(time.Time)
 }
