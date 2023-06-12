@@ -9,11 +9,11 @@ import (
 
 type Conn struct {
 	config *ConfigOra
-	db     *sql.DB
+	Db     *sql.DB
 }
 
 func (co *Conn) StartTransaction() (*sql.Tx, error) {
-	return co.db.Begin()
+	return co.Db.Begin()
 }
 func (co *Conn) Commit(tx *sql.Tx) {
 	tx.Commit()
@@ -29,11 +29,9 @@ func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
 	co.config = cf
 	return co
 }
-func (co *Conn) GetDB() *sql.DB {
-	return co.db
-}
+
 func (co *Conn) Disconnect() {
-	co.db.Close()
+	co.Db.Close()
 }
 
 func GetConn(d Drive) (*Conn, error) {
@@ -43,6 +41,6 @@ func GetConn(d Drive) (*Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.db = db
+	conn.Db = db
 	return conn, nil
 }
