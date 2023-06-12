@@ -1,4 +1,4 @@
-module github.com/aoticombr/go
+module github.com/aoticombr/golang
 
 go 1.20
 

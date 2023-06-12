@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	ora "github.com/aoticombr/go/connection"
-	ds "github.com/aoticombr/go/dataset"
+
+	ora "github.com/aoticombr/golang/connection"
+	ds "github.com/aoticombr/golang/dataset"
 )
 
 func main() {
@@ -29,22 +30,12 @@ func main() {
 	fmt.Println("q.Eof():", q.Eof())
 	for !q.Eof() {
 		fmt.Println(
-			//	q.FieldByName("cdcontaspagar").AsInt64(),
 			q.FieldByName("valor").AsFloat(),
-			//q.FieldByName("juros").AsString()
+			q.FieldByName("valor").AsString(),
 		)
 		q.Next()
 	}
-	fmt.Println("q.Eof():", q.Eof())
-	q.First()
-	for !q.Eof() {
-		fmt.Println(
-			//	q.FieldByName("cdcontaspagar").AsInt64(),
-			q.FieldByName("valor").AsFloat(),
-			//q.FieldByName("juros").AsString()
-		)
-		q.Next()
-	}
+
 	// executablePath, err := os.Executable()
 	// if err != nil {
 	// 	// Lidar com o erro, se necessário

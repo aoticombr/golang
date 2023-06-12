@@ -7,10 +7,13 @@ import (
 	"strings"
 	"time"
 )
-
 type Variant struct {
 	Value interface{}
 }
+
+// type Variant struct {
+// 	Value interface{}
+// }
 func (v Variant) SetValue(value interface{}){
 	v.Value = value
 }

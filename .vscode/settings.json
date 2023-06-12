@@ -1,0 +1,19 @@
+{
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "oracleOptions": {
+                "autoCommit": true,
+                "lowerCase": false
+            },
+            "previewLimit": 50,
+            "server": "192.168.0.108",
+            "port": 1521,
+            "driver": "Oracle",
+            "name": "nexus",
+            "username": "NEXUS",
+            "password": "b0b5371e1a0c24a3f08dedbbffb9df",
+            "database": "XE"
+        }
+    ]
+}

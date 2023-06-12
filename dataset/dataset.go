@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"strings"
 
-	cp "github.com/aoticombr/go/component"
-	conn "github.com/aoticombr/go/connection"
+	cp "github.com/aoticombr/golang/component"
+	conn "github.com/aoticombr/golang/connection"
 )
 
 type DataSet struct {
@@ -80,19 +80,19 @@ func (ds *DataSet) scan(list *sql.Rows) {
 		row := make(map[string]cp.Field)
 
 		for i, value := range columns {
-			f:= cp.Field{
+			f := cp.Field{
 				Name:       fields[i],
 				Caption:    fields[i],
-				DataType:   columntypes[i],				
+				DataType:   columntypes[i],
 				DataMask:   "",
-				Value : cp.Variant{Value: value},  
+				Value:      cp.Variant{Value: value},
 				ValueTrue:  "",
 				ValueFalse: "",
 				Visible:    true,
 				Order:      i + 1,
 				Index:      i,
 			}
-			     
+
 			row[fields[i]] = f
 		}
 
@@ -101,7 +101,7 @@ func (ds *DataSet) scan(list *sql.Rows) {
 }
 func (ds *DataSet) ParamByName(paramName string, paramValue any) *DataSet {
 
-	ds.param[paramName] = cp.Parameter{Value:paramValue}
+	ds.param[paramName] = cp.Parameter{Value: paramValue}
 
 	return ds
 }
@@ -112,7 +112,7 @@ func (ds *DataSet) FieldByName(fieldName string) cp.Field {
 func (ds *DataSet) Locate(key string, value any) bool {
 	ds.First()
 	for !ds.Eof() {
-		
+
 		switch v := value.(type) {
 		case string:
 			if ds.FieldByName(key).AsValue() == v {
