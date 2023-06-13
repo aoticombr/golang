@@ -9,31 +9,39 @@ import (
 
 type Conn struct {
 	config *ConfigOra
-	db     *sql.DB
+	Db     *sql.DB
+	tx     *sql.Tx
 }
 
-func (co *Conn) StartTransaction() (*sql.Tx, error) {
-	return co.db.Begin()
+func (co *Conn) StartTransaction() error {
+	t, err := co.Db.Begin()
+	if err != nil {
+		return err
+	}
+	co.tx = t
+	return nil
 }
-func (co *Conn) Commit(tx *sql.Tx) {
-	tx.Commit()
+func (co *Conn) Commit() error {
+	err := co.tx.Commit()
+	co.tx = nil
+	return err
 }
-func (co *Conn) Rollback(tx *sql.Tx) {
-	tx.Rollback()
+func (co *Conn) Rollback() error {
+	err := co.tx.Rollback()
+	co.tx = nil
+	return err
 }
-func (co *Conn) Exec(tx *sql.Tx, sql string, arg ...any) (sql.Result, error) {
-	return tx.Exec(sql, arg)
+func (co *Conn) Exec(sql string, arg ...any) (sql.Result, error) {
+	return co.tx.Exec(sql, arg)
 }
 
 func (co *Conn) SetConfig(cf *ConfigOra) *Conn {
 	co.config = cf
 	return co
 }
-func (co *Conn) GetDB() *sql.DB {
-	return co.db
-}
+
 func (co *Conn) Disconnect() {
-	co.db.Close()
+	co.Db.Close()
 }
 
 func GetConn(d Drive) (*Conn, error) {
@@ -43,6 +51,6 @@ func GetConn(d Drive) (*Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.db = db
+	conn.Db = db
 	return conn, nil
 }

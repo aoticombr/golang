@@ -17,14 +17,14 @@ var (
 var cfgglobal *ConfigOra
 
 type ConfigOra struct {
-	drive    Drive
-	host     string
-	user     string
-	pass     string
-	port     string
-	database string
-	schema   string
-	sid      string
+	Drive    Drive
+	Host     string
+	User     string
+	Pass     string
+	Port     string
+	Database string
+	Schema   string
+	Sid      string
 }
 
 func (cf *ConfigOra) SetHost(value string) *ConfigOra {
