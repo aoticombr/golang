@@ -9,7 +9,8 @@ import (
 
 type Conn struct {
 	config *ConfigOra
-	db     *sql.DB
+	Db     *sql.DB
+	tx     *sql.Tx
 }
 
 func (co *Conn) StartTransaction() (*sql.Tx, error) {

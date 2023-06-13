@@ -2,8 +2,6 @@ package connection
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -21,61 +19,10 @@ type ConfigOra struct {
 	Host     string
 	User     string
 	Pass     string
-	Port     string
+	Port     int
 	Database string
 	Schema   string
 	Sid      string
-}
-
-func (cf *ConfigOra) SetHost(value string) *ConfigOra {
-	cf.host = value
-	return cf
-}
-func (cf *ConfigOra) SetDatabase(value string) *ConfigOra {
-	cf.database = value
-	return cf
-}
-func (cf *ConfigOra) SetUser(value string) *ConfigOra {
-	cf.user = value
-	return cf
-}
-func (cf *ConfigOra) SetPassCrypt(value string) *ConfigOra {
-	cf.pass = value
-	return cf
-}
-func (cf *ConfigOra) SetPort(value string) *ConfigOra {
-	cf.port = value
-	return cf
-}
-func (cf *ConfigOra) SetSid(value string) *ConfigOra {
-	cf.sid = value
-	return cf
-}
-func (cf *ConfigOra) SetSchema(value string) *ConfigOra {
-	cf.schema = value
-	return cf
-}
-func (cf *ConfigOra) GetHost() string {
-	return cf.host
-}
-func (cf *ConfigOra) GetUser() string {
-	return cf.user
-}
-func (cf *ConfigOra) GetDatabase() string {
-	return cf.database
-}
-func (cf *ConfigOra) GetPass() string {
-	return cf.pass
-}
-func (cf *ConfigOra) GetSid() string {
-	return cf.sid
-}
-func (cf *ConfigOra) GetPort() int {
-	intValue, _ := strconv.Atoi(cf.port)
-	return intValue
-}
-func (cf *ConfigOra) GetSchema() string {
-	return cf.schema
 }
 
 func (cf *ConfigOra) Load() *ConfigOra {
@@ -83,36 +30,36 @@ func (cf *ConfigOra) Load() *ConfigOra {
 	if err != nil {
 		panic(err.Error())
 	}
-	switch cf.drive {
+	switch cf.Drive {
 	case ORA:
-		cf.SetHost(os.Getenv("ora_host"))
-		cf.SetUser(os.Getenv("ora_user"))
-		cf.SetPort(os.Getenv("ora_port"))
-		cf.SetPassCrypt(os.Getenv("ora_pass"))
-		cf.SetSchema(os.Getenv("ora_schema"))
-		cf.SetSid(os.Getenv("ora_sid"))
+		cf.Host = GetEnvString("ora_host")
+		cf.User = GetEnvString("ora_user")
+		cf.Port = GetEnvInt("ora_port")
+		cf.Pass = GetEnvString("ora_pass")
+		cf.Schema = GetEnvString("ora_schema")
+		cf.Sid = GetEnvString("ora_sid")
 	case PG:
-		cf.SetHost(os.Getenv("pg_host"))
-		cf.SetUser(os.Getenv("pg_user"))
-		cf.SetPort(os.Getenv("pg_port"))
-		cf.SetPassCrypt(os.Getenv("pg_pass"))
-		cf.SetDatabase(os.Getenv("pg_database"))
+		cf.Host = GetEnvString("pg_host")
+		cf.User = GetEnvString("pg_user")
+		cf.Port = GetEnvInt("pg_port")
+		cf.Pass = GetEnvString("pg_pass")
+		cf.Database = GetEnvString("pg_database")
 	}
 	return cf
 }
 
 func (cf *ConfigOra) GetUrlOra() string {
 	url := fmt.Sprintf("oracle://%s:%s@%s:%d/%s",
-		cf.GetUser(), cf.GetPass(), cf.GetHost(), cf.GetPort(), cf.GetSid())
+		cf.User, cf.Pass, cf.Host, cf.Port, cf.Sid)
 	return url
 }
 func (cf *ConfigOra) GetUrlPG() string {
 	url := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cf.GetHost(), cf.GetPort(), cf.GetUser(), cf.GetPass(), cf.GetDatabase())
+		cf.Host, cf.Port, cf.User, cf.Pass, cf.Database)
 	return url
 }
 func (cf *ConfigOra) GetUrl() string {
-	switch cf.drive {
+	switch cf.Drive {
 	case ORA:
 		return cf.GetUrlOra()
 	case PG:
@@ -124,7 +71,7 @@ func (cf *ConfigOra) GetUrl() string {
 func GetConfigOra(d Drive) *ConfigOra {
 	if cfgglobal == nil {
 		cfgglobal = &ConfigOra{}
-		cfgglobal.drive = d
+		cfgglobal.Drive = d
 	}
 	return cfgglobal
 }
