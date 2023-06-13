@@ -19,6 +19,7 @@ type DataSet struct {
 	param      cp.Params
 	index      int
 	Recno      int
+	tx         *sql.Tx
 }
 
 func (ds *DataSet) Eof() bool {
@@ -53,17 +54,28 @@ func (ds *DataSet) Open() error {
 	return nil
 }
 
-func (ds *DataSet) StartTransaction() (*sql.Tx, error) {
-	return ds.Connection.Db.Begin()
+func (ds *DataSet) StartTransaction() error {
+	if ds.tx != nil {
+		t, err := ds.Connection.Db.Begin()
+		if err != nil {
+			return err
+		}
+		ds.tx = t
+	}
+	return nil
 }
-func (ds *DataSet) Commit(tx *sql.Tx) {
-	tx.Commit()
+func (ds *DataSet) Commit() error {
+	err := ds.tx.Commit()
+	ds.tx = nil
+	return err
 }
-func (ds *DataSet) Rollback(tx *sql.Tx) {
-	tx.Rollback()
+func (ds *DataSet) Rollback() error {
+	err := ds.tx.Rollback()
+	ds.tx = nil
+	return err
 }
-func (ds *DataSet) ExecTransact(tx *sql.Tx) (sql.Result, error) {
-	return tx.Exec(ds.Sql.Text(), ds.GetParams()...)
+func (ds *DataSet) ExecTransact() (sql.Result, error) {
+	return ds.tx.Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) ExecDirect() (sql.Result, error) {
 	return ds.Connection.Db.Exec(ds.Sql.Text(), ds.GetParams()...)
