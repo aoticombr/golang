@@ -9,17 +9,11 @@ import (
 
 type Conn struct {
 	config *ConfigOra
-	Db     *sql.DB
-	tx     *sql.Tx
+	db     *sql.DB
 }
 
-func (co *Conn) StartTransaction() error {
-	t, err := co.Db.Begin()
-	if err != nil {
-		return err
-	}
-	co.tx = t
-	return nil
+func (co *Conn) StartTransaction() (*sql.Tx, error) {
+	return co.db.Begin()
 }
 func (co *Conn) Commit() error {
 	err := co.tx.Commit()
