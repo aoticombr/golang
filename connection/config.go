@@ -48,12 +48,12 @@ func (cf *ConfigOra) Load() *ConfigOra {
 	return cf
 }
 
-func (cf *ConfigOra) GetUrlOra() string {
+func (cf *ConfigOra) getUrlOra() string {
 	url := fmt.Sprintf("oracle://%s:%s@%s:%d/%s",
 		cf.User, cf.Pass, cf.Host, cf.Port, cf.Sid)
 	return url
 }
-func (cf *ConfigOra) GetUrlPG() string {
+func (cf *ConfigOra) getUrlPG() string {
 	url := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cf.Host, cf.Port, cf.User, cf.Pass, cf.Database)
 	return url
@@ -61,9 +61,9 @@ func (cf *ConfigOra) GetUrlPG() string {
 func (cf *ConfigOra) GetUrl() string {
 	switch cf.Drive {
 	case ORA:
-		return cf.GetUrlOra()
+		return cf.getUrlOra()
 	case PG:
-		return cf.GetUrlPG()
+		return cf.getUrlPG()
 	}
 	return ""
 }

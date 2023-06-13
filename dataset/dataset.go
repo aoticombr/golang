@@ -2,7 +2,10 @@ package dataset
 
 import (
 	"database/sql"
+	"fmt"
+	"reflect"
 	"strings"
+	"time"
 
 	cp "github.com/aoticombr/golang/component"
 	conn "github.com/aoticombr/golang/connection"
@@ -10,6 +13,7 @@ import (
 
 type DataSet struct {
 	Connection *conn.Conn
+	Columns    []string
 	Sql        cp.Strings
 	rows       cp.Rows
 	param      cp.Params
@@ -34,12 +38,13 @@ func (ds *DataSet) Open() error {
 	ds.rows = nil
 	ds.index = 0
 	ds.Recno = 0
-	rows, err := ds.Connection.GetDB().Query(ds.Sql.Text(), ds.GetParams()...)
+	rows, err := ds.Connection.Db.Query(ds.Sql.Text(), ds.GetParams()...)
 
 	if err != nil {
 		return err
 	}
-
+	col, _ := rows.Columns()
+	ds.Columns = col
 	defer rows.Close()
 
 	ds.scan(rows)
@@ -49,7 +54,7 @@ func (ds *DataSet) Open() error {
 }
 
 func (ds *DataSet) StartTransaction() (*sql.Tx, error) {
-	return ds.Connection.GetDB().Begin()
+	return ds.Connection.Db.Begin()
 }
 func (ds *DataSet) Commit(tx *sql.Tx) {
 	tx.Commit()
@@ -61,7 +66,7 @@ func (ds *DataSet) ExecTransact(tx *sql.Tx) (sql.Result, error) {
 	return tx.Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) ExecDirect() (sql.Result, error) {
-	return ds.Connection.GetDB().Exec(ds.Sql.Text(), ds.GetParams()...)
+	return ds.Connection.Db.Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) scan(list *sql.Rows) {
 	columntypes, _ := list.ColumnTypes()
@@ -146,6 +151,61 @@ func (ds *DataSet) IsEmpty() bool {
 func (ds *DataSet) IsNotEmpty() bool {
 	return ds.Count() > 0
 }
+
+func (ds *DataSet) RowInStruck(targetStruct interface{}) ([]interface{}, error) {
+
+	targetType := reflect.TypeOf(targetStruct)
+	if targetType.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("targetStruct deve ser uma estrutura")
+	}
+
+	var results []interface{}
+	fields := make(map[string]reflect.Value)
+
+	for i := 0; i < targetType.NumField(); i++ {
+		field := targetType.Field(i)
+		if field.Anonymous {
+			continue // Ignorar campos anônimos
+		}
+		name := field.Name
+		value := reflect.New(field.Type).Elem()
+		fields[name] = value
+	}
+
+	for !ds.Eof() {
+		result := reflect.New(targetType).Elem()
+
+		for name, value := range fields {
+			fieldValue := value.Interface()
+			fieldType := value.Type()
+
+			switch fieldValue.(type) {
+			case int, int64, int32, int16, int8:
+				val := ds.FieldByName(name).AsInt64()
+				fieldValue = reflect.ValueOf(val).Convert(fieldType).Interface()
+			case float32, float64:
+				val := ds.FieldByName(name).AsFloat()
+				fieldValue = reflect.ValueOf(val).Convert(fieldType).Interface()
+			case string:
+				val := ds.FieldByName(name).AsString()
+				fieldValue = reflect.ValueOf(val).Convert(fieldType).Interface()
+			case time.Time:
+				val := ds.FieldByName(name).AsDateTime()
+				fieldValue = reflect.ValueOf(val).Convert(fieldType).Interface()
+			default:
+				return nil, fmt.Errorf("tipo de campo não suportado: %v", fieldType)
+			}
+
+			result.FieldByName(name).Set(reflect.ValueOf(fieldValue))
+		}
+
+		results = append(results, result.Interface())
+		ds.Next()
+	}
+
+	return results, nil
+}
+
 func GetDataSet(pconn *conn.Conn) *DataSet {
 	ds := &DataSet{
 		Connection: pconn,

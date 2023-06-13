@@ -2,10 +2,18 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	ora "github.com/aoticombr/golang/connection"
 	ds "github.com/aoticombr/golang/dataset"
 )
+
+type ContasPagar struct {
+	Cdcontaspagar int64
+	Historico     string
+	Dtaconta      time.Time
+	Valor         float64
+}
 
 func main() {
 	//logLevel := flag.String("log", "ERROR", "Logging level")
@@ -24,17 +32,45 @@ func main() {
 	conn, _ := ora.GetConn(ora.ORA)
 	defer conn.Disconnect()
 	q := ds.GetDataSet(conn)
-	q.Sql.Add("SELECT * FROM CONTASPAGAR where rownum <= 10")
+	q.Sql.Add("SELECT cdcontaspagar, historico, dtaconta, valor FROM CONTASPAGAR where rownum <= 10")
 	q.Open()
 	q.First()
-	fmt.Println("q.Eof():", q.Eof())
-	for !q.Eof() {
-		fmt.Println(
-			q.FieldByName("valor").AsFloat(),
-			q.FieldByName("valor").AsString(),
-		)
-		q.Next()
+	// fmt.Println("q.Eof():", q.Eof())
+	// for !q.Eof() {
+	// 	fmt.Println(
+	// 		q.FieldByName("cdcontaspagar").AsInt64(),
+	// 		q.FieldByName("historico").AsString(),
+	// 		q.FieldByName("dtaconta").AsDateTime(),
+	// 		q.FieldByName("valor").AsFloat64(),
+	// 	)
+	// 	q.Next()
+	// }
+	//var contas []ContasPagar
+	results, err := q.RowInStruck(ContasPagar{})
+	if err != nil {
+		fmt.Println("Erro ao executar a consulta:", err)
+		return
 	}
+	fmt.Println("results:", results)
+	for _, result := range results {
+		contasPagar, ok := result.(ContasPagar) // Faz a conversão para o tipo correto
+
+		if !ok {
+			fmt.Println("Erro ao converter resultado para ContasPagar")
+			continue
+		}
+
+		fmt.Println("Cdcontaspagar:", contasPagar.Cdcontaspagar)
+		fmt.Println("Historico:", contasPagar.Historico)
+		fmt.Println("Dtaconta:", contasPagar.Dtaconta)
+		fmt.Println("Valor:", contasPagar.Valor)
+
+		fmt.Println("----------------------")
+	}
+	// for _, result := range results {
+	// 	conta := result.(*ContasPagar)
+	// 	fmt.Println(*conta)
+	// }
 
 	// executablePath, err := os.Executable()
 	// if err != nil {
