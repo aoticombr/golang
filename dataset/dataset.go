@@ -164,7 +164,7 @@ func (ds *DataSet) IsNotEmpty() bool {
 	return ds.Count() > 0
 }
 
-func (ds *DataSet) RowInStruck(targetStruct interface{}) ([]interface{}, error) {
+func (ds *DataSet) RowInStructList(targetStruct interface{}) ([]interface{}, error) {
 
 	targetType := reflect.TypeOf(targetStruct)
 	if targetType.Kind() != reflect.Struct {
@@ -216,6 +216,17 @@ func (ds *DataSet) RowInStruck(targetStruct interface{}) ([]interface{}, error) 
 	}
 
 	return results, nil
+}
+
+func (ds *DataSet) RowInStructObject(targetStruct interface{}) (interface{}, error) {
+	results, err := ds.RowInStructList(targetStruct)
+	if err != nil {
+		return nil, err
+	}
+	if len(results) == 0 {
+		return nil, fmt.Errorf("nenhum objeto encontrado")
+	}
+	return results[0], nil
 }
 
 func GetDataSet(pconn *conn.Conn) *DataSet {
