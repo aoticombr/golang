@@ -59,6 +59,7 @@ RowInStruck(targetStruct interface{}) ([]interface{}, error): Mapeia os registro
 GetDataSet(pconn *conn.Conn) *DataSet: Cria e retorna uma nova instância do DataSet com uma conexão fornecida.
 
 ## Exemplo de uso 1
+```main.go
 conn, _ := ora.GetConn(ora.ORA)
 	defer conn.Disconnect()
 	q := ds.GetDataSet(conn)
@@ -76,6 +77,7 @@ conn, _ := ora.GetConn(ora.ORA)
 		q.Next()
 	}
 ## Exemplo de uso 2
+```main.go
 type ContasPagar struct {
 	Cdcontaspagar int64
 	Historico     string
