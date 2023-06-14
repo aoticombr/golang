@@ -57,3 +57,57 @@ IsNotEmpty() bool: Verifica se o conjunto de dados não está vazio.
 RowInStruck(targetStruct interface{}) ([]interface{}, error): Mapeia os registros do conjunto de dados para uma estrutura fornecida.
 
 GetDataSet(pconn *conn.Conn) *DataSet: Cria e retorna uma nova instância do DataSet com uma conexão fornecida.
+
+## Exemplo de uso 1
+conn, _ := ora.GetConn(ora.ORA)
+	defer conn.Disconnect()
+	q := ds.GetDataSet(conn)
+	q.Sql.Add("SELECT cdcontaspagar, historico, dtaconta, valor FROM CONTASPAGAR where rownum <= 10")
+	q.Open()
+	q.First()
+	fmt.Println("q.Eof():", q.Eof())
+	for !q.Eof() {
+		fmt.Println(
+			q.FieldByName("cdcontaspagar").AsInt64(),
+			q.FieldByName("historico").AsString(),
+			q.FieldByName("dtaconta").AsDateTime(),
+			q.FieldByName("valor").AsFloat64(),
+		)
+		q.Next()
+	}
+## Exemplo de uso 2
+type ContasPagar struct {
+	Cdcontaspagar int64
+	Historico     string
+	Dtaconta      time.Time
+	Valor         float32
+}
+
+conn, _ := ora.GetConn(ora.ORA)
+	defer conn.Disconnect()
+	q := ds.GetDataSet(conn)
+	q.Sql.Add("SELECT cdcontaspagar, historico, dtaconta, valor FROM CONTASPAGAR where rownum <= 10")
+	q.Open()
+	q.First()
+	//var contas []ContasPagar
+	results, err := q.RowInStructList(ContasPagar{})
+	if err != nil {
+		fmt.Println("Erro ao executar a consulta:", err)
+		return
+	}
+	fmt.Println("results:", results)
+	for _, result := range results {
+		contasPagar, ok := result.(ContasPagar) // Faz a conversão para o tipo correto
+
+		if !ok {
+			fmt.Println("Erro ao converter resultado para ContasPagar")
+			continue
+		}
+
+		fmt.Println("Cdcontaspagar:", contasPagar.Cdcontaspagar)
+		fmt.Println("Historico:", contasPagar.Historico)
+		fmt.Println("Dtaconta:", contasPagar.Dtaconta)
+		fmt.Println("Valor:", contasPagar.Valor)
+
+		fmt.Println("----------------------")
+	}
