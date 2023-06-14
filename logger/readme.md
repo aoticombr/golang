@@ -29,3 +29,12 @@ func main() {
 
 }
 ```
+os logs só serão mostrados por nivel de hierarquia
+
+// DEBUG = 0
+// INFO = 1
+// WARNING = 2
+// ERROR = 3
+// CRITICAL = 4
+
+exemplo se colocar como "ERROR" ele ira mostrar somente ERROR OU Critital já que o nivel de Error é 3 sempre sera um >= em comparação neste caso
