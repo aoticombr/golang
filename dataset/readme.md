@@ -61,6 +61,17 @@ GetDataSet(pconn *conn.Conn) *DataSet: Cria e retorna uma nova instância do Dat
 ## Exemplo de uso 1
 
 ```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	ora "github.com/aoticombr/golang/connection"
+	ds "github.com/aoticombr/golang/dataset"
+)
+
+func main() {
 conn, _ := ora.GetConn(ora.ORA)
 	defer conn.Disconnect()
 	q := ds.GetDataSet(conn)
@@ -77,11 +88,22 @@ conn, _ := ora.GetConn(ora.ORA)
 		)
 		q.Next()
 	}
+}	
 ```
 
 ## Exemplo de uso 2
 
 ```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	ora "github.com/aoticombr/golang/connection"
+	ds "github.com/aoticombr/golang/dataset"
+)
+
 type ContasPagar struct {
 	Cdcontaspagar int64
 	Historico     string
@@ -89,6 +111,7 @@ type ContasPagar struct {
 	Valor         float32
 }
 
+func main() {
 conn, _ := ora.GetConn(ora.ORA)
 	defer conn.Disconnect()
 	q := ds.GetDataSet(conn)
@@ -117,4 +140,5 @@ conn, _ := ora.GetConn(ora.ORA)
 
 		fmt.Println("----------------------")
 	}
+}	
 ```
