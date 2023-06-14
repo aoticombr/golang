@@ -1,5 +1,5 @@
 A estrutura de código fornecida parece ser uma implementação de um pacote chamado "dataset". O pacote inclui uma estrutura chamada DataSet com vários métodos associados a ela. Aqui está uma descrição geral dos principais elementos da estrutura e seus métodos:
-
+## 
 DataSet (estrutura):
 Connection: Um ponteiro para uma estrutura Conn, que representa uma conexão com o banco de dados.
 Columns: Uma lista de nomes de colunas.
@@ -10,7 +10,7 @@ index: Um índice usado para navegar pelas linhas retornadas.
 Recno: O número atual do registro sendo acessado.
 tx: Um ponteiro para uma transação SQL.
 Métodos da estrutura DataSet:
-
+## 
 Eof() bool: Verifica se o cursor está no final do conjunto de dados.
 Count() int: Retorna o número de registros no conjunto de dados.
 GetParams() []any: Retorna uma lista de valores de parâmetros.
