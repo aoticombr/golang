@@ -77,7 +77,7 @@ conn, _ := ora.GetConn(ora.ORA)
 		)
 		q.Next()
 	}
-
+```
 
 ## Exemplo de uso 2
 
@@ -117,3 +117,4 @@ conn, _ := ora.GetConn(ora.ORA)
 
 		fmt.Println("----------------------")
 	}
+```
