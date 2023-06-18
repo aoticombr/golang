@@ -17,6 +17,7 @@ type Field struct {
 	Order      int
 	Index      int
 }
+
 func (field Field) AsValue() interface{} {
 	return field.Value.AsValue()
 }

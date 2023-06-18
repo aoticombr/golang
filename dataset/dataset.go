@@ -91,6 +91,7 @@ func (ds *DataSet) ExecDirect() (sql.Result, error) {
 	if err != nil {
 		// handle the error
 	}
+	defer stmt.Close()
 	return stmt.Exec(ds.GetParams()...)
 }
 func (ds *DataSet) scan(list *sql.Rows) {

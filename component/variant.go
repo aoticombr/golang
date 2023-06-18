@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-type variant struct {
+type Variant struct {
 	Value any
 }
 
-func (v variant) AsValue() any {
+func (v Variant) AsValue() any {
 	return v.Value
 }
 
-func (v variant) AsString() string {
+func (v Variant) AsString() string {
 
 	switch val := v.Value.(type) {
 	case time.Time:
@@ -38,7 +38,7 @@ func (v variant) AsString() string {
 
 }
 
-func (v variant) AsInt() int {
+func (v Variant) AsInt() int {
 
 	switch val := v.Value.(type) {
 	case int:
@@ -61,7 +61,7 @@ func (v variant) AsInt() int {
 
 }
 
-func (v variant) AsInt64() int64 {
+func (v Variant) AsInt64() int64 {
 
 	switch val := v.Value.(type) {
 	case int:
@@ -84,7 +84,7 @@ func (v variant) AsInt64() int64 {
 
 }
 
-func (v variant) AsFloat() float32 {
+func (v Variant) AsFloat() float32 {
 
 	switch val := v.Value.(type) {
 	case float32:
@@ -109,7 +109,7 @@ func (v variant) AsFloat() float32 {
 
 }
 
-func (v variant) AsFloat64() float64 {
+func (v Variant) AsFloat64() float64 {
 
 	switch val := v.Value.(type) {
 	case float32:
@@ -134,7 +134,7 @@ func (v variant) AsFloat64() float64 {
 
 }
 
-func (v variant) AsBool() bool {
+func (v Variant) AsBool() bool {
 
 	switch val := v.Value.(type) {
 	case int:
@@ -164,7 +164,7 @@ func (v variant) AsBool() bool {
 
 }
 
-func (v variant) AsDateTime() time.Time {
+func (v Variant) AsDateTime() time.Time {
 
 	switch v.Value.(type) {
 	case time.Time:
