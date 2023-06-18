@@ -16,7 +16,7 @@ type DataSet struct {
 	Columns    []string
 	Sql        cp.Strings
 	rows       cp.Rows
-	param      cp.Params
+	Params     cp.Params
 	index      int
 	Recno      int
 	tx         *sql.Tx
@@ -30,8 +30,17 @@ func (ds *DataSet) Count() int {
 }
 func (ds *DataSet) GetParams() []any {
 	var param []any
-	for _, prm := range ds.param {
-		param = append(param, prm.Value)
+	for key, prm := range ds.Params {
+
+		switch prm.Input {
+		case cp.IN:
+			param = append(param, sql.Named(key, prm.Value))
+		case cp.OUT:
+			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value}))
+		case cp.INOUT:
+			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value, In: true}))
+			//param = append(param, sql.Out{Dest: prm.Value, In: true})
+		}
 	}
 	return param
 }
@@ -78,7 +87,11 @@ func (ds *DataSet) ExecTransact() (sql.Result, error) {
 	return ds.tx.Exec(ds.Sql.Text(), ds.GetParams()...)
 }
 func (ds *DataSet) ExecDirect() (sql.Result, error) {
-	return ds.Connection.Db.Exec(ds.Sql.Text(), ds.GetParams()...)
+	stmt, err := ds.Connection.Db.Prepare(ds.Sql.Text())
+	if err != nil {
+		// handle the error
+	}
+	return stmt.Exec(ds.GetParams()...)
 }
 func (ds *DataSet) scan(list *sql.Rows) {
 	columntypes, _ := list.ColumnTypes()
@@ -116,11 +129,37 @@ func (ds *DataSet) scan(list *sql.Rows) {
 		ds.rows = append(ds.rows, row)
 	}
 }
-func (ds *DataSet) ParamByName(paramName string, paramValue any) *DataSet {
 
-	ds.param[paramName] = cp.Parameter{Value: paramValue}
+func (ds *DataSet) SetInputParam(paramName string, paramValue any) *DataSet {
+
+	ds.Params[paramName] = cp.Param{Value: paramValue, Input: cp.IN}
 
 	return ds
+}
+
+func (ds *DataSet) SetOutputParam(paramName string, tipo interface{}) *DataSet {
+
+	switch tipo.(type) {
+	case int, int8, int16, int32, int64:
+		tipoValor := int64(0)
+		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+	case float32:
+		tipoValor := float32(0)
+		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+	case float64:
+		tipoValor := float64(0)
+		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+	case string:
+		tipoValor := ""
+		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+	default:
+		tipoValor := float64(0)
+		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+	}
+	return ds
+}
+func (ds *DataSet) ParamByName(paramName string) cp.Param {
+	return ds.Params[paramName]
 }
 func (ds *DataSet) FieldByName(fieldName string) cp.Field {
 	field := strings.ToUpper(fieldName)
@@ -234,7 +273,7 @@ func GetDataSet(pconn *conn.Conn) *DataSet {
 		Connection: pconn,
 		index:      0,
 		Recno:      0,
-		param:      make(map[string]cp.Parameter),
+		Params:     make(cp.Params),
 	}
 	return ds
 }

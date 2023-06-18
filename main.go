@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
+	log "github.com/aoticombr/golang/Logger"
 	ora "github.com/aoticombr/golang/connection"
 	ds "github.com/aoticombr/golang/dataset"
 )
@@ -12,74 +15,55 @@ type ContasPagar struct {
 	Cdcontaspagar int64
 	Historico     string
 	Dtaconta      time.Time
-	Valor         float64
+	Valor         float32
+}
+
+type any struct {
+	// Defina os campos necessários para o tipo `any`
+}
+
+type value interface {
+	GetData() interface{} // Exemplo de um método na interface `value`
+}
+
+type component struct {
+	Value value
+	// Defina outros campos necessários para o componente
 }
 
 func main() {
-	//logLevel := flag.String("log", "ERROR", "Logging level")
-	//flag.Parse()
-	//logger, _ := log.NewLogger(*logLevel, os.Stdout, "[DEVRAIZ]")
-	// save.GetLog().SaveLog("aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa")
-	// save.GetLog().SaveLog("bbbb")
-	// save.GetLog().SaveLog("ccc")
-	// logger.Info("Download", "Download", "Download", "Download", "Download", "Download", "Download")
-	// logger.Info("Descompactar o arquivo")
-	// logger.Info("ler o arquivo")
-	// logger.Fatal("erro ao ler o arquivo")
-	// logger.Debug("Debug================")
-	// logger.Warning("Warning================")
-	// logger.Fatal("Fatal================")
+	executablePath, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	appRoot := filepath.Dir(executablePath)
+	logDir := appRoot //
+	fmt.Println(logDir)
+	logger, _ := log.NewLogger("ERROR", os.Stdout, "[DEVRAIZ]", logDir)
+
+	logger.Warning("Warning================")
+	//logger.Fatal("Fatal================")
 	conn, _ := ora.GetConn(ora.ORA)
 	defer conn.Disconnect()
-	q := ds.GetDataSet(conn)
-	q.Sql.Add("SELECT cdcontaspagar, historico, dtaconta, valor FROM CONTASPAGAR where rownum <= 10")
-	q.Open()
-	q.First()
-	// fmt.Println("q.Eof():", q.Eof())
-	// for !q.Eof() {
-	// 	fmt.Println(
-	// 		q.FieldByName("cdcontaspagar").AsInt64(),
-	// 		q.FieldByName("historico").AsString(),
-	// 		q.FieldByName("dtaconta").AsDateTime(),
-	// 		q.FieldByName("valor").AsFloat64(),
-	// 	)
-	// 	q.Next()
-	// }
-	//var contas []ContasPagar
-	results, err := q.RowInStruck(ContasPagar{})
-	if err != nil {
-		fmt.Println("Erro ao executar a consulta:", err)
-		return
-	}
-	fmt.Println("results:", results)
-	for _, result := range results {
-		contasPagar, ok := result.(ContasPagar) // Faz a conversão para o tipo correto
 
-		if !ok {
-			fmt.Println("Erro ao converter resultado para ContasPagar")
-			continue
+	q2 := ds.GetDataSet(conn)
+	q2.Sql.
+		Add("INSERT INTO NEXUS.MARCAS").
+		Add("(MARCAS,ATIVO)").
+		Add("VALUES").
+		Add("(:MARCAS,:ATIVO)").
+		Add("RETURNING CDMARCAS INTO :CDMARCAS")
+
+	q2.SetInputParam("MARCAS", "XXX")
+	q2.SetInputParam("ATIVO", "S")
+	q2.SetOutputParam("CDMARCAS", int64(0))
+	for i := 0; i < 288; i++ {
+		_, err := q2.ExecDirect()
+		if err != nil {
+			fmt.Println("i:", i, "erro:", err)
 		}
-
-		fmt.Println("Cdcontaspagar:", contasPagar.Cdcontaspagar)
-		fmt.Println("Historico:", contasPagar.Historico)
-		fmt.Println("Dtaconta:", contasPagar.Dtaconta)
-		fmt.Println("Valor:", contasPagar.Valor)
-
-		fmt.Println("----------------------")
+		//time.Sleep(1 * time.Second)
+		fmt.Println("CDMARCAS GetData:", q2.ParamByName("CDMARCAS").GetData())
 	}
-	// for _, result := range results {
-	// 	conta := result.(*ContasPagar)
-	// 	fmt.Println(*conta)
-	// }
-
-	// executablePath, err := os.Executable()
-	// if err != nil {
-	// 	// Lidar com o erro, se necessário
-	// }
-	// appRoot := filepath.Dir(executablePath)
-	// logDir := appRoot //
-	// fmt.Println(logDir)
-	// logger, _ := log.NewLogger("INFO", os.Stdout, "[DEVRAIZ]", logDir)
-	// logger.Info("ler o arquivo")
 
 }
