@@ -17,8 +17,9 @@ func (v Variant) AsValue() any {
 }
 
 func (v Variant) AsString() string {
-
 	switch val := v.Value.(type) {
+	case nil:
+		return ""
 	case time.Time:
 		layout := "02/01/2006 15:04:05"
 		formattedTime := val.Format(layout)
@@ -26,8 +27,9 @@ func (v Variant) AsString() string {
 			formattedTime = formattedTime[:10]
 		}
 		return formattedTime
-	case nil:
-		return ""
+	case int, int8, int16, int32, int64:
+		intValue := strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
+		return intValue
 	case string:
 		return val
 	default:
@@ -35,7 +37,6 @@ func (v Variant) AsString() string {
 		log.Printf("unable to convert data type to string. Type: %v", t)
 		return ""
 	}
-
 }
 
 func (v Variant) AsInt() int {
@@ -178,4 +179,12 @@ func (v Variant) AsDateTime() time.Time {
 		return data
 	}
 
+}
+
+func IsPointer(value interface{}) bool {
+	// Obtenha o tipo da variável
+	t := reflect.TypeOf(value)
+
+	// Verifique se o tipo é um ponteiro
+	return t.Kind() == reflect.Ptr
 }

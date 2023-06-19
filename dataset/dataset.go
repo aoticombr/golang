@@ -34,11 +34,11 @@ func (ds *DataSet) GetParams() []any {
 
 		switch prm.Input {
 		case cp.IN:
-			param = append(param, sql.Named(key, prm.Value))
+			param = append(param, sql.Named(key, prm.Value.Value))
 		case cp.OUT:
-			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value}))
+			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value.Value}))
 		case cp.INOUT:
-			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value, In: true}))
+			param = append(param, sql.Named(key, sql.Out{Dest: prm.Value.Value, In: true}))
 			//param = append(param, sql.Out{Dest: prm.Value, In: true})
 		}
 	}
@@ -133,7 +133,7 @@ func (ds *DataSet) scan(list *sql.Rows) {
 
 func (ds *DataSet) SetInputParam(paramName string, paramValue any) *DataSet {
 
-	ds.Params[paramName] = cp.Param{Value: paramValue, Input: cp.IN}
+	ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: paramValue}, Input: cp.IN}
 
 	return ds
 }
@@ -143,19 +143,19 @@ func (ds *DataSet) SetOutputParam(paramName string, tipo interface{}) *DataSet {
 	switch tipo.(type) {
 	case int, int8, int16, int32, int64:
 		tipoValor := int64(0)
-		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+		ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: &tipoValor}, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
 	case float32:
 		tipoValor := float32(0)
-		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+		ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: &tipoValor}, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
 	case float64:
 		tipoValor := float64(0)
-		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+		ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: &tipoValor}, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
 	case string:
 		tipoValor := ""
-		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+		ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: &tipoValor}, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
 	default:
 		tipoValor := float64(0)
-		ds.Params[paramName] = cp.Param{Value: &tipoValor, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
+		ds.Params[paramName] = cp.Param{Value: cp.Variant{Value: &tipoValor}, Tipo: reflect.TypeOf(tipoValor), Input: cp.INOUT}
 	}
 	return ds
 }

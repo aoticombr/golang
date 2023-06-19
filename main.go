@@ -57,21 +57,14 @@ func main() {
 	q2.SetInputParam("MARCAS", "XXX")
 	q2.SetInputParam("ATIVO", "S")
 	q2.SetOutputParam("CDMARCAS", int64(0))
-	for i := 0; i < 288; i++ {
+	for i := 0; i < 2; i++ {
 		_, err := q2.ExecDirect()
 		if err != nil {
 			fmt.Println("i:", i, "erro:", err)
 		}
 		//time.Sleep(1 * time.Second)
-		fmt.Println("CDMARCAS GetData:", q2.ParamByName("CDMARCAS").GetData())
-	}
-	for i := 0; i < 288; i++ {
-		_, err := q2.ExecDirect()
-		if err != nil {
-			fmt.Println("i:", i, "erro:", err)
-		}
-		//time.Sleep(1 * time.Second)
-		fmt.Println("CDMARCAS GetData:", q2.ParamByName("CDMARCAS").GetData())
+		fmt.Println("CDMARCAS GetData int64:", q2.ParamByName("CDMARCAS").AsInt64())
+		fmt.Println("CDMARCAS GetData string:", q2.ParamByName("CDMARCAS").AsString())
 	}
 
 }
