@@ -3,6 +3,7 @@ package component
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -22,14 +23,14 @@ type Param struct {
 	Tipo  reflect.Type
 }
 
+func (p Param) SetValue(value any) {
+	p.Value.Value = value
+}
+
 func (p Param) asValue() Variant {
-	//tp := reflect.TypeOf(p.Value.Value)
-	//	fmt.Println("Param.TypeOf", tp)
 	if IsPointer(p.Value.Value) {
 		fmt.Println("IsPointer")
 		a := reflect.ValueOf(p.Value.Value).Elem().Interface()
-		tp := reflect.TypeOf(a)
-		fmt.Println("Param.TypeOf", tp)
 		return Variant{Value: a}
 	} else {
 		fmt.Println("not IsPointer")
@@ -71,5 +72,17 @@ func (p Param) AsDateTime() time.Time {
 }
 
 type Params map[string]Param
+
+func ConvertToInsertStatement(params Params) (string, string) {
+	var columns []string
+	var values []string
+	for key, _ := range params {
+		columns = append(columns, key)
+		values = append(values, ":"+key)
+	}
+	columnsStr := strings.Join(columns, ", ")
+	valuesStr := strings.Join(values, ", ")
+	return columnsStr, valuesStr
+}
 
 //type Params map[string]Param

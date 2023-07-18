@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/aoticombr/golang/Logger"
+	cp "github.com/aoticombr/golang/component"
 	ora "github.com/aoticombr/golang/connection"
 	ds "github.com/aoticombr/golang/dataset"
 )
@@ -65,6 +66,22 @@ func main() {
 		//time.Sleep(1 * time.Second)
 		fmt.Println("CDMARCAS GetData int64:", q2.ParamByName("CDMARCAS").AsInt64())
 		fmt.Println("CDMARCAS GetData string:", q2.ParamByName("CDMARCAS").AsString())
+	}
+	cl1, cl2 := cp.ConvertToInsertStatement(q2.Params)
+	fmt.Println(cl1)
+	fmt.Println(cl2)
+
+	q3 := ds.GetDataSet(conn)
+	q3.Sql.
+		Add("SELECT CDMARCAS, MARCAS,ATIVO FROM NEXUS.MARCAS WHERE ATIVO = :ATIVO and Rownum <= 5")
+
+	//q3.SetInputParam("MARCAS", "XXX")
+	q3.SetInputParam("ATIVO", "S")
+	q3.Open()
+	for !q3.Eof() {
+		fmt.Println("CDMARCASCDMARCAS GetData int64:", q3.FieldByName("CDMARCAS").AsInt64())
+		fmt.Println("MARCAS GetData string:", q3.FieldByName("MARCAS").AsString())
+		q3.Next()
 	}
 
 }
