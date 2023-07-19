@@ -45,7 +45,7 @@ func main() {
 		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
 		return
 	}
-	cp.Request.AddContentBin("file2", "12087033_898785803548607_2614616143038690718_o.jpg", fileContent)
+	cp.Request.AddContentBin("file2", "Mickey_Mouse.png", fileContent)
 
 	cp.Request.Header.AddExtraField("testexx", "testexx")
 	cp.Request.Header.AddExtraField("testexx1", "testexx1")
