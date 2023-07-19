@@ -33,7 +33,7 @@ func main() {
 	t := comp.NewStrings().Add("xxxxxyyyy").Add("eeeeee")
 	cp.Request.AddContentText("txt1", t)
 	cp.Request.AddContentBin("file1", "file1.txt", []byte("teste"))
-	file, err := os.Open("12087033_898785803548607_2614616143038690718_o.jpg") // Substitua pelo caminho real do arquivo que deseja enviar
+	file, err := os.Open("Mickey_Mouse.png") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)
 		return
