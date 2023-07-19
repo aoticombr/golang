@@ -124,7 +124,18 @@ func (H THttp) Send() (*Response, error) {
 		}
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, strings.NewReader(formData.Encode()))
 	case CT_BINARY:
-		panic("CT_BINARY não implementado")
+		fileBuffer := &bytes.Buffer{}
+		fileBuffer.Reset()
+		if H.Request.ItensContentBin != nil {
+			for _, v := range H.Request.ItensContentBin {
+				_, err := fileBuffer.Write(v.Value)
+				if err != nil {
+					fmt.Println("Erro ao copiar os dados para o buffer:", err)
+					return nil, fmt.Errorf("Erro ao copiar os dados para o buffer:", v.FileName, err)
+				}
+			}
+		}
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, fileBuffer)
 	}
 
 	if err != nil {
