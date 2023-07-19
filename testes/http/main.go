@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	comp "github.com/aoticombr/golang/component"
 	http "github.com/aoticombr/golang/http"
@@ -28,12 +30,26 @@ func main() {
 
 	cp.Request.AddFormField("teste", "teste")
 	cp.Request.AddFormField("teste2", "teste2")
-	cp.Request.AddContentBin([]byte("teste"))
+	t := comp.NewStrings().Add("xxxxxyyyy").Add("eeeeee")
+	cp.Request.AddContentText("txt1", t)
+	cp.Request.AddContentBin("file1", "file1.txt", []byte("teste"))
+	file, err := os.Open("12087033_898785803548607_2614616143038690718_o.jpg") // Substitua pelo caminho real do arquivo que deseja enviar
+	if err != nil {
+		fmt.Println("Erro ao abrir o arquivo:", err)
+		return
+	}
+	defer file.Close()
+	// Ler o conteúdo do arquivo como um slice de bytes
+	fileContent, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
+		return
+	}
+	cp.Request.AddContentBin("file2", "12087033_898785803548607_2614616143038690718_o.jpg", fileContent)
+
 	cp.Request.Header.AddExtraField("testexx", "testexx")
 	cp.Request.Header.AddExtraField("testexx1", "testexx1")
 	cp.Request.AddSubmitFile("teste", "application/json", []byte("teste"))
-	t := comp.NewStrings().Add("xxxxxyyyy")
-	cp.Request.AddContentText(t)
 
 	cp.Request.Body = []byte(`{
 		"user":"admin@aoti.com.br",

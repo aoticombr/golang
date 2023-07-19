@@ -12,9 +12,41 @@ type Header struct {
 	ContentEncoding string
 	ContentVersion  string
 	ContentLocation string
+	ExtraFields     Fields
+}
 
-	ItensFormField   ListContentFormField
-	ItensSubmitFile  ListContentFile
-	ItensContentText ListContentText
-	ItensContentBin  ListContentBinary
+func (H *Header) AddExtraField(fieldName string, fieldValue string) {
+	if fieldName == "Accept" {
+		H.Accept = fieldValue
+	} else if fieldName == "Accept-Charset" {
+		H.AcceptCharset = fieldValue
+	} else if fieldName == "Accept-Encoding" {
+		H.AcceptEncoding = fieldValue
+	} else if fieldName == "Accept-Language" {
+		H.AcceptLanguage = fieldValue
+	} else if fieldName == "Authorization" {
+		H.Authorization = fieldValue
+	} else if fieldName == "Charset" {
+		H.Charset = fieldValue
+	} else if fieldName == "Content-Type" {
+		H.ContentType = fieldValue
+	} else if fieldName == "Content-Length" {
+		H.ContentLength = fieldValue
+	} else if fieldName == "Content-Encoding" {
+		H.ContentEncoding = fieldValue
+	} else if fieldName == "Content-Version" {
+		H.ContentVersion = fieldValue
+	} else if fieldName == "Content-Location" {
+		H.ContentLocation = fieldValue
+	} else {
+		H.ExtraFields.Add(fieldName, fieldValue)
+	}
+}
+
+func NewHeader() *Header {
+	H := &Header{
+		Accept:      "*/*",
+		ExtraFields: NewFields(),
+	}
+	return H
 }

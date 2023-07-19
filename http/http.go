@@ -3,17 +3,17 @@ package http
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type THttp struct {
-	req *http.Request
-
+	req               *http.Request
 	Request           *Request
-	Response          []byte
-	ContentType       TContentType
 	Metodo            TMethod
-	Charset           string
 	AuthorizationType AuthorizationType
 	Authorization     string
 	Password          string
@@ -55,9 +55,12 @@ func (H THttp) CompletHeader() {
 	if H.Request.Header.ContentLocation != "" {
 		H.req.Header.Set("Content-Location", H.Request.Header.ContentLocation)
 	}
-	if H.Request.Header.ItensFormField != nil {
-		for _, v := range H.Request.Header.ItensFormField {
-			H.req.Form.Add(v.FieldName, v.FieldValue)
+
+	if H.Request.Header.ExtraFields != nil {
+		for k, v := range H.Request.Header.ExtraFields {
+			for _, v2 := range v {
+				H.req.Header.Add(k, v2)
+			}
 		}
 	}
 
@@ -78,33 +81,81 @@ func (H THttp) CompletAutorization() {
 	}
 }
 
-func (H THttp) Send() error {
+func (H THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
 	client := &http.Client{}
-	H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, bytes.NewReader(H.Response))
+
+	switch GetContentTypeFromString(H.Request.Header.ContentType) {
+	case CT_NONE:
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, nil)
+	case CT_TEXT, CT_JAVASCRIPT, CT_JSON, CT_HTML, CT_XML:
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, bytes.NewReader(H.Request.Body))
+	case CT_MULTIPART_FORM_DATA:
+		var requestBody bytes.Buffer
+		multipartWriter := multipart.NewWriter(&requestBody)
+		defer multipartWriter.Close()
+		if H.Request.ItensContentText != nil {
+			for _, v := range H.Request.ItensContentText {
+				multipartWriter.WriteField(v.Name, v.Value.Text())
+			}
+		}
+		if H.Request.ItensContentBin != nil {
+			for _, v := range H.Request.ItensContentBin {
+				fileWriter, err := multipartWriter.CreateFormFile(v.Name, v.FileName)
+				if err != nil {
+					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+				}
+				_, err = fileWriter.Write(v.Value)
+				if err != nil {
+					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+				}
+			}
+		}
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, &requestBody)
+		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
+		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
+	case CT_X_WWW_FORM_URLENCODED:
+		formData := url.Values{}
+		if H.Request.ItensFormField != nil {
+			for _, v := range H.Request.ItensFormField {
+				formData.Add(v.FieldName, v.FieldValue)
+			}
+		}
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, strings.NewReader(formData.Encode()))
+	case CT_BINARY:
+		panic("CT_BINARY não implementado")
+	}
+
 	if err != nil {
-		return fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+		return nil, fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
 	}
 	H.CompletHeader()
 	H.CompletAutorization()
-
 	resp, err = client.Do(H.req)
-	defer resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("Erro ao fazer a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
-	}
 
-	return nil
+	if err != nil {
+		return nil, fmt.Errorf("Erro ao fazer a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+	}
+	defer resp.Body.Close()
+	// Ler a resposta (opcional)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Erro ao ler body : %s\n", err)
+	}
+	RES := &Response{
+		StatusCode:    resp.StatusCode,
+		StatusMessage: resp.Status,
+		Body:          body,
+		Header:        resp.Header,
+	}
+	return RES, nil
 }
 
 func NewHttp() *THttp {
+	fmt.Println("NewHttp")
 	ht := &THttp{
-		Request: &Request{
-			Header: &Header{
-				Accept: "*/*",
-			},
-		},
+		Request:           NewRequest(),
 		Metodo:            M_GET,
 		AuthorizationType: AutoDetect,
 	}

@@ -24,3 +24,6 @@ func (s *Strings) Count() int {
 func (s *Strings) Text() string {
 	return strings.Join(s.itens, " ")
 }
+func NewStrings() *Strings {
+	return &Strings{}
+}

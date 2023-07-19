@@ -1,22 +1,25 @@
 package http
 
-import ST "github.com/aoticombr/golang/component"
-
-type TContentType int
-
-const (
-	CT_NENHUM                TContentType = 0
-	CT_TEXT                  TContentType = 1
-	CT_JAVASCRIPT            TContentType = 2
-	CT_JSON                  TContentType = 3
-	CT_HTML                  TContentType = 4
-	CT_XML                   TContentType = 5
-	CT_MULTIPART_FORM_DATA   TContentType = 6
-	CT_X_WWW_FORM_URLENCODED TContentType = 7
-	CT_BINARY                TContentType = 8
+import (
+	"fmt"
+	"strings"
 )
 
-func GetContentTypeStr(value TContentType) string {
+type ContentType int
+
+const (
+	CT_NONE                  ContentType = 0
+	CT_TEXT                  ContentType = 1
+	CT_JAVASCRIPT            ContentType = 2
+	CT_JSON                  ContentType = 3
+	CT_HTML                  ContentType = 4
+	CT_XML                   ContentType = 5
+	CT_MULTIPART_FORM_DATA   ContentType = 6
+	CT_X_WWW_FORM_URLENCODED ContentType = 7
+	CT_BINARY                ContentType = 8
+)
+
+func GeContentTypeStr(value ContentType) string {
 
 	switch value {
 	case CT_TEXT:
@@ -40,24 +43,29 @@ func GetContentTypeStr(value TContentType) string {
 	}
 }
 
+func GetContentTypeFromString(str string) ContentType {
+	fmt.Printf("GetContentTypeFromString: '%s'", strings.ToLower(str))
+	switch strings.ToLower(str) {
+	case "text/plain":
+		return CT_TEXT
+	case "application/javascript":
+		return CT_JAVASCRIPT
+	case "application/json":
+		return CT_JSON
+	case "text/html":
+		return CT_HTML
+	case "application/xml":
+		return CT_XML
+	case "multipart/form-data":
+		return CT_MULTIPART_FORM_DATA
+	case "application/x-www-form-urlencoded":
+		return CT_X_WWW_FORM_URLENCODED
+	case "application/octet-stream":
+		return CT_BINARY
+	default:
+		return CT_NONE
+	}
+}
+
 type Content interface {
 }
-type ContentFormField struct {
-	FieldName  string
-	FieldValue string
-}
-type ContentFile struct {
-	FieldName   string
-	Content     []byte
-	ContentType string
-}
-type ContentText struct {
-	Value ST.Strings
-}
-type ContentBinary struct {
-	Value []byte
-}
-type ListContentBinary []ContentBinary
-type ListContentText []ContentText
-type ListContentFile []ContentFile
-type ListContentFormField []ContentFormField
