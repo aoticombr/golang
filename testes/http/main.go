@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	comp "github.com/aoticombr/golang/component"
 	http "github.com/aoticombr/golang/http"
 )
 
@@ -10,14 +11,43 @@ func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
 	cp.Url = "http://127.0.0.1:3003/signin"
+
 	cp.Metodo = http.M_POST
+	//cp.Request.Header.ContentType = "application/json"
+	cp.Request.Header.ContentType = "multipart/form-data"
+	cp.Request.Header.Accept = "*/*"
+	cp.Request.Header.AcceptCharset = "utf-8"
+	cp.Request.Header.AcceptEncoding = "gzip, deflate, br"
+	cp.Request.Header.AcceptLanguage = "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
+	cp.Request.Header.Authorization = "Bearer teste"
+	cp.Request.Header.Charset = "utf-8"
+	cp.Request.Header.ContentLocation = "http://"
+	//cp.Request.Header.ContentLength = "0"
+	//cp.Request.Header.ContentEncoding = "gzip"
+	//cp.Request.Header.ContentVersion = "1.0"
+
+	cp.Request.AddFormField("teste", "teste")
+	cp.Request.AddFormField("teste2", "teste2")
+	cp.Request.AddContentBin([]byte("teste"))
+	cp.Request.Header.AddExtraField("testexx", "testexx")
+	cp.Request.Header.AddExtraField("testexx1", "testexx1")
+	cp.Request.AddSubmitFile("teste", "application/json", []byte("teste"))
+	t := comp.NewStrings().Add("xxxxxyyyy")
+	cp.Request.AddContentText(t)
+
+	cp.Request.Body = []byte(`{
+		"user":"admin@aoti.com.br",
+		"pass":"master"
+	}	`)
 	resp, err := cp.Send()
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Code:", resp.StatusCode)
 	fmt.Println("Msg:", resp.StatusMessage)
-	fmt.Println("Header:", resp.Header)
+	for k, v := range resp.Header {
+		fmt.Println("Header:", k, v)
+	}
 	fmt.Println("Body:", resp.Body)
 	fmt.Println("Body string:", string(resp.Body))
 }
