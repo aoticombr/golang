@@ -17,8 +17,7 @@ func main() {
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "application/octet-stream"
 	cp.Request.Header.Accept = "*/*"
-	cp.Request.AddContentBin("file1", "file1.txt", []byte("teste"))
-	file, err := os.Open("Mickey_Mouse.png") // Substitua pelo caminho real do arquivo que deseja enviar
+	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)
 		return
@@ -30,7 +29,7 @@ func main() {
 		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
 		return
 	}
-	cp.Request.AddContentBin("file2", "Mickey_Mouse.png", fileContent)
+	cp.Request.AddContentBin("file2", "image.png", fileContent)
 
 	cp.Request.Body = []byte(`{
 		"user":"admin@aoti.com.br",

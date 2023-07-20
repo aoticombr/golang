@@ -21,7 +21,6 @@ func main() {
 	cp.Request.Header.Accept = "*/*"
 	t := comp.NewStrings().Add("xxxxxyyyy").Add("eeeeee")
 	cp.Request.AddContentText("txt1", t)
-	cp.Request.AddContentBin("file1", "file1.txt", []byte("teste"))
 	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)
