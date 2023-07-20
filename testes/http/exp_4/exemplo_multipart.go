@@ -1,4 +1,4 @@
-package main
+package exp_4
 
 import (
 	"fmt"
