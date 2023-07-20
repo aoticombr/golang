@@ -18,10 +18,54 @@ type THttp struct {
 	Authorization     string
 	Password          string
 	UserName          string
-	Url               string
+
+	url    string
+	path   string
+	host   string
+	scheme string
+
+	Params Params
 }
 
-func (H THttp) CompletHeader() {
+func (H *THttp) SetUrl(value string) error {
+
+	u, err := url.Parse(value)
+	if err != nil {
+		return err
+	}
+	for key, values := range u.Query() {
+		H.Params.Add(key, strings.Join(values, ", "))
+	}
+	H.scheme = u.Scheme
+
+	H.host = u.Host
+	H.path = u.Path
+	H.url = fmt.Sprintf("%s://%s%s", u.Scheme, u.Host, u.Path)
+	return nil
+}
+func (H *THttp) GetFullURL() (string, error) {
+
+	return fmt.Sprintf("%s://%s", H.scheme, H.host), nil
+}
+
+func (H *THttp) GetUrl() string {
+
+	queryParams := url.Values{}
+
+	baseURL := H.url
+	fmt.Println("baseURL:", baseURL)
+	for key, value := range H.Params {
+		queryParams.Add(key, value)
+	}
+	if strings.Contains(baseURL, "?") {
+		baseURL += "&" + queryParams.Encode()
+	} else {
+		baseURL += "?" + queryParams.Encode()
+	}
+	return baseURL
+}
+
+func (H *THttp) CompletHeader() {
 	if H.Request.Header.Accept != "" {
 		H.req.Header.Set("Accept", H.Request.Header.Accept)
 	}
@@ -65,7 +109,7 @@ func (H THttp) CompletHeader() {
 	}
 
 }
-func (H THttp) CompletAutorization() {
+func (H *THttp) CompletAutorization() {
 	if H.AuthorizationType == AutoDetect {
 		if H.Authorization != "" {
 			H.AuthorizationType = Bearer
@@ -81,17 +125,20 @@ func (H THttp) CompletAutorization() {
 	}
 }
 
-func (H THttp) Send() (*Response, error) {
+func (H *THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
 	client := &http.Client{}
 
 	switch GetContentTypeFromString(H.Request.Header.ContentType) {
 	case CT_NONE:
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, nil)
+		fmt.Println("CT_NONE:")
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
 	case CT_TEXT, CT_JAVASCRIPT, CT_JSON, CT_HTML, CT_XML:
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, bytes.NewReader(H.Request.Body))
+		fmt.Println("CT_TEXT:")
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
 	case CT_MULTIPART_FORM_DATA:
+		fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := multipart.NewWriter(&requestBody)
 		defer multipartWriter.Close()
@@ -112,18 +159,20 @@ func (H THttp) Send() (*Response, error) {
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, &requestBody)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
 	case CT_X_WWW_FORM_URLENCODED:
+		fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
 				formData.Add(v.FieldName, v.FieldValue)
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, strings.NewReader(formData.Encode()))
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
 	case CT_BINARY:
+		fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
@@ -135,7 +184,7 @@ func (H THttp) Send() (*Response, error) {
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.Url, fileBuffer)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), fileBuffer)
 	}
 
 	if err != nil {
@@ -167,6 +216,7 @@ func NewHttp() *THttp {
 	fmt.Println("NewHttp")
 	ht := &THttp{
 		Request:           NewRequest(),
+		Params:            NewParams(),
 		Metodo:            M_GET,
 		AuthorizationType: AutoDetect,
 	}

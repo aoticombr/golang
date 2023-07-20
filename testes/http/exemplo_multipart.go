@@ -12,22 +12,17 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.Url = "http://127.0.0.1:3003/signin"
+	cp.SetUrl("http://127.0.0.1:3003/signin?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
 
 	cp.Metodo = http.M_POST
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "multipart/form-data"
+	cp.Request.Header.ContentType = "multipart/form-data"
 	cp.Request.Header.Accept = "*/*"
-	cp.Request.Header.AcceptCharset = "utf-8"
-	cp.Request.Header.AcceptEncoding = "gzip, deflate, br"
-	cp.Request.Header.AcceptLanguage = "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
-	cp.Request.Header.Authorization = "Bearer teste"
-	cp.Request.Header.Charset = "utf-8"
-	cp.Request.Header.ContentLocation = "http://"
 	t := comp.NewStrings().Add("xxxxxyyyy").Add("eeeeee")
 	cp.Request.AddContentText("txt1", t)
 	cp.Request.AddContentBin("file1", "file1.txt", []byte("teste"))
-	file, err := os.Open("Mickey_Mouse.png") // Substitua pelo caminho real do arquivo que deseja enviar
+	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)
 		return
@@ -39,7 +34,7 @@ func main() {
 		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
 		return
 	}
-	cp.Request.AddContentBin("file2", "Mickey_Mouse.png", fileContent)
+	cp.Request.AddContentBin("file2", "image.png", fileContent)
 
 	resp, err := cp.Send()
 	if err != nil {

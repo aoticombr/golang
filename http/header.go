@@ -15,7 +15,7 @@ type Header struct {
 	ExtraFields     Fields
 }
 
-func (H *Header) AddExtraField(fieldName string, fieldValue string) {
+func (H *Header) AddField(fieldName string, fieldValue string) {
 	if fieldName == "Accept" {
 		H.Accept = fieldValue
 	} else if fieldName == "Accept-Charset" {

@@ -12,8 +12,14 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.Url = "http://127.0.0.1:3003/signin"
-
+	cp.SetUrl("http://127.0.0.1:3003/signin?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
+	fmt.Println("URL 2:", cp.GetUrl())
+	cp.Params.Add("teste", "teste")
+	cp.Params.Set("aaaa", "999999")
+	for k, v := range cp.Params {
+		fmt.Println("Params:", k, v)
+	}
+	fmt.Println("URL 2:", cp.GetUrl())
 	cp.Metodo = http.M_POST
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "multipart/form-data"
@@ -47,9 +53,8 @@ func main() {
 	}
 	cp.Request.AddContentBin("file2", "Mickey_Mouse.png", fileContent)
 
-	cp.Request.Header.AddExtraField("testexx", "testexx")
-	cp.Request.Header.AddExtraField("testexx1", "testexx1")
-	cp.Request.AddSubmitFile("teste", "application/json", []byte("teste"))
+	cp.Request.Header.AddField("testexx", "testexx")
+	cp.Request.Header.AddField("testexx1", "testexx1")
 
 	cp.Request.Body = []byte(`{
 		"user":"admin@aoti.com.br",
