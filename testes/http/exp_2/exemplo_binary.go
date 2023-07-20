@@ -11,12 +11,11 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.SetUrl("http://127.0.0.1:3003/signin?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
+	cp.SetUrl("http://127.0.0.1:3003/signin")
 
 	cp.Metodo = http.M_POST
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "application/octet-stream"
-	cp.Request.Header.Accept = "*/*"
 	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)

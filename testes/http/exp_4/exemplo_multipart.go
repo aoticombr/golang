@@ -15,10 +15,7 @@ func main() {
 	cp.SetUrl("http://127.0.0.1:3003/signin?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
 
 	cp.Metodo = http.M_POST
-	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "multipart/form-data"
-	cp.Request.Header.ContentType = "multipart/form-data"
-	cp.Request.Header.Accept = "*/*"
 	t := comp.NewStrings().Add("xxxxxyyyy").Add("eeeeee")
 	cp.Request.AddContentText("txt1", t)
 	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar

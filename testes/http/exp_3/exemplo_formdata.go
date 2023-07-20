@@ -9,18 +9,11 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.SetUrl("http://127.0.0.1:3003/signin?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
+	cp.SetUrl("http://127.0.0.1:3003/signin")
 
 	cp.Metodo = http.M_POST
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "application/x-www-form-urlencoded"
-	cp.Request.Header.Accept = "*/*"
-	cp.Request.Header.AcceptCharset = "utf-8"
-	cp.Request.Header.AcceptEncoding = "gzip, deflate, br"
-	cp.Request.Header.AcceptLanguage = "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7"
-	cp.Request.Header.Authorization = "Bearer teste"
-	cp.Request.Header.Charset = "utf-8"
-	cp.Request.Header.ContentLocation = "http://"
 
 	cp.Request.AddFormField("teste", "teste")
 	cp.Request.AddFormField("teste2", "teste2")
