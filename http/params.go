@@ -15,5 +15,5 @@ func (P Params) Clear() {
 	P = make(map[string]string)
 }
 func NewParams() Params {
-	return make(map[string]string)
+	return make(Params)
 }

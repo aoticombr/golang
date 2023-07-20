@@ -20,7 +20,6 @@ func main() {
 
 	cp.Request.Header.AddField("testexx", "testexx")
 	cp.Request.Header.AddField("testexx1", "testexx1")
-	cp.Request.AddSubmitFile("teste", "application/json", []byte("teste"))
 
 	resp, err := cp.Send()
 	if err != nil {
