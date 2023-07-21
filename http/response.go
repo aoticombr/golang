@@ -12,3 +12,6 @@ type Response struct {
 func (R *Response) GetStatusCodeStr() string {
 	return fmt.Sprintf("%d", R.StatusCode)
 }
+func (R *Response) GetStatusMessage() string {
+	return R.StatusMessage
+}
