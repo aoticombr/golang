@@ -31,6 +31,9 @@ func (H *THttp) SetMetodoStr(value string) error {
 	H.Metodo, _ = GetStrFromMethod(value)
 	return nil
 }
+func (H *THttp) GetMetodoStr() string {
+	return GetMethodStr(H.Metodo)
+}
 
 func (H *THttp) SetUrl(value string) error {
 	u, err := url.Parse(value)
