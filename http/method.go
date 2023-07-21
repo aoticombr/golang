@@ -1,5 +1,7 @@
 package http
 
+import "fmt"
+
 type TMethod int
 
 const (
@@ -34,5 +36,28 @@ func GetMethodStr(value TMethod) string {
 	default:
 		return ""
 
+	}
+}
+
+func GetStrFromMethod(methodStr string) (TMethod, error) {
+	switch methodStr {
+	case "GET":
+		return M_GET, nil
+	case "POST":
+		return M_POST, nil
+	case "PUT":
+		return M_PUT, nil
+	case "DELETE":
+		return M_DELETE, nil
+	case "HEAD":
+		return M_HEAD, nil
+	case "OPTIONS":
+		return M_OPTIONS, nil
+	case "TRACE":
+		return M_TRACE, nil
+	case "PATCH":
+		return M_PATCH, nil
+	default:
+		return -1, fmt.Errorf("Método HTTP não reconhecido!")
 	}
 }

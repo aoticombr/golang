@@ -27,6 +27,11 @@ type THttp struct {
 	Params            Params
 }
 
+func (H *THttp) SetMetodoStr(value string) error {
+	H.Metodo, _ = GetStrFromMethod(value)
+	return nil
+}
+
 func (H *THttp) SetUrl(value string) error {
 	u, err := url.Parse(value)
 	if err != nil {
