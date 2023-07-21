@@ -34,6 +34,20 @@ func (H *THttp) SetMetodoStr(value string) error {
 func (H *THttp) GetMetodoStr() string {
 	return GetMethodStr(H.Metodo)
 }
+func (H *THttp) SetMetodo(value TMethod) error {
+	H.Metodo = value
+	return nil
+}
+func (H *THttp) GetMetodo() TMethod {
+	return H.Metodo
+}
+func (H *THttp) SetAuthorizationType(value AuthorizationType) error {
+	H.AuthorizationType = value
+	return nil
+}
+func (H *THttp) GetAuthorizationType() AuthorizationType {
+	return H.AuthorizationType
+}
 
 func (H *THttp) SetUrl(value string) error {
 	u, err := url.Parse(value)
