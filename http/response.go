@@ -15,3 +15,9 @@ func (R *Response) GetStatusCodeStr() string {
 func (R *Response) GetStatusMessage() string {
 	return R.StatusMessage
 }
+func (R *Response) GetBody() []byte {
+	return R.Body
+}
+func (R *Response) GetHeader() map[string][]string {
+	return R.Header
+}
