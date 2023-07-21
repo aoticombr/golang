@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type THttp struct {
@@ -25,6 +26,7 @@ type THttp struct {
 	Path              string // /product
 	Varibles          Varibles
 	Params            Params
+	Timeout           int
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
@@ -154,7 +156,9 @@ func (H *THttp) CompletAutorization() error {
 func (H *THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Duration(H.Timeout) * time.Second,
+	}
 	uri := H.GetUrl()
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
 		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
@@ -248,6 +252,7 @@ func NewHttp() *THttp {
 		Params:            NewParams(),
 		Varibles:          NewVaribles(),
 		Metodo:            M_GET,
+		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
 	}
 	return ht
