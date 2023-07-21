@@ -26,7 +26,7 @@ type THttp struct {
 	Path              string // /product
 	Varibles          Varibles
 	Params            Params
-	Timeout           int
+	Timeout           int //segundos
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
