@@ -26,6 +26,7 @@ type THttp struct {
 	Path              string // /product
 	Varibles          Varibles
 	Params            Params
+	Proxy             *proxy
 	Timeout           int //segundos
 }
 
@@ -156,8 +157,11 @@ func (H *THttp) CompletAutorization() error {
 func (H *THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
+	var trans *http.Transport
+	trans, _ = H.Proxy.GetTransport()
 	client := &http.Client{
-		Timeout: time.Duration(H.Timeout) * time.Second,
+		Transport: trans,
+		Timeout:   time.Duration(H.Timeout) * time.Second,
 	}
 	uri := H.GetUrl()
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
@@ -251,6 +255,7 @@ func NewHttp() *THttp {
 		Request:           NewRequest(),
 		Params:            NewParams(),
 		Varibles:          NewVaribles(),
+		Proxy:             NewProxy(),
 		Metodo:            M_GET,
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
