@@ -15,6 +15,7 @@ type THttp struct {
 	req               *http.Request
 	Auth2             auth2
 	Request           *Request
+	Response          *Response
 	Metodo            TMethod
 	AuthorizationType AuthorizationType
 	Authorization     string
@@ -155,6 +156,7 @@ func (H *THttp) CompletAutorization() error {
 	return nil
 }
 func (H *THttp) Send() (*Response, error) {
+	H.Response = nil
 	var err error
 	var resp *http.Response
 	var trans *http.Transport
@@ -246,6 +248,7 @@ func (H *THttp) Send() (*Response, error) {
 		Body:          body,
 		Header:        resp.Header,
 	}
+	H.Response = RES
 	return RES, nil
 }
 
