@@ -1,5 +1,7 @@
 package http
 
+import "strings"
+
 type Header struct {
 	Accept          string
 	AcceptCharset   string
@@ -41,6 +43,31 @@ func (H *Header) AddField(fieldName string, fieldValue string) {
 	} else {
 		H.ExtraFields.Add(fieldName, fieldValue)
 	}
+}
+func (H *Header) GetAllFields() map[string]string {
+	headerValues := make(map[string]string)
+
+	headerValues["Accept"] = H.Accept
+	headerValues["Accept-Charset"] = H.AcceptCharset
+	headerValues["Accept-Encoding"] = H.AcceptEncoding
+	headerValues["Accept-Language"] = H.AcceptLanguage
+	headerValues["Authorization"] = H.Authorization
+	headerValues["Charset"] = H.Charset
+	headerValues["Content-Type"] = H.ContentType
+	headerValues["Content-Length"] = H.ContentLength
+	headerValues["Content-Encoding"] = H.ContentEncoding
+	headerValues["Content-Version"] = H.ContentVersion
+	headerValues["Content-Location"] = H.ContentLocation
+
+	// Adicionando os campos extras do cabeçalho (ExtraFields)
+	for fieldName, fieldValues := range H.ExtraFields {
+		if len(fieldValues) > 0 {
+			// Se houver múltiplos valores para o campo, concatenamos eles em uma única string
+			headerValues[fieldName] = strings.Join(fieldValues, "; ")
+		}
+	}
+
+	return headerValues
 }
 
 func NewHeader() *Header {
