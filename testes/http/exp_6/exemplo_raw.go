@@ -9,16 +9,16 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.SetUrl("https://api.xolvis.com/pm/oauth/token")
-	cp.UserName = "thiago.silva@nbsi.com.br"
-	cp.Password = "Paymail01@"
+	cp.SetUrl("http://127.0.0.1:3003/signin")
+	///	cp.UserName = "thiago.silva@nbsi.com.br"
+	///	cp.Password = "Paymail01@"
 	cp.Metodo = http.M_POST
-	cp.Request.Header.ContentType = "application/x-www-form-urlencoded"
+	cp.Request.Header.ContentType = "application/json"
 	cp.Request.AddFormField("grant_type", "client_credentials")
-	// cp.Request.Body = []byte(`{
-	// 	"user":"admin@aoti.com.br",
-	// 	"pass":"master"
-	// }	`)
+	cp.Request.Body = []byte(`{
+	 	"user":"admin@aoti.com.br",
+	 	"pass":"master"
+	 }	`)
 	resp, err := cp.Send()
 	if err != nil {
 		fmt.Println(err)
