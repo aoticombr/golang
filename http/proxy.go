@@ -29,7 +29,7 @@ func (p *proxy) GetTransport() (*http.Transport, error) {
 		// Create a new proxy URL with authentication
 		proxy, err := url.Parse(p.getUrl())
 		if err != nil {
-			return nil, fmt.Errorf("Error parsing proxy URL:", err)
+			return nil, fmt.Errorf("Error parsing proxy URL:" + err.Error())
 		}
 		transport := &http.Transport{
 			Proxy: http.ProxyURL(proxy),
