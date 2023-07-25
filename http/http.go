@@ -256,6 +256,7 @@ func NewHttp() *THttp {
 
 	ht := &THttp{
 		Request:           NewRequest(),
+		Response:          NewResponse(),
 		Params:            NewParams(),
 		Varibles:          NewVaribles(),
 		Proxy:             NewProxy(),
