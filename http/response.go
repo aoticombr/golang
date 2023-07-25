@@ -37,3 +37,6 @@ func (R *Response) GetAllFields() map[string]string {
 
 	return headerValues
 }
+func NewResponse() *Response {
+	return &Response{}
+}

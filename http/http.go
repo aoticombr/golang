@@ -156,7 +156,7 @@ func (H *THttp) CompletAutorization() error {
 	return nil
 }
 func (H *THttp) Send() (*Response, error) {
-	H.Response = nil
+	H.Response = NewResponse()
 	var err error
 	var resp *http.Response
 	var trans *http.Transport
