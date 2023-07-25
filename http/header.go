@@ -47,17 +47,39 @@ func (H *Header) AddField(fieldName string, fieldValue string) {
 func (H *Header) GetAllFields() map[string]string {
 	headerValues := make(map[string]string)
 
-	headerValues["Accept"] = H.Accept
-	headerValues["Accept-Charset"] = H.AcceptCharset
-	headerValues["Accept-Encoding"] = H.AcceptEncoding
-	headerValues["Accept-Language"] = H.AcceptLanguage
-	headerValues["Authorization"] = H.Authorization
-	headerValues["Charset"] = H.Charset
-	headerValues["Content-Type"] = H.ContentType
-	headerValues["Content-Length"] = H.ContentLength
-	headerValues["Content-Encoding"] = H.ContentEncoding
-	headerValues["Content-Version"] = H.ContentVersion
-	headerValues["Content-Location"] = H.ContentLocation
+	if H.Accept != "" {
+		headerValues["Accept"] = H.Accept
+	}
+	if H.Accept != "" {
+		headerValues["Accept-Charset"] = H.AcceptCharset
+	}
+	if H.Accept != "" {
+		headerValues["Accept-Encoding"] = H.AcceptEncoding
+	}
+	if H.Accept != "" {
+		headerValues["Accept-Language"] = H.AcceptLanguage
+	}
+	if H.Accept != "" {
+		headerValues["Authorization"] = H.Authorization
+	}
+	if H.Accept != "" {
+		headerValues["Charset"] = H.Charset
+	}
+	if H.Accept != "" {
+		headerValues["Content-Type"] = H.ContentType
+	}
+	if H.Accept != "" {
+		headerValues["Content-Length"] = H.ContentLength
+	}
+	if H.Accept != "" {
+		headerValues["Content-Encoding"] = H.ContentEncoding
+	}
+	if H.Accept != "" {
+		headerValues["Content-Version"] = H.ContentVersion
+	}
+	if H.Accept != "" {
+		headerValues["Content-Location"] = H.ContentLocation
+	}
 
 	// Adicionando os campos extras do cabeçalho (ExtraFields)
 	for fieldName, fieldValues := range H.ExtraFields {
