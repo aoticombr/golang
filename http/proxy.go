@@ -41,6 +41,8 @@ func (p *proxy) GetTransport() (*http.Transport, error) {
 }
 
 func NewProxy() *proxy {
-	px := &proxy{}
+	px := &proxy{
+		Ativo: false,
+	}
 	return px
 }

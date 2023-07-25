@@ -160,10 +160,17 @@ func (H *THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
 	var trans *http.Transport
+	var client *http.Client
 	trans, _ = H.Proxy.GetTransport()
-	client := &http.Client{
-		Transport: trans,
-		Timeout:   time.Duration(H.Timeout) * time.Second,
+	if trans != nil {
+		client = &http.Client{
+			Transport: trans,
+			Timeout:   time.Duration(H.Timeout) * time.Second,
+		}
+	} else {
+		client = &http.Client{
+			Timeout: time.Duration(H.Timeout) * time.Second,
+		}
 	}
 	uri := H.GetUrl()
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
