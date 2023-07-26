@@ -1,35 +1,35 @@
 {
 	"boots": [{
-		"name": "SrvNbsBmwCRG",
+		"name": "servico1",
 		"ativo": true,
 		"schemas": [{
 			"host": "100.0.65.48",
 			"port": 1521,
-			"user": "BMW",
-			"pass": "new",
-			"schema": "BMW",
-			"sid": "BMW",
+			"user": "usuario1",
+			"pass": "senha",
+			"schema": "global",
+			"sid": "ORACLE12",
 			"ativo": true
 		    },
 			{
 				"host": "100.0.65.48",
 				"port": 1521,
-				"user": "BMW",
-				"pass": "new",
-				"schema": "BMW",
-				"sid": "BMW",
+				"user": "usuario2",
+				"pass": "senha",
+				"schema": "sys",
+				"sid": "ORACLE19",
 				"ativo": true
 				}
 		   ]
 	   },{
-			"name": "SrvNissanServiceBook",
+			"name": "servico2",
 			"schemas": [{
 				"host": "100.0.65.224",
 				"port": 1521,
-				"user": "NBSAMA",
+				"user": "system",
 				"pass": "new",
-				"schema": "NBSAMA",
-				"sid": "fab",
+				"schema": "sys",
+				"sid": "XE21C",
 				"ativo": true
 			    }
 	        ]
@@ -49,10 +49,10 @@
 		"schemas": [{
 			"host": "localhost",
 			"port": 1521,
-			"user": "nbsama",
+			"user": "USUARIO3",
 			"pass": "new",
-			"schema": "nbsama",
-			"sid": "fab",
+			"schema": "USUARUI3",
+			"sid": "XXX",
 			"ativo": true
 		}],
 		"ativo": true
