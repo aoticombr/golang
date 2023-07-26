@@ -1,0 +1,38 @@
+{
+	"boots": [{
+		"name": "nome_do_servico",
+		"schemas": [{
+			"host": "localhost",
+			"port": 1521,
+			"user": "nbsama",
+			"pass": "new",
+			"schema": "nbsama",
+			"sid": "fab",
+			"ativo": true
+		}],
+		"ativo": true
+	}],
+	"apis": [{
+		"name": "nome_do_plugin",
+		"protocolo": "http",
+		"host": "localhost",
+		"port": 2997,
+		"gateway": {
+			"protocolo": "http",
+			"host": "100.0.67.188",
+			"port": 2997,
+			"ativo": true
+		},
+		"schemas": [{
+			"host": "localhost",
+			"port": 1521,
+			"user": "nbsama",
+			"pass": "new",
+			"schema": "nbsama",
+			"sid": "fab",
+			"ativo": true
+		}],
+		"ativo": true
+	}],
+	"path" : ""
+}
