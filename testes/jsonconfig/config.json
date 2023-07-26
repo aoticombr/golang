@@ -1,18 +1,41 @@
 {
 	"boots": [{
-		"name": "nome_do_servico",
+		"name": "SrvNbsBmwCRG",
+		"ativo": true,
 		"schemas": [{
-			"host": "localhost",
+			"host": "100.0.65.48",
 			"port": 1521,
-			"user": "nbsama",
+			"user": "BMW",
 			"pass": "new",
-			"schema": "nbsama",
-			"sid": "fab",
+			"schema": "BMW",
+			"sid": "BMW",
 			"ativo": true
-		}],
-		"ativo": true
-	}],
-	"apis": [{
+		    },
+			{
+				"host": "100.0.65.48",
+				"port": 1521,
+				"user": "BMW",
+				"pass": "new",
+				"schema": "BMW",
+				"sid": "BMW",
+				"ativo": true
+				}
+		   ]
+	   },{
+			"name": "SrvNissanServiceBook",
+			"schemas": [{
+				"host": "100.0.65.224",
+				"port": 1521,
+				"user": "NBSAMA",
+				"pass": "new",
+				"schema": "NBSAMA",
+				"sid": "fab",
+				"ativo": true
+			    }
+	        ]
+		
+	    }]
+	,"apis": [{
 		"name": "nome_do_plugin",
 		"protocolo": "http",
 		"host": "localhost",

@@ -16,11 +16,5 @@ func main() {
 			println("Schema ", key, ": ", schema.Schema)
 		}
 	}
-	for key, api := range js.GetConfig().Apis {
-		println("Api ", key, ": ", api.Name)
-		for key, schema := range api.GetSchemas() {
-			println("Schema ", key, ": ", schema.Schema)
-		}
-	}
 
 }
