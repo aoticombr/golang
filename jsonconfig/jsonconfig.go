@@ -57,9 +57,9 @@ func NewJsonConfig() *JsonConfig {
 	return &JsonConfig{}
 }
 
-func NewJsonConfigGlobal(name string) *JsonConfig {
+func NewJsonConfigGlobal() *JsonConfig {
 	if jsonglobal == nil {
-		jsonglobal = &JsonConfig{Name: name}
+		jsonglobal = &JsonConfig{}
 	}
 	return jsonglobal
 }
