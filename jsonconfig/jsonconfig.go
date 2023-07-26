@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 )
 
+var jsonglobal *JsonConfig
+
 type JsonConfig struct {
 	Name   string
 	config *Config
@@ -53,4 +55,11 @@ func (j *JsonConfig) Load() error {
 
 func NewJsonConfig() *JsonConfig {
 	return &JsonConfig{}
+}
+
+func NewJsonConfigGlobal(name string) *JsonConfig {
+	if jsonglobal == nil {
+		jsonglobal = &JsonConfig{Name: name}
+	}
+	return jsonglobal
 }
