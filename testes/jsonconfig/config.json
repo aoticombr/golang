@@ -1,0 +1,61 @@
+{
+	"boots": [{
+		"name": "servico1",
+		"ativo": true,
+		"schemas": [{
+			"host": "100.0.65.48",
+			"port": 1521,
+			"user": "usuario1",
+			"pass": "senha",
+			"schema": "global",
+			"sid": "ORACLE12",
+			"ativo": true
+		    },
+			{
+				"host": "100.0.65.48",
+				"port": 1521,
+				"user": "usuario2",
+				"pass": "senha",
+				"schema": "sys",
+				"sid": "ORACLE19",
+				"ativo": true
+				}
+		   ]
+	   },{
+			"name": "servico2",
+			"schemas": [{
+				"host": "100.0.65.224",
+				"port": 1521,
+				"user": "system",
+				"pass": "new",
+				"schema": "sys",
+				"sid": "XE21C",
+				"ativo": true
+			    }
+	        ]
+		
+	    }]
+	,"apis": [{
+		"name": "nome_do_plugin",
+		"protocolo": "http",
+		"host": "localhost",
+		"port": 2997,
+		"gateway": {
+			"protocolo": "http",
+			"host": "100.0.67.188",
+			"port": 2997,
+			"ativo": true
+		},
+		"schemas": [{
+			"host": "localhost",
+			"port": 1521,
+			"user": "USUARIO3",
+			"pass": "new",
+			"schema": "USUARUI3",
+			"sid": "XXX",
+			"ativo": true
+		}],
+		"ativo": true
+	}],
+	"path" : ""
+}

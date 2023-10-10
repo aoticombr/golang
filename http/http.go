@@ -169,6 +169,10 @@ func (H *THttp) Send() (*Response, error) {
 	var trans *http.Transport
 	var client *http.Client
 	trans, _ = H.Proxy.GetTransport()
+<<<<<<< HEAD
+=======
+	var client *http.Client
+>>>>>>> 427f42a0978753c37aabf91e25721ab2baae8915
 	if trans != nil {
 		client = &http.Client{
 			Transport: trans,
