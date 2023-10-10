@@ -150,10 +150,11 @@ func (H *THttp) CompletAutorization() error {
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
+		fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
 	}
 	//fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
-		//	fmt.Println("passou aqui 3.1")
+		fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
 		H.req.Header.Set("Authorization", "Bearer "+H.Authorization)
 	}
 	//fmt.Println("passou aqui 4")
