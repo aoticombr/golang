@@ -133,6 +133,7 @@ func (H *THttp) CompletHeader() {
 	}
 }
 func (H *THttp) CompletAutorization() error {
+	fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
 		if H.Authorization != "" {
 			H.AuthorizationType = AT_Bearer
@@ -140,17 +141,23 @@ func (H *THttp) CompletAutorization() error {
 			H.AuthorizationType = AT_Basic
 		}
 	}
+	fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
+		fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			return fmt.Errorf("Erro ao obter o token:", err.Error())
 		}
 		H.Authorization = token
 	}
+	fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
+		fmt.Println("passou aqui 3.1")
 		H.req.Header.Set("Authorization", "Bearer "+H.Authorization)
 	}
+	fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
+		fmt.Println("passou aqui 5")
 		H.req.SetBasicAuth(H.UserName, H.Password)
 	}
 	return nil
@@ -209,7 +216,7 @@ func (H *THttp) Send() (*Response, error) {
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
 	case CT_X_WWW_FORM_URLENCODED:
-		//	fmt.Println("CT_X_WWW_FORM_URLENCODED:")
+		fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
