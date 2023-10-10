@@ -19,6 +19,8 @@ type auth2 struct {
 	ClientId     string
 	ClientSecret string
 	Scope        string
+	Resp         *Response
+	Erro         error
 }
 
 func (A *auth2) GetToken() (string, error) {
@@ -39,9 +41,11 @@ func (A *auth2) GetToken() (string, error) {
 	}
 
 	Resp, err := HttpCliente.Send()
-	//fmt.Println("passou aqui a, 1")
+	A.Resp = Resp
+	A.Erro = err
+	fmt.Println("passou aqui a, 1")
 	if err != nil {
-		//fmt.Println("passou aqui a, 2", err)
+		fmt.Println("passou aqui a, 2", err)
 		return "", err
 	}
 	//	fmt.Println("passou aqui a, 3", Resp.StatusCode)
