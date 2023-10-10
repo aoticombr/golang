@@ -148,6 +148,7 @@ func (H *THttp) CompletAutorization() error {
 		if err != nil {
 			return fmt.Errorf("Erro ao obter o token:", err.Error())
 		}
+		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
 	}
 	//fmt.Println("passou aqui 3")
