@@ -9,17 +9,15 @@ import (
 func main() {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.SetUrl("http://localhost:3003")
+	cp.SetUrl("https://...")
 	cp.AuthorizationType = http.AT_Auth2
-	cp.Auth2.ClientId = "...."
-	cp.Auth2.ClientSecret = "...."
-	cp.Auth2.AuthUrl = "https://...."
-	cp.Metodo = http.M_POST
+	cp.Auth2.ClientId = ".."
+	cp.Auth2.ClientSecret = "....."
+	cp.Auth2.AuthUrl = "...."
+	cp.Metodo = http.M_GET
 	cp.Request.Header.ContentType = "application/json"
-	cp.Request.Body = []byte(`{
-	 	"user":"admin@aoti.com.br",
-	 	"pass":"master"
-	 }	`)
+	cp.Request.Header.AddField("X-Personal-ID", "...")
+	cp.Request.Body = []byte(``)
 	resp, err := cp.Send()
 	if err != nil {
 		fmt.Println(err)
