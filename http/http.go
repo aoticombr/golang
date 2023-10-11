@@ -146,6 +146,7 @@ func (H *THttp) CompletAutorization() error {
 		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
+			fmt.Println("Erro ao obter o token:", err.Error())
 			return fmt.Errorf("Erro ao obter o token:", err.Error())
 		}
 		H.AuthorizationType = AT_Bearer
@@ -155,7 +156,15 @@ func (H *THttp) CompletAutorization() error {
 	//fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
 		fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
-		H.req.Header.Set("Authorization", "Bearer "+H.Authorization)
+		inputStringLower := strings.ToLower(H.Authorization)
+		searchTermLower := "bearer"
+
+		if strings.Contains(inputStringLower, searchTermLower) {
+			H.req.Header.Set("Authorization", H.Authorization)
+		} else {
+			H.req.Header.Set("Authorization", "Bearer "+H.Authorization)
+		}
+
 	}
 	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
