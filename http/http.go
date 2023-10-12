@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -13,7 +14,7 @@ import (
 
 type THttp struct {
 	req               *http.Request
-	Auth2             auth2
+	Auth2             *auth2
 	Request           *Request
 	Response          *Response
 	Metodo            TMethod
@@ -75,15 +76,19 @@ func (H *THttp) GetUrl() string {
 	queryParams := url.Values{}
 
 	baseURL := H.url
-	//fmt.Println("baseURL:", baseURL)
+	fmt.Println("baseURL:", baseURL)
 	for key, value := range H.Params {
 		queryParams.Add(key, value)
 	}
-	if strings.Contains(baseURL, "?") {
-		baseURL += "&" + queryParams.Encode()
-	} else {
-		baseURL += "?" + queryParams.Encode()
+	fmt.Println("baseURL:", baseURL)
+	if queryParams.Encode() != "" {
+		if strings.Contains(baseURL, "?") {
+			baseURL += "&" + queryParams.Encode()
+		} else {
+			baseURL += "?" + queryParams.Encode()
+		}
 	}
+	fmt.Println("baseURL:", baseURL)
 	for key, value := range H.Varibles {
 		baseURL = strings.ReplaceAll(baseURL, "{{"+key+"}}", value)
 	}
@@ -133,8 +138,9 @@ func (H *THttp) CompletHeader() {
 	}
 }
 func (H *THttp) CompletAutorization() error {
-	//fmt.Println("passou aqui 1")
+	fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
+		fmt.Println("passou aqui 1.1")
 		if H.Authorization != "" {
 			H.AuthorizationType = AT_Bearer
 		} else if H.UserName != "" && H.Password != "" {
@@ -143,7 +149,7 @@ func (H *THttp) CompletAutorization() error {
 	}
 	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
-		//	fmt.Println("passou aqui 2.1")
+		fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			fmt.Println("Erro ao obter o token:", err.Error())
@@ -168,12 +174,20 @@ func (H *THttp) CompletAutorization() error {
 	}
 	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
-		//fmt.Println("passou aqui 5")
+		fmt.Println("passou aqui 5", H.UserName, H.Password)
+		auth := H.UserName + ":" + H.Password
+		basic := base64.StdEncoding.EncodeToString([]byte(auth))
+		H.Request.Header.Authorization = "Basic " + basic
+
+		fmt.Println("H.Request.Header.Authorization:", H.Request.Header.Authorization)
 		H.req.SetBasicAuth(H.UserName, H.Password)
 	}
 	return nil
 }
 func (H *THttp) Send() (*Response, error) {
+	fmt.Println("==================")
+	fmt.Println("Send..")
+	fmt.Println("------------------")
 	H.Response = NewResponse()
 	var err error
 	var resp *http.Response
@@ -196,13 +210,13 @@ func (H *THttp) Send() (*Response, error) {
 	}
 	switch GetContentTypeFromString(H.Request.Header.ContentType) {
 	case CT_NONE:
-		//	fmt.Println("CT_NONE:")
+		fmt.Println("CT_NONE:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
 	case CT_TEXT, CT_JAVASCRIPT, CT_JSON, CT_HTML, CT_XML:
-		//	fmt.Println("CT_TEXT:")
+		fmt.Println("CT_TEXT:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
 	case CT_MULTIPART_FORM_DATA:
-		//fmt.Println("CT_MULTIPART_FORM_DATA:")
+		fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := multipart.NewWriter(&requestBody)
 		defer multipartWriter.Close()
@@ -227,7 +241,7 @@ func (H *THttp) Send() (*Response, error) {
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
 	case CT_X_WWW_FORM_URLENCODED:
-		//fmt.Println("CT_X_WWW_FORM_URLENCODED:")
+		fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
@@ -236,7 +250,7 @@ func (H *THttp) Send() (*Response, error) {
 		}
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
 	case CT_BINARY:
-		//fmt.Println("CT_BINARY:")
+		fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
@@ -254,8 +268,9 @@ func (H *THttp) Send() (*Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
 	}
-	H.CompletHeader()
+
 	H.CompletAutorization()
+	H.CompletHeader()
 	resp, err = client.Do(H.req)
 
 	if err != nil {
@@ -285,6 +300,7 @@ func NewHttp() *THttp {
 		Params:            NewParams(),
 		Varibles:          NewVaribles(),
 		Proxy:             NewProxy(),
+		Auth2:             NewAuth2(),
 		Metodo:            M_GET,
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,

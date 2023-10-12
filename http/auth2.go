@@ -14,11 +14,19 @@ type TokenResponse struct {
 	Scope            string `json:"scope"`
 }
 
+type ClientAuth int
+
+const (
+	CA_SendBasicAuthHeader ClientAuth = iota
+	CA_SendClientCredentialsInBody
+)
+
 type auth2 struct {
 	AuthUrl      string
 	ClientId     string
 	ClientSecret string
 	Scope        string
+	ClientAuth   ClientAuth
 	Resp         *Response
 	Erro         error
 }
@@ -27,23 +35,37 @@ func (A *auth2) GetToken() (string, error) {
 	var (
 		TokenResponse TokenResponse
 	)
-	HttpCliente := NewHttp()
-	HttpCliente.Request.Header.ContentType = "application/x-www-form-urlencoded"
-	HttpCliente.Request.Header.Accept = "*/*"
-	HttpCliente.AuthorizationType = AT_Basic
-	HttpCliente.UserName = A.ClientId
-	HttpCliente.Password = A.ClientSecret
-	HttpCliente.SetUrl(A.AuthUrl)
-	HttpCliente.Metodo = M_POST
-	HttpCliente.Request.AddFormField("grant_type", "client_credentials")
-	if A.Scope != "" {
-		HttpCliente.Request.AddFormField("scope", A.Scope)
-	}
+	HttpToken := NewHttp()
+	HttpToken.Request.Header.ContentType = "application/x-www-form-urlencoded"
+	HttpToken.Request.Header.Accept = "*/*"
 
-	Resp, err := HttpCliente.Send()
+	HttpToken.SetUrl(A.AuthUrl)
+	fmt.Println("A.AuthUrl...", A.AuthUrl)
+	HttpToken.Metodo = M_POST
+
+	if A.ClientAuth == CA_SendBasicAuthHeader {
+		HttpToken.AuthorizationType = AT_Basic
+		HttpToken.UserName = A.ClientId
+		HttpToken.Password = A.ClientSecret
+		HttpToken.Request.AddFormField("grant_type", "client_credentials")
+		if A.Scope != "" {
+			HttpToken.Request.AddFormField("scope", A.Scope)
+		}
+	} else {
+		HttpToken.AuthorizationType = AT_Nenhum
+		HttpToken.Request.AddFormField("grant_type", "client_credentials")
+		HttpToken.Request.AddFormField("client_id", A.ClientId)
+		HttpToken.Request.AddFormField("client_secret", A.ClientSecret)
+		if A.Scope != "" {
+			HttpToken.Request.AddFormField("scope", A.Scope)
+		}
+	}
+	fmt.Println("send.. auth...token 1")
+	Resp, err := HttpToken.Send()
+
 	A.Resp = Resp
 	A.Erro = err
-	fmt.Println("passou aqui a, 1")
+	fmt.Println("passou aqui a, 1", Resp)
 	if err != nil {
 		fmt.Println("passou aqui a, 2", err)
 		return "", err
@@ -59,8 +81,20 @@ func (A *auth2) GetToken() (string, error) {
 		if err != nil {
 			return "", err
 		}
+		fmt.Println("send.. auth...token 2")
 		return TokenResponse.AccessToken, nil
 
 	}
+
 	return "", nil
+}
+
+func NewAuth2() *auth2 {
+	return &auth2{
+		AuthUrl:      "",
+		ClientId:     "",
+		ClientSecret: "",
+		Scope:        "",
+		ClientAuth:   CA_SendBasicAuthHeader,
+	}
 }

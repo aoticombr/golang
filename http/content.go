@@ -44,7 +44,7 @@ func GeContentTypeStr(value ContentType) string {
 }
 
 func GetContentTypeFromString(str string) ContentType {
-	fmt.Printf("GetContentTypeFromString: '%s'", strings.ToLower(str))
+	fmt.Println("GetContentTypeFromString: '%s'", strings.ToLower(str))
 	switch strings.ToLower(str) {
 	case "text/plain":
 		return CT_TEXT
