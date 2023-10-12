@@ -76,11 +76,11 @@ func (H *THttp) GetUrl() string {
 	queryParams := url.Values{}
 
 	baseURL := H.url
-	fmt.Println("baseURL:", baseURL)
+	//fmt.Println("baseURL:", baseURL)
 	for key, value := range H.Params {
 		queryParams.Add(key, value)
 	}
-	fmt.Println("baseURL:", baseURL)
+	//	fmt.Println("baseURL:", baseURL)
 	if queryParams.Encode() != "" {
 		if strings.Contains(baseURL, "?") {
 			baseURL += "&" + queryParams.Encode()
@@ -88,7 +88,7 @@ func (H *THttp) GetUrl() string {
 			baseURL += "?" + queryParams.Encode()
 		}
 	}
-	fmt.Println("baseURL:", baseURL)
+	//fmt.Println("baseURL:", baseURL)
 	for key, value := range H.Varibles {
 		baseURL = strings.ReplaceAll(baseURL, "{{"+key+"}}", value)
 	}
@@ -138,9 +138,9 @@ func (H *THttp) CompletHeader() {
 	}
 }
 func (H *THttp) CompletAutorization() error {
-	fmt.Println("passou aqui 1")
+	//fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
-		fmt.Println("passou aqui 1.1")
+		//fmt.Println("passou aqui 1.1")
 		if H.Authorization != "" {
 			H.AuthorizationType = AT_Bearer
 		} else if H.UserName != "" && H.Password != "" {
@@ -149,19 +149,19 @@ func (H *THttp) CompletAutorization() error {
 	}
 	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
-		fmt.Println("passou aqui 2.1")
+		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
-			fmt.Println("Erro ao obter o token:", err.Error())
+			//fmt.Println("Erro ao obter o token:", err.Error())
 			return fmt.Errorf("Erro ao obter o token:", err.Error())
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
-		fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
+		//Sfmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
 	}
 	//fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
-		fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
+		//fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
 		inputStringLower := strings.ToLower(H.Authorization)
 		searchTermLower := "bearer"
 
@@ -174,20 +174,20 @@ func (H *THttp) CompletAutorization() error {
 	}
 	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
-		fmt.Println("passou aqui 5", H.UserName, H.Password)
+		//fmt.Println("passou aqui 5", H.UserName, H.Password)
 		auth := H.UserName + ":" + H.Password
 		basic := base64.StdEncoding.EncodeToString([]byte(auth))
 		H.Request.Header.Authorization = "Basic " + basic
 
-		fmt.Println("H.Request.Header.Authorization:", H.Request.Header.Authorization)
+		//fmt.Println("H.Request.Header.Authorization:", H.Request.Header.Authorization)
 		H.req.SetBasicAuth(H.UserName, H.Password)
 	}
 	return nil
 }
 func (H *THttp) Send() (*Response, error) {
-	fmt.Println("==================")
-	fmt.Println("Send..")
-	fmt.Println("------------------")
+	//fmt.Println("==================")
+	//fmt.Println("Send..")
+	//fmt.Println("------------------")
 	H.Response = NewResponse()
 	var err error
 	var resp *http.Response
@@ -210,13 +210,13 @@ func (H *THttp) Send() (*Response, error) {
 	}
 	switch GetContentTypeFromString(H.Request.Header.ContentType) {
 	case CT_NONE:
-		fmt.Println("CT_NONE:")
+		//fmt.Println("CT_NONE:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
 	case CT_TEXT, CT_JAVASCRIPT, CT_JSON, CT_HTML, CT_XML:
-		fmt.Println("CT_TEXT:")
+		//fmt.Println("CT_TEXT:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
 	case CT_MULTIPART_FORM_DATA:
-		fmt.Println("CT_MULTIPART_FORM_DATA:")
+		//fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := multipart.NewWriter(&requestBody)
 		defer multipartWriter.Close()
@@ -241,7 +241,7 @@ func (H *THttp) Send() (*Response, error) {
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
 	case CT_X_WWW_FORM_URLENCODED:
-		fmt.Println("CT_X_WWW_FORM_URLENCODED:")
+		//fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
@@ -250,14 +250,14 @@ func (H *THttp) Send() (*Response, error) {
 		}
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
 	case CT_BINARY:
-		fmt.Println("CT_BINARY:")
+		//fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
 			for _, v := range H.Request.ItensContentBin {
 				_, err := fileBuffer.Write(v.Value)
 				if err != nil {
-					fmt.Println("Erro ao copiar os dados para o buffer:", err)
+					//fmt.Println("Erro ao copiar os dados para o buffer:", err)
 					return nil, fmt.Errorf("Erro ao copiar os dados para o buffer:", v.FileName, err)
 				}
 			}
