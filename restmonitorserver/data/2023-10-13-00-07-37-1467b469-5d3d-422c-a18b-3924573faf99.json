@@ -1,0 +1,37 @@
+{
+  "body": {
+    "grant_type": "client_credentials",
+    "scope": "xxxx"
+  },
+  "headers": {
+    "Accept": [
+      "*/*"
+    ],
+    "Accept-Encoding": [
+      "gzip, deflate, br"
+    ],
+    "Authorization": [
+      "Basic ZGRkZGRkZGRkOmZmZmZmZmY="
+    ],
+    "Cache-Control": [
+      "no-cache"
+    ],
+    "Connection": [
+      "keep-alive"
+    ],
+    "Content-Length": [
+      "40"
+    ],
+    "Content-Type": [
+      "application/x-www-form-urlencoded"
+    ],
+    "Postman-Token": [
+      "7693b74c-3cb0-4b98-83a4-fb0b4ee6b43c"
+    ],
+    "User-Agent": [
+      "PostmanRuntime/7.33.0"
+    ]
+  },
+  "method": "POST",
+  "url": "/token"
+}

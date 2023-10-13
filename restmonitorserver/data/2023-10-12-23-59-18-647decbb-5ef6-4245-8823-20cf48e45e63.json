@@ -1,0 +1,27 @@
+{
+  "body": {
+    "client_id": "ddddddddd",
+    "client_secret": "fffffff",
+    "grant_type": "client_credentials",
+    "scope": "downloaded"
+  },
+  "headers": {
+    "Accept": [
+      "*/*"
+    ],
+    "Accept-Encoding": [
+      "gzip"
+    ],
+    "Content-Length": [
+      "88"
+    ],
+    "Content-Type": [
+      "application/x-www-form-urlencoded"
+    ],
+    "User-Agent": [
+      "Go-http-client/1.1"
+    ]
+  },
+  "method": "POST",
+  "url": "/token"
+}
