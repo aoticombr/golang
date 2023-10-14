@@ -21,6 +21,7 @@ func TestAuth2_tipo1(t *testing.T) {
 	cp1.Auth2.Scope = "downloaded"
 	cp1.Auth2.ClientAuth = http.CA_SendBasicAuthHeader
 	cp1.Metodo = http.M_GET
+	cp1.EncType = http.ET_RAW
 	cp1.Request.Header.ContentType = "application/json"
 	///cp1.Request.Header.AddField("X-Personal-ID", "...")
 	cp1.Request.Body = []byte(``)
@@ -48,6 +49,7 @@ func TestAuth2_tipo2(t *testing.T) {
 	cp2.Auth2.Scope = "downloaded"
 	cp2.Auth2.ClientAuth = http.CA_SendClientCredentialsInBody
 	cp2.Metodo = http.M_GET
+	cp2.EncType = http.ET_RAW
 	cp2.Request.Header.ContentType = "application/json"
 	///cp2.Request.Header.AddField("X-Personal-ID", "...")
 	cp2.Request.Body = []byte(``)
@@ -71,6 +73,7 @@ func TestSendRaw(t *testing.T) {
 	///	cp.UserName = "thiago.silva@nbsi.com.br"
 	///	cp.Password = "Paymail01@"
 	cp.Metodo = http.M_POST
+	cp.EncType = http.ET_RAW
 	cp.Request.Header.ContentType = "application/json"
 	cp.Request.AddFormField("grant_type", "client_credentials")
 	cp.Request.Body = []byte(`{
@@ -93,6 +96,7 @@ func TestSendRaw(t *testing.T) {
 func TestSendParam(t *testing.T) {
 	//	fmt.Println("Teste")
 	cp := http.NewHttp()
+	cp.EncType = http.ET_RAW
 	cp.SetUrl("http://127.0.0.1:3003/{{id}}")
 	//	fmt.Println("Path:", cp.Path)
 	//	fmt.Println("URL:", cp.GetUrl())
@@ -119,6 +123,7 @@ func TestMultPart(t *testing.T) {
 	cp.SetUrl("http://localhost:3003/?eee=1111&aaaa=222222&bbbbbbbbb=3333333")
 
 	cp.Metodo = http.M_POST
+	cp.EncType = http.ET_FORM_DATA
 	cp.Request.Header.ContentType = "multipart/form-data"
 	a := component.NewStrings()
 	a.Add("xxxxxyyyy")
@@ -157,6 +162,7 @@ func TestFormData(t *testing.T) {
 	cp.SetUrl("http://localhost:3003")
 
 	cp.Metodo = http.M_POST
+	cp.EncType = http.ET_X_WWW_FORM_URLENCODED
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "application/x-www-form-urlencoded"
 
@@ -185,6 +191,7 @@ func TestBinary(t *testing.T) {
 	cp.SetUrl("http://127.0.0.1:3003/")
 
 	cp.Metodo = http.M_POST
+	cp.EncType = http.ET_BINARY
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "application/octet-stream"
 	file, err := os.Open("image.png") // Substitua pelo caminho real do arquivo que deseja enviar

@@ -29,6 +29,7 @@ type THttp struct {
 	Varibles          Varibles
 	Params            Params
 	Proxy             *proxy
+	EncType           EncType
 	Timeout           int //segundos
 }
 
@@ -208,14 +209,12 @@ func (H *THttp) Send() (*Response, error) {
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
 		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
 	}
-	switch GetContentTypeFromString(H.Request.Header.ContentType) {
-	case CT_NONE:
+	switch H.EncType {
+	case ET_NONE:
 		//fmt.Println("CT_NONE:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
-	case CT_TEXT, CT_JAVASCRIPT, CT_JSON, CT_HTML, CT_XML:
-		//fmt.Println("CT_TEXT:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
-	case CT_MULTIPART_FORM_DATA:
+
+	case ET_FORM_DATA:
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := multipart.NewWriter(&requestBody)
@@ -240,7 +239,7 @@ func (H *THttp) Send() (*Response, error) {
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
-	case CT_X_WWW_FORM_URLENCODED:
+	case ET_X_WWW_FORM_URLENCODED:
 		//fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}
 		if H.Request.ItensFormField != nil {
@@ -249,7 +248,10 @@ func (H *THttp) Send() (*Response, error) {
 			}
 		}
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
-	case CT_BINARY:
+	case ET_RAW:
+		//fmt.Println("CT_TEXT:")
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
+	case ET_BINARY:
 		//fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()

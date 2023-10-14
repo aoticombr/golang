@@ -4,6 +4,16 @@ import (
 	"strings"
 )
 
+type EncType int
+
+const (
+	ET_NONE                  EncType = 0
+	ET_FORM_DATA             EncType = 1
+	ET_X_WWW_FORM_URLENCODED EncType = 2
+	ET_RAW                   EncType = 3
+	ET_BINARY                EncType = 4
+)
+
 type ContentType int
 
 const (
