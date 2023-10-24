@@ -143,18 +143,18 @@ func (H *THttp) completHeader() {
 	}
 }
 func (H *THttp) completAutorization(req *http.Request) error {
-	fmt.Println("passou aqui 1")
+	//	fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
-		fmt.Println("passou aqui 1.1")
+		//	fmt.Println("passou aqui 1.1")
 		if H.Authorization != "" {
 			H.AuthorizationType = AT_Bearer
 		} else if H.UserName != "" && H.Password != "" {
 			H.AuthorizationType = AT_Basic
 		}
 	}
-	fmt.Println("passou aqui 2:>", H.AuthorizationType)
+	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
-		fmt.Println("passou aqui 2.1")
+		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
@@ -162,9 +162,9 @@ func (H *THttp) completAutorization(req *http.Request) error {
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
-		fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
+		//	fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
 	}
-	fmt.Println("passou aqui 3")
+	//	fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
 		//fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
 		inputStringLower := strings.ToLower(H.Authorization)
@@ -177,7 +177,7 @@ func (H *THttp) completAutorization(req *http.Request) error {
 		}
 
 	}
-	fmt.Println("passou aqui 4")
+	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
 		//fmt.Println("passou aqui 5", H.UserName, H.Password)
 		auth := H.UserName + ":" + H.Password
@@ -190,16 +190,16 @@ func (H *THttp) completAutorization(req *http.Request) error {
 	return nil
 }
 func (H *THttp) completAutorizationSocket(req http.Header) error {
-	fmt.Println("passou aqui 1")
+	//	fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
-		fmt.Println("passou aqui 1.1")
+		//	fmt.Println("passou aqui 1.1")
 		if H.Authorization != "" {
 			H.AuthorizationType = AT_Bearer
 		} else if H.UserName != "" && H.Password != "" {
 			H.AuthorizationType = AT_Basic
 		}
 	}
-	fmt.Println("passou aqui 2:>", H.AuthorizationType)
+	//	fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
 		fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
@@ -209,9 +209,9 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
-		fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
+		//fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
 	}
-	fmt.Println("passou aqui 3")
+	//fmt.Println("passou aqui 3")
 	if H.AuthorizationType == AT_Bearer {
 		//fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
 		inputStringLower := strings.ToLower(H.Authorization)
@@ -224,7 +224,7 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 		}
 
 	}
-	fmt.Println("passou aqui 4")
+	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
 		//fmt.Println("passou aqui 5", H.UserName, H.Password)
 		auth := H.UserName + ":" + H.Password
