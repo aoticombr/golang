@@ -10,10 +10,13 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type THttp struct {
 	req               *http.Request
+	ws                *websocket.Conn
 	Auth2             *auth2
 	Request           *Request
 	Response          *Response
@@ -31,6 +34,7 @@ type THttp struct {
 	Proxy             *proxy
 	EncType           EncType
 	Timeout           int //segundos
+	OnSend            IWebsocket
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
@@ -95,7 +99,7 @@ func (H *THttp) GetUrl() string {
 	}
 	return baseURL
 }
-func (H *THttp) CompletHeader() {
+func (H *THttp) completHeader() {
 	if H.Request.Header.Accept != "" {
 		H.req.Header.Set("Accept", H.Request.Header.Accept)
 	}
@@ -138,7 +142,7 @@ func (H *THttp) CompletHeader() {
 		}
 	}
 }
-func (H *THttp) CompletAutorization() error {
+func (H *THttp) completAutorization() error {
 	//fmt.Println("passou aqui 1")
 	if H.AuthorizationType == AT_AutoDetect {
 		//fmt.Println("passou aqui 1.1")
@@ -252,7 +256,7 @@ func (H *THttp) Send() (*Response, error) {
 		//fmt.Println("CT_TEXT:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
-		//fmt.Println("CT_BINARY:")
+		fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
@@ -271,8 +275,8 @@ func (H *THttp) Send() (*Response, error) {
 		return nil, fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
 	}
 
-	H.CompletAutorization()
-	H.CompletHeader()
+	H.completAutorization()
+	H.completHeader()
 	resp, err = client.Do(H.req)
 
 	if err != nil {
@@ -292,6 +296,87 @@ func (H *THttp) Send() (*Response, error) {
 	}
 	H.Response = RES
 	return RES, nil
+}
+func (H *THttp) Conectar() error {
+	var (
+		err     error
+		headers http.Header
+	)
+	if H.Request.Header.Accept != "" {
+		headers.Set("Accept", H.Request.Header.Accept)
+	}
+	if H.Request.Header.AcceptCharset != "" {
+		headers.Set("Accept-Charset", H.Request.Header.AcceptCharset)
+	}
+	if H.Request.Header.AcceptEncoding != "" {
+		headers.Set("Accept-Encoding", H.Request.Header.AcceptEncoding)
+	}
+	if H.Request.Header.AcceptLanguage != "" {
+		headers.Set("Accept-Language", H.Request.Header.AcceptLanguage)
+	}
+	if H.Request.Header.Authorization != "" {
+		headers.Set("Authorization", H.Request.Header.Authorization)
+	}
+	if H.Request.Header.Charset != "" {
+		headers.Set("Charset", H.Request.Header.Charset)
+	}
+	if H.Request.Header.ContentType != "" {
+		headers.Set("Content-Type", H.Request.Header.ContentType)
+	}
+	if H.Request.Header.ContentLength != "" {
+		headers.Set("Content-Length", H.Request.Header.ContentLength)
+	}
+	if H.Request.Header.ContentEncoding != "" {
+		headers.Set("Content-Encoding", H.Request.Header.ContentEncoding)
+	}
+	if H.Request.Header.ContentVersion != "" {
+		headers.Set("Content-Version", H.Request.Header.ContentVersion)
+	}
+	if H.Request.Header.ContentLocation != "" {
+		headers.Set("Content-Location", H.Request.Header.ContentLocation)
+	}
+
+	if H.Request.Header.ExtraFields != nil {
+		for k, v := range H.Request.Header.ExtraFields {
+			for _, v2 := range v {
+				headers.Add(k, v2)
+			}
+		}
+	}
+
+	H.ws, _, err = websocket.DefaultDialer.Dial(H.GetUrl(), headers)
+	if err != nil {
+		return err
+	}
+	go func() {
+		for {
+			if H.OnSend != nil {
+				H.OnSend.read(H.ws.ReadMessage())
+			}
+		}
+	}()
+	return nil
+}
+func (H *THttp) IsConect() bool {
+	if H.ws != nil {
+		return true
+	}
+	return false
+}
+func (H *THttp) Desconectar() error {
+	return H.ws.Close()
+}
+func (H *THttp) EnviarBinario(messageType int, data []byte) error {
+	return H.ws.WriteMessage(messageType, data)
+}
+func (H *THttp) EnviarTexto(messageType int, data string) error {
+	return H.ws.WriteMessage(messageType, []byte(data))
+}
+func (H *THttp) EnviarTextTypeTextMessage(data []byte) error {
+	return H.ws.WriteMessage(websocket.TextMessage, data)
+}
+func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
+	return H.ws.WriteMessage(websocket.BinaryMessage, data)
 }
 
 func NewHttp() *THttp {

@@ -1,8 +1,5 @@
 {
-  "body": {
-    "grant_type": "client_credentials",
-    "scope": "xxxx"
-  },
+  "body": {},
   "headers": {
     "Accept": [
       "*/*"
@@ -11,27 +8,21 @@
       "gzip, deflate, br"
     ],
     "Authorization": [
-      "Basic ZGRkZGRkZGRkOmZmZmZmZmY="
-    ],
-    "Cache-Control": [
-      "no-cache"
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6Inh4eHgiLCJ1c2VyX2lkIjoxMjN9.m5Ym02XDJBGnMaVmCjWzmPvxUHOcrQ5VbxNQH3Dq-8k"
     ],
     "Connection": [
       "keep-alive"
     ],
     "Content-Length": [
-      "40"
-    ],
-    "Content-Type": [
-      "application/x-www-form-urlencoded"
+      "0"
     ],
     "Postman-Token": [
-      "7693b74c-3cb0-4b98-83a4-fb0b4ee6b43c"
+      "99006e92-acf7-42b5-b2a3-ea317469846e"
     ],
     "User-Agent": [
       "PostmanRuntime/7.33.0"
     ]
   },
   "method": "POST",
-  "url": "/token"
+  "url": "/"
 }

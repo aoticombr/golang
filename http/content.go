@@ -12,6 +12,8 @@ const (
 	ET_X_WWW_FORM_URLENCODED EncType = 2
 	ET_RAW                   EncType = 3
 	ET_BINARY                EncType = 4
+	ET_GRAPHQL               EncType = 5
+	ET_WEB_SERVICE           EncType = 6
 )
 
 type ContentType int

@@ -188,7 +188,7 @@ func TestFormData(t *testing.T) {
 func TestBinary(t *testing.T) {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
-	cp.SetUrl("http://127.0.0.1:3003/")
+	cp.SetUrl("http://localhost:3003")
 
 	cp.Metodo = http.M_POST
 	cp.EncType = http.ET_BINARY
@@ -206,12 +206,9 @@ func TestBinary(t *testing.T) {
 		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
 		return
 	}
+	cp.Request.Body = []byte(`{}`)
 	cp.Request.AddContentBin("file2", "image.png", fileContent)
 
-	cp.Request.Body = []byte(`{
-		"user":"admin@aoti.com.br",
-		"pass":"master"
-	}	`)
 	resp, err := cp.Send()
 	if err != nil {
 		fmt.Println(err)
@@ -221,6 +218,6 @@ func TestBinary(t *testing.T) {
 	for k, v := range resp.Header {
 		fmt.Println("Header:", k, v)
 	}
-	fmt.Println("Body:", resp.Body)
-	fmt.Println("Body string:", string(resp.Body))
+	//fmt.Println("Body:", resp.Body)
+	//fmt.Println("Body string:", string(resp.Body))
 }
