@@ -398,9 +398,14 @@ func (H *THttp) Conectar() error {
 	}
 	go func() {
 		for {
-			if H.OnSend != nil {
-				H.OnSend.Read(H.ws.ReadMessage())
+			messageType, p, err := H.ws.ReadMessage()
+			if err != nil {
+				if H.OnSend != nil {
+					go H.OnSend.Read(messageType, p, err)
+				}
+				return
 			}
+
 		}
 	}()
 	return nil
