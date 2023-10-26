@@ -400,10 +400,11 @@ func (H *THttp) Conectar() error {
 		for {
 			messageType, p, err := H.ws.ReadMessage()
 			if err != nil {
-				if H.OnSend != nil {
-					go H.OnSend.Read(messageType, p, err)
-				}
+
 				return
+			}
+			if H.OnSend != nil {
+				go H.OnSend.Read(messageType, p, err)
 			}
 
 		}
