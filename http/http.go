@@ -435,7 +435,7 @@ func (H *THttp) Conectar() error {
 		if err != nil {
 			if H.OnSend != nil {
 				H.OnSend.Error("Erro na conexão: " + err.Error())
-				fmt.Println("Tentando reconectar em 5 segundos...")
+				H.OnSend.Msg("Tentando reconectar em 5 segundos...")
 			} else {
 				fmt.Printf("Erro na conexão: " + err.Error())
 				fmt.Println("Tentando reconectar em 5 segundos...")
