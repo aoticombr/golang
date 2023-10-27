@@ -1,13 +1,11 @@
 #HTTP Package
-1. [Instalação](#THttp Structure)
-2. [Uso](#Fields)
-3. [Contribuição](#contribuição)
-4. [Licença](#licença)
-5. 
-
+1. [THttp Structure](#THttpStructure)
+2. [Fields](#Fields)
+3. [Methods](#Methods)
+   
 The http package provides a set of functions and structures for making HTTP requests and handling WebSocket connections. This package is designed to simplify working with HTTP and WebSocket protocols in your Go applications.
 
-##THttp Structure
+##THttpStructure
 The THttp structure represents an HTTP client that can be used to send HTTP requests and establish WebSocket connections. It includes various fields and methods for configuring and sending requests.
 
 ##Fields
