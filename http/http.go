@@ -391,60 +391,101 @@ func (H *THttp) websocketClient() error {
 		}
 	}
 	dialer := websocket.DefaultDialer
+	var (
+		conn *websocket.Conn
+		//resp *http.Response
+		err  error
+		err2 error
+	)
 
-	for {
-		conn, _, err := dialer.Dial(H.GetUrl(), headers)
-		if err != nil {
-			if H.OnSend != nil {
-				H.OnSend.Error("Erro na conexão: " + err.Error())
-			} else {
-				fmt.Printf("Erro na conexão: %v\n", err)
-			}
-			time.Sleep(5 * time.Second)
-			continue
-		}
-
+	conn, _, err = dialer.Dial(H.GetUrl(), headers)
+	if err != nil {
 		if H.OnSend != nil {
-			H.OnSend.Msg("Conectado ao servidor WebSocket")
+			H.OnSend.Error("Erro na conexão: " + err.Error())
 		} else {
-			fmt.Println("Conectado ao servidor WebSocket")
+			fmt.Printf("Erro na conexão: %v\n", err)
 		}
-
-		for {
-			msgtype, msg, err := conn.ReadMessage()
-			if err != nil {
-				if H.OnSend != nil {
-					H.OnSend.Error("Erro na leitura da mensagem: " + err.Error())
-				} else {
-					fmt.Printf("Erro na leitura da mensagem: %v\n", err)
-				}
-				conn.Close()
-				break
-			}
-
-			if H.OnSend != nil {
-				H.OnSend.Read(msgtype, msg, err)
-			}
+		return fmt.Errorf("Erro na conexão: " + err.Error())
+	} else {
+		if H.OnSend != nil {
+			H.OnSend.Msg("Conectado")
+		} else {
+			fmt.Println("Conectado")
 		}
 	}
+	go func() {
+		for {
+
+			fmt.Println("################", err)
+			if (conn == nil) || (err2 != nil) {
+				if H.OnSend != nil {
+					H.OnSend.Msg("Tentando Reconectar")
+				} else {
+					fmt.Printf("Tentando Reconectar")
+				}
+				conn, _, err = dialer.Dial(H.GetUrl(), headers)
+				if err != nil {
+					if H.OnSend != nil {
+						H.OnSend.Error("Erro na conexão: " + err.Error())
+					} else {
+						fmt.Printf("Erro na conexão: %v\n", err)
+					}
+					time.Sleep(5 * time.Second)
+					continue
+				}
+				if H.OnSend != nil {
+					H.OnSend.Msg("Reconectado")
+				} else {
+					fmt.Printf("Reconectado")
+				}
+			}
+			err2 = nil
+
+			for err2 == nil {
+				//fmt.Println("Conectado ao servidor WebSocket 2", err2)
+				msgtype, msg, err := conn.ReadMessage()
+				if err != nil {
+					if H.OnSend != nil {
+						//	fmt.Printf("Erro na leitura da mensagem: %v\n", err)
+						H.OnSend.Error("Erro na leitura da mensagem: " + err.Error())
+					} else {
+						fmt.Printf("Erro na leitura da mensagem: %v\n", err)
+					}
+					conn.Close()
+					time.Sleep(5 * time.Second)
+					//fmt.Println("Conectado ao servidor WebSocket 4", err)
+					err2 = err
+					//break
+					continue
+				} else {
+					//fmt.Println("Conectado ao servidor WebSocket 3", err2)
+					if H.OnSend != nil {
+						H.OnSend.Read(msgtype, msg, err)
+					}
+				}
+				//fmt.Println("Conectado ao servidor WebSocket 5", err2)
+
+			}
+		}
+	}()
 	return nil
 }
 func (H *THttp) Conectar() error {
-	for {
-		err := H.websocketClient()
-		if err != nil {
-			if H.OnSend != nil {
-				H.OnSend.Error("Erro na conexão: " + err.Error())
-				H.OnSend.Msg("Tentando reconectar em 5 segundos...")
-			} else {
-				fmt.Printf("Erro na conexão: " + err.Error())
-				fmt.Println("Tentando reconectar em 5 segundos...")
-			}
-
-			time.Sleep(5 * time.Second)
+	//for {
+	err := H.websocketClient()
+	if err != nil {
+		if H.OnSend != nil {
+			H.OnSend.Error("Erro na conexão: " + err.Error())
+			H.OnSend.Msg("Tentando reconectar em 5 segundos...")
+		} else {
+			fmt.Printf("Erro na conexão: " + err.Error())
+			fmt.Println("Tentando reconectar em 5 segundos...")
 		}
+		return err
+		//time.Sleep(5 * time.Second)
 	}
-
+	//}
+	return nil
 }
 func (H *THttp) IsConect() bool {
 	if H.ws != nil {

@@ -42,7 +42,9 @@ func main() {
 	cp.EncType = http.ET_WEB_SERVICE
 
 	cp.OnSend = rs
+	fmt.Println("###############ini###################")
 	err := cp.Conectar()
+	fmt.Println("###############fim###################")
 	if err != nil {
 		panic(err)
 	}
