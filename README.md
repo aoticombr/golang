@@ -1,10 +1,10 @@
-HTTP Package
+#HTTP Package
 The http package provides a set of functions and structures for making HTTP requests and handling WebSocket connections. This package is designed to simplify working with HTTP and WebSocket protocols in your Go applications.
 
-THttp Structure
+#THttp Structure
 The THttp structure represents an HTTP client that can be used to send HTTP requests and establish WebSocket connections. It includes various fields and methods for configuring and sending requests.
 
-Fields
+#Fields
 req: Represents an HTTP request.
 ws: Represents a WebSocket connection.
 Auth2: An instance of the auth2 type for handling authentication.
@@ -25,7 +25,9 @@ Proxy: An instance of the proxy type for configuring proxy settings.
 EncType: The type of request content (e.g., Form data, Raw, Binary).
 Timeout: The request timeout in seconds.
 OnSend: An interface for handling WebSocket events.
-Methods
+
+#Methods
+
 SetMetodoStr(value string) error: Set the HTTP request method using a string.
 GetMetodoStr() string: Get the HTTP request method as a string.
 SetMetodo(value TMethod) error: Set the HTTP request method using an enum.
