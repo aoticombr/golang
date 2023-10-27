@@ -1,9 +1,9 @@
 # Contributing to aoticombr/golang
 
 We love pull requests from everyone. By participating in this project, you
-agree to abide by the Blues Inc [code of conduct].
+agree to abide by the AOTI [code of conduct].
 
-[code of conduct]: https://github.com/aoticombr/golang/blob/main/CODE_OF_CONSTRUCT.md
+[code of conduct]: https://github.com/aoticombr/golang/blob/main/CODE_OF_CONDUCT.md
 
 Here are some ways *you* can contribute:
 
