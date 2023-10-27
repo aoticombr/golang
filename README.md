@@ -1,9 +1,9 @@
 #HTTP Package
-1. [THttp Structure](#THttpStructure)
+1. [Http Structure](#THttpStructure)
    
  The http package provides a set of functions and structures for making HTTP requests and handling WebSocket connections. This package is designed to simplify working with HTTP and WebSocket protocols in your Go applications.
 
-3. [Fields](#Fields)
+2. [Fields](#Fields)
    
 - req: Represents an HTTP request.
 - ws: Represents a WebSocket connection.
@@ -26,7 +26,7 @@
 - Timeout: The request timeout in seconds.
 - OnSend: An interface for handling WebSocket events.
 
-5. [Methods](#Methods)
+3. [Methods](#Methods)
 
 - SetMetodoStr(value string) error: Set the HTTP request method using a string.
 - GetMetodoStr() string: Get the HTTP request method as a string.
