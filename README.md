@@ -5,8 +5,8 @@
 
 3. [Fields](#Fields)
    
-#req: Represents an HTTP request.
-#ws: Represents a WebSocket connection.
+- req: Represents an HTTP request.
+- ws: Represents a WebSocket connection.
 #Auth2: An instance of the auth2 type for handling authentication.
 #Request: An instance of the Request type to configure the HTTP request.
 #Response: An instance of the Response type to store the HTTP response.
