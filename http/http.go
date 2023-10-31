@@ -392,13 +392,13 @@ func (H *THttp) websocketClient() error {
 	}
 	dialer := websocket.DefaultDialer
 	var (
-		conn *websocket.Conn
+		//conn *websocket.Conn
 		//resp *http.Response
 		err  error
 		err2 error
 	)
 
-	conn, _, err = dialer.Dial(H.GetUrl(), headers)
+	H.ws, _, err = dialer.Dial(H.GetUrl(), headers)
 	if err != nil {
 		if H.OnSend != nil {
 			H.OnSend.Error("Erro na conexão: " + err.Error())
@@ -417,13 +417,13 @@ func (H *THttp) websocketClient() error {
 		for {
 
 			fmt.Println("################", err)
-			if (conn == nil) || (err2 != nil) {
+			if (H.ws == nil) || (err2 != nil) {
 				if H.OnSend != nil {
 					H.OnSend.Msg("Tentando Reconectar")
 				} else {
 					fmt.Printf("Tentando Reconectar")
 				}
-				conn, _, err = dialer.Dial(H.GetUrl(), headers)
+				H.ws, _, err = dialer.Dial(H.GetUrl(), headers)
 				if err != nil {
 					if H.OnSend != nil {
 						H.OnSend.Error("Erro na conexão: " + err.Error())
@@ -443,7 +443,7 @@ func (H *THttp) websocketClient() error {
 
 			for err2 == nil {
 				//fmt.Println("Conectado ao servidor WebSocket 2", err2)
-				msgtype, msg, err := conn.ReadMessage()
+				msgtype, msg, err := H.ws.ReadMessage()
 				if err != nil {
 					if H.OnSend != nil {
 						//	fmt.Printf("Erro na leitura da mensagem: %v\n", err)
@@ -451,7 +451,7 @@ func (H *THttp) websocketClient() error {
 					} else {
 						fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 					}
-					conn.Close()
+					H.ws.Close()
 					time.Sleep(5 * time.Second)
 					//fmt.Println("Conectado ao servidor WebSocket 4", err)
 					err2 = err

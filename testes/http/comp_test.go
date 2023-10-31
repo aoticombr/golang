@@ -258,9 +258,22 @@ func TestWebSocket(t *testing.T) {
 	cp.EncType = http.ET_WEB_SERVICE
 
 	cp.OnSend = rs
+	fmt.Println("111111")
 	err := cp.Conectar()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("222222")
+	go func() {
+		for {
+			fmt.Println("44444")
+			err = cp.EnviarTextTypeTextMessage([]byte("Teste"))
+			if err != nil {
+				fmt.Println("Erro ao enviar:", err)
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+	fmt.Println("33333333")
 	select {}
 }
