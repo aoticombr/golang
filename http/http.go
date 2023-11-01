@@ -437,7 +437,7 @@ func (H *THttp) websocketClient() error {
 		}
 		return fmt.Errorf("Erro na conexão: " + err.Error())
 	} else {
-		H.WebSocket.connectado = true
+		H.WebSocket.connect = OPEN
 		if H.OnSend != nil {
 			H.OnSend.Msg(MSG_CONECTADO)
 		} else {
@@ -449,7 +449,7 @@ func (H *THttp) websocketClient() error {
 
 			fmt.Println("################", err)
 			if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == true) {
-				H.WebSocket.connectado = false
+				H.WebSocket.connect = CONNECTING
 				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
 					break
 				}
@@ -471,7 +471,7 @@ func (H *THttp) websocketClient() error {
 					H.WebSocket.attempts++
 					continue
 				}
-				H.WebSocket.connectado = true
+				H.WebSocket.connect = OPEN
 				H.WebSocket.attempts = 0
 				if H.OnSend != nil {
 					H.OnSend.Msg(MSG_RECONECTADO)
@@ -480,7 +480,7 @@ func (H *THttp) websocketClient() error {
 				}
 
 			} else if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == false) {
-				H.WebSocket.connectado = false
+				H.WebSocket.connect = CLOSED
 				break
 			}
 			err2 = nil
@@ -513,9 +513,11 @@ func (H *THttp) websocketClient() error {
 		}
 		if H.OnSend != nil {
 			H.OnSend.Disconect(MSG_DISCONECT, true)
+
 		} else {
 			fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 		}
+		H.WebSocket.connect = CLOSED
 	}()
 	return nil
 }

@@ -1,10 +1,23 @@
 package http
 
+type Status int
+
+const (
+	OPEN Status = iota
+	CLOSED
+	CONNECTING
+	STOP
+)
+
 type WebSocket struct {
 	AutoReconnect    bool
 	NumberOfAttempts int
 	attempts         int
-	connectado       bool
+	connect          Status
+}
+
+func (ws *WebSocket) Connect() Status {
+	return ws.connect
 }
 
 func NewWebSocket() *WebSocket {
@@ -12,7 +25,7 @@ func NewWebSocket() *WebSocket {
 		AutoReconnect:    true,
 		NumberOfAttempts: 10,
 		attempts:         0,
-		connectado:       false,
+		connect:          STOP,
 	}
 }
 
