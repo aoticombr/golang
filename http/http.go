@@ -14,27 +14,56 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	MSG_DISCONECT    = "Perca de Conexão..."
+	MSG_RECONECTANDO = "Reconectando..."
+	MSG_RECONECTADO  = "Reconectado..."
+	MSG_CONECTADO    = "Conectado..."
+)
+
 type THttp struct {
-	req               *http.Request
-	ws                *websocket.Conn
+	/*privado*/
+	req *http.Request
+	ws  *websocket.Conn
+	url string
+
+	/*publico*/
 	Auth2             *auth2
 	Request           *Request
 	Response          *Response
 	Metodo            TMethod
 	AuthorizationType AuthorizationType
+	WebSocket         *WebSocket
 	Authorization     string
 	Password          string
 	UserName          string
-	url               string
-	Protocolo         string // http, https
-	Host              string // www.example.com
-	Path              string // /product
-	Varibles          Varibles
-	Params            Params
-	Proxy             *proxy
-	EncType           EncType
-	Timeout           int //segundos
-	OnSend            IWebsocket
+
+	Protocolo string // http, https
+	Host      string // www.example.com
+	Path      string // /product
+	Varibles  Varibles
+	Params    Params
+	Proxy     *proxy
+	EncType   EncType
+	Timeout   int //segundos
+	OnSend    IWebsocket
+}
+
+func NewHttp() *THttp {
+
+	ht := &THttp{
+		Request:           NewRequest(),
+		Response:          NewResponse(),
+		Params:            NewParams(),
+		Varibles:          NewVaribles(),
+		Proxy:             NewProxy(),
+		Auth2:             NewAuth2(),
+		WebSocket:         NewWebSocket(),
+		Metodo:            M_GET,
+		Timeout:           30,
+		AuthorizationType: AT_AutoDetect,
+	}
+	return ht
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
@@ -97,6 +126,7 @@ func (H *THttp) GetUrl() string {
 	for key, value := range H.Varibles {
 		baseURL = strings.ReplaceAll(baseURL, "{{"+key+"}}", value)
 	}
+
 	return baseURL
 }
 func (H *THttp) completHeader() {
@@ -407,21 +437,28 @@ func (H *THttp) websocketClient() error {
 		}
 		return fmt.Errorf("Erro na conexão: " + err.Error())
 	} else {
+		H.WebSocket.connectado = true
 		if H.OnSend != nil {
-			H.OnSend.Msg("Conectado")
+			H.OnSend.Msg(MSG_CONECTADO)
 		} else {
-			fmt.Println("Conectado")
+			fmt.Println(MSG_CONECTADO)
 		}
 	}
 	go func() {
 		for {
 
 			fmt.Println("################", err)
-			if (H.ws == nil) || (err2 != nil) {
+			if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == true) {
+				H.WebSocket.connectado = false
+				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
+					break
+				}
 				if H.OnSend != nil {
-					H.OnSend.Msg("Tentando Reconectar")
+					H.OnSend.Disconect(MSG_DISCONECT, false)
+					H.OnSend.Msg(MSG_RECONECTANDO)
+
 				} else {
-					fmt.Printf("Tentando Reconectar")
+					fmt.Printf(MSG_RECONECTANDO)
 				}
 				H.ws, _, err = dialer.Dial(H.GetUrl(), headers)
 				if err != nil {
@@ -431,13 +468,20 @@ func (H *THttp) websocketClient() error {
 						fmt.Printf("Erro na conexão: %v\n", err)
 					}
 					time.Sleep(5 * time.Second)
+					H.WebSocket.attempts++
 					continue
 				}
+				H.WebSocket.connectado = true
+				H.WebSocket.attempts = 0
 				if H.OnSend != nil {
-					H.OnSend.Msg("Reconectado")
+					H.OnSend.Msg(MSG_RECONECTADO)
 				} else {
-					fmt.Printf("Reconectado")
+					fmt.Printf(MSG_RECONECTADO)
 				}
+
+			} else if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == false) {
+				H.WebSocket.connectado = false
+				break
 			}
 			err2 = nil
 
@@ -446,8 +490,8 @@ func (H *THttp) websocketClient() error {
 				msgtype, msg, err := H.ws.ReadMessage()
 				if err != nil {
 					if H.OnSend != nil {
-						//	fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 						H.OnSend.Error("Erro na leitura da mensagem: " + err.Error())
+
 					} else {
 						fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 					}
@@ -466,6 +510,11 @@ func (H *THttp) websocketClient() error {
 				//fmt.Println("Conectado ao servidor WebSocket 5", err2)
 
 			}
+		}
+		if H.OnSend != nil {
+			H.OnSend.Disconect(MSG_DISCONECT, true)
+		} else {
+			fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 		}
 	}()
 	return nil
@@ -497,30 +546,26 @@ func (H *THttp) Desconectar() error {
 	return H.ws.Close()
 }
 func (H *THttp) EnviarBinario(messageType int, data []byte) error {
+	if H.ws == nil {
+		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+	}
 	return H.ws.WriteMessage(messageType, data)
 }
 func (H *THttp) EnviarTexto(messageType int, data string) error {
+	if H.ws == nil {
+		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+	}
 	return H.ws.WriteMessage(messageType, []byte(data))
 }
 func (H *THttp) EnviarTextTypeTextMessage(data []byte) error {
+	if H.ws == nil {
+		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+	}
 	return H.ws.WriteMessage(websocket.TextMessage, data)
 }
 func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
-	return H.ws.WriteMessage(websocket.BinaryMessage, data)
-}
-
-func NewHttp() *THttp {
-
-	ht := &THttp{
-		Request:           NewRequest(),
-		Response:          NewResponse(),
-		Params:            NewParams(),
-		Varibles:          NewVaribles(),
-		Proxy:             NewProxy(),
-		Auth2:             NewAuth2(),
-		Metodo:            M_GET,
-		Timeout:           30,
-		AuthorizationType: AT_AutoDetect,
+	if H.ws == nil {
+		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
 	}
-	return ht
+	return H.ws.WriteMessage(websocket.BinaryMessage, data)
 }

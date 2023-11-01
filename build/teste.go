@@ -28,6 +28,12 @@ func (rs *ReadSocket) Msg(msg string) {
 	fmt.Println(time.Now())
 	fmt.Println("msg:", msg)
 }
+func (rs *ReadSocket) Disconect(msg string, limit bool) {
+	fmt.Println("-------Disconect-------")
+	fmt.Println(time.Now())
+	fmt.Println("msg:", msg)
+	fmt.Println("limit:", limit)
+}
 func main() {
 	var rs *ReadSocket
 	rs = &ReadSocket{}
