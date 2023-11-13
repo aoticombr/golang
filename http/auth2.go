@@ -60,6 +60,7 @@ func (A *auth2) GetToken() (string, error) {
 			HttpToken.Request.AddFormField("scope", A.Scope)
 		}
 	}
+	HttpToken.EncType = ET_X_WWW_FORM_URLENCODED
 	//fmt.Println("send.. auth...token 1")
 	Resp, err := HttpToken.Send()
 
