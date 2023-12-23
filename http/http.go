@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -273,6 +274,15 @@ func (H *THttp) Send() (*Response, error) {
 	var resp *http.Response
 	var trans *http.Transport
 	trans, _ = H.Proxy.GetTransport()
+
+	if trans != nil {
+		if strings.EqualFold(H.Protocolo, "https") {
+			trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		}
+	} else {
+		trans = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	}
+
 	var client *http.Client
 	if trans != nil {
 		client = &http.Client{
