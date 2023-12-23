@@ -276,7 +276,7 @@ func (H *THttp) Send() (*Response, error) {
 	trans, _ = H.Proxy.GetTransport()
 
 	if trans != nil {
-		if strings.EqualFold(H.Protocolo, "https") {
+		if strings.EqualFold(H.Protocolo, "HTTPS") {
 			trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
 	} else {
@@ -284,16 +284,11 @@ func (H *THttp) Send() (*Response, error) {
 	}
 
 	var client *http.Client
+	client = &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
 	if trans != nil {
-		client = &http.Client{
-			Transport: trans,
-			Timeout:   time.Duration(H.Timeout) * time.Second,
-		}
-	} else {
-		client = &http.Client{
-			Timeout: time.Duration(H.Timeout) * time.Second,
-		}
+		client.Transport = trans
 	}
+
 	uri := H.GetUrl()
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
 		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
