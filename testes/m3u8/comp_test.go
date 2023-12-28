@@ -12,7 +12,7 @@ import (
 func TestUp_Down(t *testing.T) {
 	fmt.Println("Teste")
 	down := m3u8.NewM3u8()
-	byt, err := down.GetVideoByte("https://b-vz-76/playlist.m3u8")
+	byt, err := down.GetVideoByte("https://b-vz-22fba020-9c7.tv.pandavideo.com.br/c1808569-132d-4bcc-980b-9a1e8bef9698/playlist.m3u8")
 	if err != nil {
 		fmt.Println(err)
 	}

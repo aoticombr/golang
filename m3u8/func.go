@@ -119,8 +119,24 @@ func GetFile(url, fileName string) error {
 	return nil
 }
 
-func GetFileByte(url string, old []byte) ([]byte, error) {
-	resp, err := http.Get(url)
+func GetFileByte(url string, old []byte, headers map[string]string) ([]byte, error) {
+	// Criar um cliente HTTP personalizado com cabeçalhos adicionais
+	client := &http.Client{}
+
+	// Criar uma solicitação HTTP personalizada com o método GET e o URL fornecido
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	// Adicionar cabeçalhos à solicitação
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	// Executar a solicitação HTTP personalizada
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -137,14 +153,18 @@ func GetFileByte(url string, old []byte) ([]byte, error) {
 	}
 
 	// Concatenar os dados existentes com os novos dados
-	new := append(old, body...)
+	newData := append(old, body...)
 
-	return new, nil
+	return newData, nil
 }
 func DownloadByte(List []string) ([]byte, error) {
 	var bt []byte
+	headers := map[string]string{
+		"Referer": "https://google.com.br",
+	}
+
 	for _, file := range List {
-		btnew, err := GetFileByte(file, bt)
+		btnew, err := GetFileByte(file, bt, headers)
 		if err != nil {
 			return nil, err
 		}
