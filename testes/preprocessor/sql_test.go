@@ -7,7 +7,27 @@ import (
 	"github.com/aoticombr/golang/preprocesssql"
 )
 
-func Test_Sql(t *testing.T) {
+func Test_Sql1(t *testing.T) {
+
+	sql := "select * from dual where id_xxx = :id_sss and xxx = :bbb_ff and yyy =:ccc_uu &hhhh');"
+	Params, MacrosUpd, MacrosRead, err := preprocesssql.PreprocessSQL(sql, true, true, true, true, true)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, p := range Params.Items {
+			fmt.Println("param.Name:", p.Name)
+		}
+		for _, m := range MacrosUpd.Items {
+			fmt.Println("macro.Name:", m.Name)
+		}
+		for _, m := range MacrosRead.Items {
+			fmt.Println("macro.Name:", m.Name)
+		}
+	}
+
+}
+
+func Test_Sql2(t *testing.T) {
 	sql := `select
    'S' AS GERAR_ENTIDADE_INTEGRADA
   ,NULL AS ID_ENTIDADE_INTEGRADA
