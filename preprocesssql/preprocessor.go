@@ -1062,7 +1062,7 @@ PreprocessSQL:
 */
 func PreprocessSQL(commandtext string, ACreateParams, ACreateMacros, AExpandMacros, AExpandEscape, AParseSQL bool) (*TParams, *TMacros, *TMacros, error) {
 	oPrep := NewPhysPreprocessor()
-	oPrep.Source = commandtext
+	oPrep.Source = commandtext + " "
 	oPrep.Params.Clear()
 	oPrep.MacrosUpd.Clear()
 	oPrep.MacrosRead.Clear()
