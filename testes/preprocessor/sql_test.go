@@ -134,7 +134,7 @@ func Test_Sql4(t *testing.T) {
 			left join xentry_controle_envio c on c.id = ei.id_controle
 			left join os o on c.cod_empresa = o.cod_empresa and c.documento = o.numero_os and c.tipo in (1,2)
 			left join os_agenda oa on c.cod_empresa = oa.cod_empresa and c.documento = oa.cod_os_agenda and c.tipo = 3
-			where mei.id_mov_mb_xa = :ID_MOV`
+			where mei.id_mov_mb_xa = :ID_MOVacTy`
 
 	//sql = "select * from dual where id_xxx = :id_sss and xxx = :bbb_ff and yyy =:ccc_uu &hhhh');"
 	Params, MacrosUpd, MacrosRead, err := preprocesssql.PreprocessSQL(sql, true, true, true, true, true)

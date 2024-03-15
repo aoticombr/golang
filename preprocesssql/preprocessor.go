@@ -162,7 +162,7 @@ func (pp *TPhysPreprocessor) ProcessIdentifier(ADotAllowed bool, AIsQuoted *bool
 	}
 	pp.PutBack()
 	Result = string(aBuff[:i])
-	return strings.ToUpper(Result), nil
+	return Result, nil
 }
 
 func (pp *TPhysPreprocessor) UnCommit(AChars int) {
