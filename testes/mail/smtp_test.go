@@ -1,4 +1,4 @@
-package mail
+package main
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/aoticombr/golang/mail"
 )
 
 const (
@@ -20,11 +22,11 @@ var (
 	testConn    = &net.TCPConn{}
 	testTLSConn = tls.Client(testConn, &tls.Config{InsecureSkipVerify: true})
 	testConfig  = &tls.Config{InsecureSkipVerify: true}
-	testAuth    = smtp.PlainAuth("", testUser, testPwd, testHost)
+	testAuth    = smtp.PlainAuth("", TestUser, TestPwd, TestHost)
 )
 
 func TestDialer(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
 	testSendMail(t, d, []string{
 		"Extension STARTTLS",
 		"StartTLS",
@@ -42,7 +44,7 @@ func TestDialer(t *testing.T) {
 }
 
 func TestDialerSSL(t *testing.T) {
-	d := NewDialer(testHost, testSSLPort, "user", "pwd")
+	d := mail.NewDialer(TestHost, testSSLPort, "user", "pwd")
 	testSendMail(t, d, []string{
 		"Extension AUTH",
 		"Auth",
@@ -58,7 +60,7 @@ func TestDialerSSL(t *testing.T) {
 }
 
 func TestDialerConfig(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
 	d.LocalName = "test"
 	d.TLSConfig = testConfig
 	testSendMail(t, d, []string{
@@ -79,7 +81,7 @@ func TestDialerConfig(t *testing.T) {
 }
 
 func TestDialerSSLConfig(t *testing.T) {
-	d := NewDialer(testHost, testSSLPort, "user", "pwd")
+	d := mail.NewDialer(TestHost, testSSLPort, "user", "pwd")
 	d.LocalName = "test"
 	d.TLSConfig = testConfig
 	testSendMail(t, d, []string{
@@ -98,8 +100,8 @@ func TestDialerSSLConfig(t *testing.T) {
 }
 
 func TestDialerNoStartTLS(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.StartTLSPolicy = NoStartTLS
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
+	d.StartTLSPolicy = mail.NoStartTLS
 	testSendMail(t, d, []string{
 		"Extension AUTH",
 		"Auth",
@@ -115,8 +117,8 @@ func TestDialerNoStartTLS(t *testing.T) {
 }
 
 func TestDialerOpportunisticStartTLS(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.StartTLSPolicy = OpportunisticStartTLS
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
+	d.StartTLSPolicy = mail.OpportunisticStartTLS
 	testSendMail(t, d, []string{
 		"Extension STARTTLS",
 		"StartTLS",
@@ -132,15 +134,15 @@ func TestDialerOpportunisticStartTLS(t *testing.T) {
 		"Close",
 	})
 
-	if OpportunisticStartTLS != 0 {
+	if mail.OpportunisticStartTLS != 0 {
 		t.Errorf("OpportunisticStartTLS: expected 0, got %d",
-			OpportunisticStartTLS)
+			mail.OpportunisticStartTLS)
 	}
 }
 
 func TestDialerOpportunisticStartTLSUnsupported(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.StartTLSPolicy = OpportunisticStartTLS
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
+	d.StartTLSPolicy = mail.OpportunisticStartTLS
 	testSendMailStartTLSUnsupported(t, d, []string{
 		"Extension STARTTLS",
 		"Extension AUTH",
@@ -157,8 +159,8 @@ func TestDialerOpportunisticStartTLSUnsupported(t *testing.T) {
 }
 
 func TestDialerMandatoryStartTLS(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.StartTLSPolicy = MandatoryStartTLS
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
+	d.StartTLSPolicy = mail.MandatoryStartTLS
 	testSendMail(t, d, []string{
 		"Extension STARTTLS",
 		"StartTLS",
@@ -176,12 +178,12 @@ func TestDialerMandatoryStartTLS(t *testing.T) {
 }
 
 func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
-	d := NewDialer(testHost, testPort, "user", "pwd")
-	d.StartTLSPolicy = MandatoryStartTLS
+	d := mail.NewDialer(TestHost, testPort, "user", "pwd")
+	d.StartTLSPolicy = mail.MandatoryStartTLS
 
 	testClient := &mockClient{
 		t:        t,
-		addr:     addr(d.Host, d.Port),
+		addr:     mail.Addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: false,
 		timeout:  true,
@@ -191,7 +193,7 @@ func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
 		"Extension STARTTLS",
 	})
 
-	if _, ok := err.(StartTLSUnsupportedError); !ok {
+	if _, ok := err.(mail.StartTLSUnsupportedError); !ok {
 		t.Errorf("expected StartTLSUnsupportedError, but got: %s",
 			reflect.TypeOf(err).Name())
 	}
@@ -204,8 +206,8 @@ func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
 }
 
 func TestDialerNoAuth(t *testing.T) {
-	d := &Dialer{
-		Host: testHost,
+	d := &mail.Dialer{
+		Host: TestHost,
 		Port: testPort,
 	}
 	testSendMail(t, d, []string{
@@ -223,8 +225,8 @@ func TestDialerNoAuth(t *testing.T) {
 }
 
 func TestDialerTimeout(t *testing.T) {
-	d := &Dialer{
-		Host:         testHost,
+	d := &mail.Dialer{
+		Host:         TestHost,
 		Port:         testPort,
 		RetryFailure: true,
 	}
@@ -246,14 +248,14 @@ func TestDialerTimeout(t *testing.T) {
 }
 
 func TestDialerTimeoutNoRetry(t *testing.T) {
-	d := &Dialer{
-		Host:         testHost,
+	d := &mail.Dialer{
+		Host:         TestHost,
 		Port:         testPort,
 		RetryFailure: false,
 	}
 	testClient := &mockClient{
 		t:        t,
-		addr:     addr(d.Host, d.Port),
+		addr:     mail.Addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: true,
 		timeout:  true,
@@ -369,10 +371,10 @@ func (w *mockWriter) Close() error {
 	return nil
 }
 
-func testSendMail(t *testing.T, d *Dialer, want []string) {
+func testSendMail(t *testing.T, d *mail.Dialer, want []string) {
 	testClient := &mockClient{
 		t:        t,
-		addr:     addr(d.Host, d.Port),
+		addr:     mail.Addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: true,
 		timeout:  false,
@@ -383,10 +385,10 @@ func testSendMail(t *testing.T, d *Dialer, want []string) {
 	}
 }
 
-func testSendMailStartTLSUnsupported(t *testing.T, d *Dialer, want []string) {
+func testSendMailStartTLSUnsupported(t *testing.T, d *mail.Dialer, want []string) {
 	testClient := &mockClient{
 		t:        t,
-		addr:     addr(d.Host, d.Port),
+		addr:     mail.Addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: false,
 		timeout:  false,
@@ -397,10 +399,10 @@ func testSendMailStartTLSUnsupported(t *testing.T, d *Dialer, want []string) {
 	}
 }
 
-func testSendMailTimeout(t *testing.T, d *Dialer, want []string) {
+func testSendMailTimeout(t *testing.T, d *mail.Dialer, want []string) {
 	testClient := &mockClient{
 		t:        t,
-		addr:     addr(d.Host, d.Port),
+		addr:     mail.Addr(d.Host, d.Port),
 		config:   d.TLSConfig,
 		startTLS: true,
 		timeout:  true,
@@ -411,10 +413,10 @@ func testSendMailTimeout(t *testing.T, d *Dialer, want []string) {
 	}
 }
 
-func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []string) error {
+func doTestSendMail(t *testing.T, d *mail.Dialer, testClient *mockClient, want []string) error {
 	testClient.want = want
 
-	NetDialTimeout = func(network, address string, d time.Duration) (net.Conn, error) {
+	mail.NetDialTimeout = func(network, address string, d time.Duration) (net.Conn, error) {
 		if network != "tcp" {
 			t.Errorf("Invalid network, got %q, want tcp", network)
 		}
@@ -425,7 +427,7 @@ func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []stri
 		return testConn, nil
 	}
 
-	tlsClient = func(conn net.Conn, config *tls.Config) *tls.Conn {
+	mail.TlsClient = func(conn net.Conn, config *tls.Config) *tls.Conn {
 		if conn != testConn {
 			t.Errorf("Invalid conn, got %#v, want %#v", conn, testConn)
 		}
@@ -433,9 +435,9 @@ func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []stri
 		return testTLSConn
 	}
 
-	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {
-		if host != testHost {
-			t.Errorf("Invalid host, got %q, want %q", host, testHost)
+	mail.SmtpNewClient = func(conn net.Conn, host string) (mail.SmtpClient, error) {
+		if host != TestHost {
+			t.Errorf("Invalid host, got %q, want %q", host, TestHost)
 		}
 		return testClient, nil
 	}
@@ -445,7 +447,7 @@ func doTestSendMail(t *testing.T, d *Dialer, testClient *mockClient, want []stri
 
 func assertConfig(t *testing.T, got, want *tls.Config) {
 	if want == nil {
-		want = &tls.Config{ServerName: testHost}
+		want = &tls.Config{ServerName: TestHost}
 	}
 	if got.ServerName != want.ServerName {
 		t.Errorf("Invalid field ServerName in config, got %q, want %q", got.ServerName, want.ServerName)

@@ -1,4 +1,4 @@
-package mail_test
+package main
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 
 func Example() {
 	m := mail.NewMessage()
-	m.SetHeader("From", "alex@example.com")
-	m.SetHeader("To", "bob@example.com", "cora@example.com")
-	m.SetAddressHeader("Cc", "dan@example.com", "Dan")
+	m.SetHeader("From", "market@example.com")
+	m.SetHeader("To", "a.b@example.com", "t.a@example.com")
+	m.SetAddressHeader("Cc", "c.o@example.com", "Dan")
 	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
-	m.Attach("/home/Alex/lolcat.jpg")
+	m.SetBody("text/html", "Hello <b>a.b</b> !")
+	m.Attach("/home/aoticombr/lolcat.jpg")
 
 	d := mail.NewDialer("smtp.example.com", 587, "user", "123456")
 	d.StartTLSPolicy = mail.MandatoryStartTLS

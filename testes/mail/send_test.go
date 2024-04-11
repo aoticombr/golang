@@ -1,4 +1,4 @@
-package mail
+package main
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"io"
 	"reflect"
 	"testing"
+
+	"github.com/aoticombr/golang/mail"
 )
 
 const (
@@ -23,7 +25,7 @@ const (
 		testBody
 )
 
-type mockSender SendFunc
+type mockSender mail.SendFunc
 
 func (s mockSender) Send(from string, to []string, msg io.WriterTo) error {
 	return s(from, to, msg)
@@ -46,7 +48,7 @@ func TestSend(t *testing.T) {
 			return nil
 		},
 	}
-	if err := Send(s, getTestMessage()); err != nil {
+	if err := mail.Send(s, getTestMessage()); err != nil {
 		t.Errorf("Send(): %v", err)
 	}
 }
@@ -58,13 +60,13 @@ func TestSendError(t *testing.T) {
 		},
 	}
 	wantErr := "gomail: could not send email 1: kaboom"
-	if err := Send(s, getTestMessage()); err == nil || err.Error() != wantErr {
+	if err := mail.Send(s, getTestMessage()); err == nil || err.Error() != wantErr {
 		t.Errorf("expected Send() error, got %q, want %q", err, wantErr)
 	}
 }
 
-func getTestMessage() *Message {
-	m := NewMessage()
+func getTestMessage() *mail.Message {
+	m := mail.NewMessage()
 	m.SetHeader("From", testFrom)
 	m.SetHeader("To", testTo1, testTo2)
 	m.SetBody("text/plain", testBody)

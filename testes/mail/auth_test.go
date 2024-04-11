@@ -1,14 +1,16 @@
-package mail
+package main
 
 import (
 	"net/smtp"
 	"testing"
+
+	"github.com/aoticombr/golang/mail"
 )
 
 const (
-	testUser = "user"
-	testPwd  = "pwd"
-	testHost = "smtp.example.com"
+	TestUser = "user"
+	TestPwd  = "pwd"
+	TestHost = "smtp.example.com"
 )
 
 type authTest struct {
@@ -32,7 +34,7 @@ func TestNoAdvertisementTLS(t *testing.T) {
 		auths:      []string{},
 		challenges: []string{"Username:", "Password:"},
 		tls:        true,
-		wantData:   []string{"", testUser, testPwd},
+		wantData:   []string{"", TestUser, TestPwd},
 	})
 }
 
@@ -41,7 +43,7 @@ func TestLogin(t *testing.T) {
 		auths:      []string{"PLAIN", "LOGIN"},
 		challenges: []string{"Username:", "Password:"},
 		tls:        false,
-		wantData:   []string{"", testUser, testPwd},
+		wantData:   []string{"", TestUser, TestPwd},
 	})
 }
 
@@ -50,24 +52,24 @@ func TestLoginTLS(t *testing.T) {
 		auths:      []string{"LOGIN"},
 		challenges: []string{"Username:", "Password:"},
 		tls:        true,
-		wantData:   []string{"", testUser, testPwd},
+		wantData:   []string{"", TestUser, TestPwd},
 	})
 }
 
 func testLoginAuth(t *testing.T, test *authTest) {
-	auth := &loginAuth{
-		username: testUser,
-		password: testPwd,
-		host:     testHost,
+	auth := &mail.LoginAuth{
+		Username: TestUser,
+		Password: TestPwd,
+		Host:     TestHost,
 	}
 	server := &smtp.ServerInfo{
-		Name: testHost,
+		Name: TestHost,
 		TLS:  test.tls,
 		Auth: test.auths,
 	}
 	proto, toServer, err := auth.Start(server)
 	if err != nil && !test.wantError {
-		t.Fatalf("loginAuth.Start(): %v", err)
+		t.Fatalf("LoginAuth.Start(): %v", err)
 	}
 	if err != nil && test.wantError {
 		return
@@ -90,7 +92,7 @@ func testLoginAuth(t *testing.T, test *authTest) {
 
 		toServer, err = auth.Next([]byte(challenge), true)
 		if err != nil {
-			t.Fatalf("loginAuth.Auth(): %v", err)
+			t.Fatalf("LoginAuth.Auth(): %v", err)
 		}
 		got = string(toServer)
 		if got != test.wantData[i] {

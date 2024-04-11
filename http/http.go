@@ -277,10 +277,10 @@ func (H *THttp) Send() (*Response, error) {
 
 	if trans != nil {
 		if strings.EqualFold(H.Protocolo, "HTTPS") {
-			trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+			trans.TlsClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
 	} else {
-		trans = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		trans = &http.Transport{TlsClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
 
 	var client *http.Client

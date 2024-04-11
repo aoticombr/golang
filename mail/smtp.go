@@ -79,16 +79,16 @@ var NetDialTimeout = net.DialTimeout
 // Dial dials and authenticates to an SMTP server. The returned SendCloser
 // should be closed when done using it.
 func (d *Dialer) Dial() (SendCloser, error) {
-	conn, err := NetDialTimeout("tcp", addr(d.Host, d.Port), d.Timeout)
+	conn, err := NetDialTimeout("tcp", Addr(d.Host, d.Port), d.Timeout)
 	if err != nil {
 		return nil, err
 	}
 
 	if d.SSL {
-		conn = tlsClient(conn, d.tlsConfig())
+		conn = TlsClient(conn, d.tlsConfig())
 	}
 
-	c, err := smtpNewClient(conn, d.Host)
+	c, err := SmtpNewClient(conn, d.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -125,10 +125,10 @@ func (d *Dialer) Dial() (SendCloser, error) {
 				d.Auth = smtp.CRAMMD5Auth(d.Username, d.Password)
 			} else if strings.Contains(auths, "LOGIN") &&
 				!strings.Contains(auths, "PLAIN") {
-				d.Auth = &loginAuth{
-					username: d.Username,
-					password: d.Password,
-					host:     d.Host,
+				d.Auth = &LoginAuth{
+					Username: d.Username,
+					Password: d.Password,
+					Host:     d.Host,
 				}
 			} else {
 				d.Auth = smtp.PlainAuth("", d.Username, d.Password, d.Host)
@@ -194,7 +194,7 @@ func (e StartTLSUnsupportedError) Error() string {
 		"SMTP server does not support STARTTLS"
 }
 
-func addr(host string, port int) string {
+func Addr(host string, port int) string {
 	return fmt.Sprintf("%s:%d", host, port)
 }
 
@@ -211,7 +211,7 @@ func (d *Dialer) DialAndSend(m ...*Message) error {
 }
 
 type smtpSender struct {
-	smtpClient
+	SmtpClient
 	conn net.Conn
 	d    *Dialer
 }
@@ -273,13 +273,13 @@ func (c *smtpSender) Close() error {
 
 // Stubbed out for tests.
 var (
-	tlsClient     = tls.Client
-	smtpNewClient = func(conn net.Conn, host string) (smtpClient, error) {
+	TlsClient     = tls.Client
+	SmtpNewClient = func(conn net.Conn, host string) (SmtpClient, error) {
 		return smtp.NewClient(conn, host)
 	}
 )
 
-type smtpClient interface {
+type SmtpClient interface {
 	Hello(string) error
 	Extension(string) (bool, string)
 	StartTLS(*tls.Config) error

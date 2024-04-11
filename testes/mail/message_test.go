@@ -1,4 +1,4 @@
-package mail
+package main
 
 import (
 	"bytes"
@@ -10,14 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
-)
 
-func init() {
-	now = func() time.Time {
-		return time.Date(2014, 06, 25, 17, 46, 0, 0, time.UTC)
-	}
-}
+	"github.com/aoticombr/golang/mail"
+)
 
 type message struct {
 	from    string
@@ -26,13 +21,13 @@ type message struct {
 }
 
 func TestMessage(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetAddressHeader("From", "from@example.com", "Señor From")
 	m.SetHeader("To", m.FormatAddress("to@example.com", "Señor To"), "tobis@example.com")
 	m.SetAddressHeader("Cc", "cc@example.com", "A, B")
 	m.SetAddressHeader("X-To", "ccbis@example.com", "à, b")
-	m.SetDateHeader("X-Date", now())
-	m.SetHeader("X-Date-2", m.FormatDate(now()))
+	m.SetDateHeader("X-Date", mail.Now())
+	m.SetHeader("X-Date-2", m.FormatDate(mail.Now()))
 	m.SetHeader("Subject", "¡Hola, señor!")
 	m.SetHeaders(map[string][]string{
 		"X-Headers": {"Test", "Café"},
@@ -64,7 +59,7 @@ func TestMessage(t *testing.T) {
 }
 
 func TestCustomMessage(t *testing.T) {
-	m := NewMessage(SetCharset("ISO-8859-1"), SetEncoding(Base64))
+	m := mail.NewMessage(mail.SetCharset("ISO-8859-1"), mail.SetEncoding(mail.Base64))
 	m.SetHeaders(map[string][]string{
 		"From":    {"from@example.com"},
 		"To":      {"to@example.com"},
@@ -88,7 +83,7 @@ func TestCustomMessage(t *testing.T) {
 }
 
 func TestUnencodedMessage(t *testing.T) {
-	m := NewMessage(SetEncoding(Unencoded))
+	m := mail.NewMessage(mail.SetEncoding(mail.Unencoded))
 	m.SetHeaders(map[string][]string{
 		"From":    {"from@example.com"},
 		"To":      {"to@example.com"},
@@ -112,7 +107,7 @@ func TestUnencodedMessage(t *testing.T) {
 }
 
 func TestRecipients(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeaders(map[string][]string{
 		"From":    {"from@example.com"},
 		"To":      {"to@example.com"},
@@ -139,7 +134,7 @@ func TestRecipients(t *testing.T) {
 }
 
 func TestAlternative(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", "¡Hola, señor!")
@@ -170,10 +165,10 @@ func TestAlternative(t *testing.T) {
 }
 
 func TestPartSetting(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
-	m.SetBody("text/plain; format=flowed", "¡Hola, señor!", SetPartEncoding(Unencoded))
+	m.SetBody("text/plain; format=flowed", "¡Hola, señor!", mail.SetPartEncoding(mail.Unencoded))
 	m.AddAlternative("text/html", "¡<b>Hola</b>, <i>señor</i>!</h1>")
 
 	want := &message{
@@ -201,11 +196,11 @@ func TestPartSetting(t *testing.T) {
 }
 
 func TestPartSettingWithCustomBoundary(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetBoundary("lalalaDaiMne3Ryblya")
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
-	m.SetBody("text/plain; format=flowed", "¡Hola, señor!", SetPartEncoding(Unencoded))
+	m.SetBody("text/plain; format=flowed", "¡Hola, señor!", mail.SetPartEncoding(mail.Unencoded))
 	m.AddAlternative("text/html", "¡<b>Hola</b>, <i>señor</i>!</h1>")
 
 	want := &message{
@@ -233,7 +228,7 @@ func TestPartSettingWithCustomBoundary(t *testing.T) {
 }
 
 func TestBodyWriter(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBodyWriter("text/plain", func(w io.Writer) error {
@@ -270,7 +265,7 @@ func TestBodyWriter(t *testing.T) {
 }
 
 func TestAttachmentReader(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 
@@ -294,7 +289,7 @@ func TestAttachmentReader(t *testing.T) {
 }
 
 func TestAttachmentOnly(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.Attach(mockCopyFile("/tmp/test.pdf"))
@@ -315,7 +310,7 @@ func TestAttachmentOnly(t *testing.T) {
 }
 
 func TestAttachment(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", "Test")
@@ -347,12 +342,12 @@ func TestAttachment(t *testing.T) {
 }
 
 func TestRename(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", "Test")
 	name, copy := mockCopyFile("/tmp/test.pdf")
-	rename := Rename("another.pdf")
+	rename := mail.Rename("another.pdf")
 	m.Attach(name, copy, rename)
 
 	want := &message{
@@ -381,7 +376,7 @@ func TestRename(t *testing.T) {
 }
 
 func TestAttachmentsOnly(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.Attach(mockCopyFile("/tmp/test.pdf"))
@@ -414,7 +409,7 @@ func TestAttachmentsOnly(t *testing.T) {
 }
 
 func TestAttachments(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", "Test")
@@ -453,7 +448,7 @@ func TestAttachments(t *testing.T) {
 }
 
 func TestEmbeddedReader(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 
@@ -478,7 +473,7 @@ func TestEmbeddedReader(t *testing.T) {
 }
 
 func TestEmbedded(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.Embed(mockCopyFileWithHeader(m, "image1.jpg", map[string][]string{"Content-ID": {"<test-content-id>"}}))
@@ -519,7 +514,7 @@ func TestEmbedded(t *testing.T) {
 }
 
 func TestFullMessage(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", "¡Hola, señor!")
@@ -593,7 +588,7 @@ func TestFullMessage(t *testing.T) {
 }
 
 func TestQpLineLength(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain",
@@ -626,7 +621,7 @@ func TestQpLineLength(t *testing.T) {
 }
 
 func TestBase64LineLength(t *testing.T) {
-	m := NewMessage(SetCharset("UTF-8"), SetEncoding(Base64))
+	m := mail.NewMessage(mail.SetCharset("UTF-8"), mail.SetEncoding(mail.Base64))
 	m.SetHeader("From", "from@example.com")
 	m.SetHeader("To", "to@example.com")
 	m.SetBody("text/plain", strings.Repeat("0", 58))
@@ -646,7 +641,7 @@ func TestBase64LineLength(t *testing.T) {
 }
 
 func TestEmptyName(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetAddressHeader("From", "from@example.com", "")
 
 	want := &message{
@@ -658,7 +653,7 @@ func TestEmptyName(t *testing.T) {
 }
 
 func TestEmptyHeader(t *testing.T) {
-	m := NewMessage()
+	m := mail.NewMessage()
 	m.SetHeaders(map[string][]string{
 		"From":    {"from@example.com"},
 		"X-Empty": nil,
@@ -673,14 +668,14 @@ func TestEmptyHeader(t *testing.T) {
 	testMessage(t, m, 0, want)
 }
 
-func testMessage(t *testing.T, m *Message, bCount int, want *message) {
-	err := Send(stubSendMail(t, bCount, want), m)
+func testMessage(t *testing.T, m *mail.Message, bCount int, want *message) {
+	err := mail.Send(stubSendMail(t, bCount, want), m)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func stubSendMail(t *testing.T, bCount int, want *message) SendFunc {
+func stubSendMail(t *testing.T, bCount int, want *message) mail.SendFunc {
 	return func(from string, to []string, m io.WriterTo) error {
 		if from != want.from {
 			t.Fatalf("Invalid from, got %q, want %q", from, want.from)
@@ -785,25 +780,25 @@ func getBoundaries(t *testing.T, count int, m string) []string {
 
 var boundaryRegExp = regexp.MustCompile("boundary=(\\w+)")
 
-func mockCopyFile(name string) (string, FileSetting) {
-	return name, SetCopyFunc(func(w io.Writer) error {
+func mockCopyFile(name string) (string, mail.FileSetting) {
+	return name, mail.SetCopyFunc(func(w io.Writer) error {
 		_, err := w.Write([]byte("Content of " + filepath.Base(name)))
 		return err
 	})
 }
 
-func mockCopyFileWithHeader(m *Message, name string, h map[string][]string) (string, FileSetting, FileSetting) {
+func mockCopyFileWithHeader(m *mail.Message, name string, h map[string][]string) (string, mail.FileSetting, mail.FileSetting) {
 	name, f := mockCopyFile(name)
-	return name, f, SetHeader(h)
+	return name, f, mail.SetHeader(h)
 }
 
 func BenchmarkFull(b *testing.B) {
-	discardFunc := SendFunc(func(from string, to []string, m io.WriterTo) error {
+	discardFunc := mail.SendFunc(func(from string, to []string, m io.WriterTo) error {
 		_, err := m.WriteTo(ioutil.Discard)
 		return err
 	})
 
-	m := NewMessage()
+	m := mail.NewMessage()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		m.SetAddressHeader("From", "from@example.com", "Señor From")
@@ -818,7 +813,7 @@ func BenchmarkFull(b *testing.B) {
 		m.Attach(mockCopyFile("benchmark.txt"))
 		m.Embed(mockCopyFile("benchmark.jpg"))
 
-		if err := Send(discardFunc, m); err != nil {
+		if err := mail.Send(discardFunc, m); err != nil {
 			panic(err)
 		}
 		m.Reset()
