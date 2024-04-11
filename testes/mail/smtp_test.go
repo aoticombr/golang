@@ -198,7 +198,7 @@ func TestDialerMandatoryStartTLSUnsupported(t *testing.T) {
 			reflect.TypeOf(err).Name())
 	}
 
-	expected := "aotimail: MandatoryStartTLS required, " +
+	expected := "mail: MandatoryStartTLS required, " +
 		"but SMTP server does not support STARTTLS"
 	if err.Error() != expected {
 		t.Errorf("expected %s, but got: %s", expected, err)
@@ -268,7 +268,7 @@ func TestDialerTimeoutNoRetry(t *testing.T) {
 		"Quit",
 	})
 
-	if err.Error() != "aotimail: could not send email 1: EOF" {
+	if err.Error() != "mail: could not send email 1: EOF" {
 		t.Error("expected to have got EOF, but got:", err)
 	}
 }

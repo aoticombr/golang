@@ -151,7 +151,7 @@ func (w *messageWriter) addFiles(files []*file, isAttachment bool) {
 
 func (w *messageWriter) Write(p []byte) (int, error) {
 	if w.err != nil {
-		return 0, errors.New("aotimail: cannot write as writer is in error")
+		return 0, errors.New("mail: cannot write as writer is in error")
 	}
 
 	var n int
