@@ -11,6 +11,6 @@ type SendError struct {
 }
 
 func (err *SendError) Error() string {
-	return fmt.Sprintf("gomail: could not send email %d: %v",
+	return fmt.Sprintf("aotimail: could not send email %d: %v",
 		err.Index+1, err.Cause)
 }

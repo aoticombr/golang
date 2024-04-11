@@ -59,7 +59,7 @@ func TestSendError(t *testing.T) {
 			return errors.New("kaboom")
 		},
 	}
-	wantErr := "gomail: could not send email 1: kaboom"
+	wantErr := "aotimail: could not send email 1: kaboom"
 	if err := mail.Send(s, getTestMessage()); err == nil || err.Error() != wantErr {
 		t.Errorf("expected Send() error, got %q, want %q", err, wantErr)
 	}

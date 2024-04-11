@@ -24,11 +24,11 @@ func (a *LoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
 			}
 		}
 		if !advertised {
-			return "", nil, errors.New("gomail: unencrypted connection")
+			return "", nil, errors.New("aotimail: unencrypted connection")
 		}
 	}
 	if server.Name != a.Host {
-		return "", nil, errors.New("gomail: wrong host name")
+		return "", nil, errors.New("aotimail: wrong host name")
 	}
 	return "LOGIN", nil, nil
 }
@@ -44,6 +44,6 @@ func (a *LoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	case bytes.Equal(fromServer, []byte("Password:")):
 		return []byte(a.Password), nil
 	default:
-		return nil, fmt.Errorf("gomail: unexpected server challenge: %s", fromServer)
+		return nil, fmt.Errorf("aotimail: unexpected server challenge: %s", fromServer)
 	}
 }

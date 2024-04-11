@@ -190,7 +190,7 @@ type StartTLSUnsupportedError struct {
 }
 
 func (e StartTLSUnsupportedError) Error() string {
-	return "gomail: " + e.Policy.String() + " required, but " +
+	return "aotimail: " + e.Policy.String() + " required, but " +
 		"SMTP server does not support STARTTLS"
 }
 

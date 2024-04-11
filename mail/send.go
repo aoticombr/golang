@@ -66,7 +66,7 @@ func (m *Message) getFrom() (string, error) {
 	if len(from) == 0 {
 		from = m.header["From"]
 		if len(from) == 0 {
-			return "", errors.New(`gomail: invalid message, "From" field is absent`)
+			return "", errors.New(`aotimail: invalid message, "From" field is absent`)
 		}
 	}
 
@@ -110,7 +110,7 @@ func addAddress(list []string, addr string) []string {
 func parseAddress(field string) (string, error) {
 	addr, err := stdmail.ParseAddress(field)
 	if err != nil {
-		return "", fmt.Errorf("gomail: invalid address %q: %v", field, err)
+		return "", fmt.Errorf("aotimail: invalid address %q: %v", field, err)
 	}
 	return addr.Address, nil
 }
