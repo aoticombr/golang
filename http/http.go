@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+
 	"net/http"
 	"net/url"
 	"strings"
@@ -302,7 +303,7 @@ func (H *THttp) Send() (*Response, error) {
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := NewWriter(&requestBody)
-		defer multipartWriter.Close()
+		//defer multipartWriter.Close()
 		if H.Request.ItensContentText != nil {
 			for _, v := range H.Request.ItensContentText {
 				multipartWriter.WriteField(v.Name, v.Value.Text())
@@ -322,7 +323,16 @@ func (H *THttp) Send() (*Response, error) {
 		}
 		if H.Request.ItensSubmitFile != nil {
 			for _, v := range H.Request.ItensSubmitFile {
+				// boundary := multipartWriter.Boundary()
+				// fileHeader := fmt.Sprintf("--%s\r\nContent-Disposition: form-data; name=\"\"; filename=\"testepaulo.pdf\"\r\nContent-Type: application/pdf\r\n\r\n", boundary)
+				// requestBody.Write([]byte(fileHeader))
+				// _, err = fileWriter.Write(v.Content)
+				// if err != nil {
+				// 	return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+				// }
+				// requestBody.Write([]byte(fmt.Sprintf("\r\n--%s--\r\n", boundary)))
 				fileWriter, err := multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				//fileWriter, err := multipartWriter.CreateFormFile(v.Key, v.FileName)
 				if err != nil {
 					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
 				}
@@ -332,9 +342,12 @@ func (H *THttp) Send() (*Response, error) {
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
-		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
+		multipartWriter.Close() //isso aqui nao fecha e sim escreve a ultima linha
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
+
+		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
+
 	case ET_X_WWW_FORM_URLENCODED:
 		//fmt.Println("CT_X_WWW_FORM_URLENCODED:")
 		formData := url.Values{}

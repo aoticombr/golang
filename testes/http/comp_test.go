@@ -232,7 +232,7 @@ func TestBinaryType(t *testing.T) {
 	cp.EncType = http.ET_FORM_DATA
 	//cp.Request.Header.ContentType = "application/json"
 	cp.Request.Header.ContentType = "multipar/form-data"
-	file, err := os.Open("H:\\golang\\testes\\http\\teste.pdf") // Substitua pelo caminho real do arquivo que deseja enviar
+	file, err := os.Open("H:\\golang\\testes\\http\\testepaulo.pdf") // Substitua pelo caminho real do arquivo que deseja enviar
 	if err != nil {
 		fmt.Println("Erro ao abrir o arquivo:", err)
 		return
@@ -245,7 +245,7 @@ func TestBinaryType(t *testing.T) {
 		return
 	}
 	//cp.Request.Body = []byte(`{}`)
-	cp.Request.AddSubmitFile("", "teste.pdf", "application/pdf", fileContent)
+	cp.Request.AddSubmitFile("", "testepaulo.pdf", "application/pdf", fileContent)
 
 	resp, err := cp.Send()
 	if err != nil {
