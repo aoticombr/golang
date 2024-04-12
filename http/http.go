@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -265,6 +264,7 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	}
 	return nil
 }
+
 func (H *THttp) Send() (*Response, error) {
 	//fmt.Println("==================")
 	//fmt.Println("Send..")
@@ -277,10 +277,10 @@ func (H *THttp) Send() (*Response, error) {
 
 	if trans != nil {
 		if strings.EqualFold(H.Protocolo, "HTTPS") {
-			trans.TlsClientConfig = &tls.Config{InsecureSkipVerify: true}
+			trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
 	} else {
-		trans = &http.Transport{TlsClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		trans = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
 
 	var client *http.Client
@@ -301,7 +301,7 @@ func (H *THttp) Send() (*Response, error) {
 	case ET_FORM_DATA:
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
-		multipartWriter := multipart.NewWriter(&requestBody)
+		multipartWriter := NewWriter(&requestBody)
 		defer multipartWriter.Close()
 		if H.Request.ItensContentText != nil {
 			for _, v := range H.Request.ItensContentText {
@@ -315,6 +315,18 @@ func (H *THttp) Send() (*Response, error) {
 					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
 				}
 				_, err = fileWriter.Write(v.Value)
+				if err != nil {
+					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+				}
+			}
+		}
+		if H.Request.ItensSubmitFile != nil {
+			for _, v := range H.Request.ItensSubmitFile {
+				fileWriter, err := multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				if err != nil {
+					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+				}
+				_, err = fileWriter.Write(v.Content)
 				if err != nil {
 					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
 				}

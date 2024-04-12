@@ -14,8 +14,8 @@ type Request struct {
 func (H *Request) AddFormField(fieldName string, fieldValue string) {
 	H.ItensFormField.Add(fieldName, fieldValue)
 }
-func (H *Request) AddSubmitFile(fieldName string, contentType string, content []byte) {
-	H.ItensSubmitFile.Add(fieldName, contentType, content)
+func (H *Request) AddSubmitFile(key string, filename string, contentType string, content []byte) {
+	H.ItensSubmitFile.Add(key, filename, contentType, content)
 }
 func (H *Request) AddContentText(Name string, value *ST.Strings) {
 	H.ItensContentText.Add(Name, value)

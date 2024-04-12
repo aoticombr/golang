@@ -1,16 +1,19 @@
 package http
 
 type ContentFile struct {
-	FieldName   string
+	Key         string
+	FileName    string
 	ContentType string
 	Content     []byte
 }
 
 type ListContentFile []*ContentFile
 
-func (L *ListContentFile) Add(fieldName string, contentType string, content []byte) {
+func (L *ListContentFile) Add(key string, fileName string, contentType string, content []byte) {
 	*L = append(*L, &ContentFile{
-		FieldName:   fieldName,
+
+		Key:         key,
+		FileName:    fileName,
 		Content:     content,
 		ContentType: contentType,
 	})

@@ -223,6 +223,43 @@ func TestBinary(t *testing.T) {
 	//fmt.Println("Body string:", string(resp.Body))
 }
 
+func TestBinaryType(t *testing.T) {
+	fmt.Println("Teste")
+	cp := http.NewHttp()
+	cp.SetUrl("http://100.0.66.81:3003")
+
+	cp.Metodo = http.M_POST
+	cp.EncType = http.ET_FORM_DATA
+	//cp.Request.Header.ContentType = "application/json"
+	cp.Request.Header.ContentType = "multipar/form-data"
+	file, err := os.Open("H:\\golang\\testes\\http\\teste.pdf") // Substitua pelo caminho real do arquivo que deseja enviar
+	if err != nil {
+		fmt.Println("Erro ao abrir o arquivo:", err)
+		return
+	}
+	defer file.Close()
+	// Ler o conteúdo do arquivo como um slice de bytes
+	fileContent, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println("Erro ao ler o conteúdo do arquivo:", err)
+		return
+	}
+	//cp.Request.Body = []byte(`{}`)
+	cp.Request.AddSubmitFile("", "teste.pdf", "application/pdf", fileContent)
+
+	resp, err := cp.Send()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Code:", resp.StatusCode)
+	fmt.Println("Msg:", resp.StatusMessage)
+	for k, v := range resp.Header {
+		fmt.Println("Header:", k, v)
+	}
+	//fmt.Println("Body:", resp.Body)
+	//fmt.Println("Body string:", string(resp.Body))
+}
+
 type ReadSocket struct {
 }
 
