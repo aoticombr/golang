@@ -65,6 +65,7 @@ func NewHttp() *THttp {
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
 	}
+	ht.Auth2.Owner = ht
 	return ht
 }
 

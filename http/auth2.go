@@ -22,6 +22,7 @@ const (
 )
 
 type auth2 struct {
+	Owner        *THttp
 	AuthUrl      string
 	ClientId     string
 	ClientSecret string
@@ -42,7 +43,10 @@ func (A *auth2) GetToken() (string, error) {
 	HttpToken.SetUrl(A.AuthUrl)
 	//fmt.Println("A.AuthUrl...", A.AuthUrl)
 	HttpToken.Metodo = M_POST
-
+	if A.Owner != nil {
+		HttpToken.Certificate.PathCrt = A.Owner.Certificate.PathCrt
+		HttpToken.Certificate.PathPriv = A.Owner.Certificate.PathPriv
+	}
 	if A.ClientAuth == CA_SendBasicAuthHeader {
 		HttpToken.AuthorizationType = AT_Basic
 		HttpToken.UserName = A.ClientId
