@@ -38,6 +38,7 @@ type THttp struct {
 	Authorization     string
 	Password          string
 	UserName          string
+	Certificate       TCert
 
 	Protocolo string // http, https
 	Host      string // www.example.com
@@ -64,6 +65,7 @@ func NewHttp() *THttp {
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
 	}
+	ht.Auth2.Owner = ht
 	return ht
 }
 
@@ -274,14 +276,26 @@ func (H *THttp) Send() (*Response, error) {
 	var err error
 	var resp *http.Response
 	var trans *http.Transport
+	var cert tls.Certificate
+	var Config *tls.Config
 	trans, _ = H.Proxy.GetTransport()
 
+	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+		cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
+		if err != nil {
+			return nil, err
+		}
+	}
+	Config = &tls.Config{InsecureSkipVerify: true}
+	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+		Config.Certificates = []tls.Certificate{cert}
+	}
 	if trans != nil {
 		if strings.EqualFold(H.Protocolo, "HTTPS") {
-			trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+			trans.TLSClientConfig = Config
 		}
 	} else {
-		trans = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		trans = &http.Transport{TLSClientConfig: Config}
 	}
 
 	var client *http.Client
