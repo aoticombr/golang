@@ -11,6 +11,11 @@ type Request struct {
 	Body             []byte
 }
 
+func (H *Request) CopyBody(value []byte) {
+	H.Body = make([]byte, len(value))
+	copy(H.Body, value)
+}
+
 func (H *Request) AddFormField(fieldName string, fieldValue string) {
 	H.ItensFormField.Add(fieldName, fieldValue)
 }
