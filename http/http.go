@@ -318,6 +318,11 @@ func (H *THttp) Send() (*Response, error) {
 		var requestBody bytes.Buffer
 		multipartWriter := NewWriter(&requestBody)
 		//defer multipartWriter.Close()
+		if H.Request.ItensFormField != nil {
+			for _, v := range H.Request.ItensFormField {
+				multipartWriter.WriteField(v.FieldName, v.FieldValue)
+			}
+		}
 		if H.Request.ItensContentText != nil {
 			for _, v := range H.Request.ItensContentText {
 				multipartWriter.WriteField(v.Name, v.Value.Text())
