@@ -321,7 +321,14 @@ func (H *THttp) Send() (*Response, error) {
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
 				if v.ContentType != "" {
-					multipartWriter.CreateFormFile3(v.FieldName, v.FieldValue, v.ContentType)
+					fileWriter, err := multipartWriter.CreateFormFile3(v.FieldName, v.ContentType)
+					if err != nil {
+						return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FieldName, err)
+					}
+					_, err = fileWriter.Write([]byte(v.FieldValue))
+					if err != nil {
+						return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
+					}
 				} else {
 					multipartWriter.WriteField(v.FieldName, v.FieldValue)
 				}
