@@ -19,6 +19,9 @@ func (H *Request) CopyBody(value []byte) {
 func (H *Request) AddFormField(fieldName string, fieldValue string) {
 	H.ItensFormField.Add(fieldName, fieldValue)
 }
+func (H *Request) AddFormFieldContext(fieldName string, fieldValue string, contentType string) {
+	H.ItensFormField.AddContentType(fieldName, fieldValue, contentType)
+}
 func (H *Request) AddSubmitFile(key string, filename string, contentType string, content []byte) {
 	H.ItensSubmitFile.Add(key, filename, contentType, content)
 }
