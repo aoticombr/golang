@@ -320,7 +320,11 @@ func (H *THttp) Send() (*Response, error) {
 		//defer multipartWriter.Close()
 		if H.Request.ItensFormField != nil {
 			for _, v := range H.Request.ItensFormField {
-				multipartWriter.WriteField(v.FieldName, v.FieldValue)
+				if v.ContentType != "" {
+					multipartWriter.CreateFormFile3(v.FieldName, v.FieldValue, v.ContentType)
+				} else {
+					multipartWriter.WriteField(v.FieldName, v.FieldValue)
+				}
 			}
 		}
 		if H.Request.ItensContentText != nil {

@@ -149,6 +149,14 @@ func (w *Writer) CreateFormFile2(fieldname string, filename string, contenttype 
 	h.Set("Content-Type", contenttype)
 	return w.CreatePart(h)
 }
+func (w *Writer) CreateFormFile3(fieldname string, filename string, contenttype string) (io.Writer, error) {
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition",
+		fmt.Sprintf(`form-data; name="%s"; `,
+			escapeQuotes(fieldname), escapeQuotes(filename)))
+	h.Set("Content-Type", contenttype)
+	return w.CreatePart(h)
+}
 
 // CreateFormField calls CreatePart with a header using the
 // given field name.
