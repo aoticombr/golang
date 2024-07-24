@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -630,4 +631,12 @@ func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
 		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(websocket.BinaryMessage, data)
+}
+
+func (H *THttp) ConvertBodyInStruct(value any) error {
+	err := json.Unmarshal(H.Response.Body, value)
+	if err != nil {
+		return err
+	}
+	return nil
 }
