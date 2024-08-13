@@ -10,13 +10,14 @@ type ContentFile struct {
 
 type ListContentFile []*ContentFile
 
-func (L *ListContentFile) Add(key string, fileName string, contentType string, content []byte) {
+func (L *ListContentFile) Add(key string, fileName string, contentType string, content []byte, transferEncoding ContentTransferEncoding) {
 	*L = append(*L, &ContentFile{
 
-		Key:         key,
-		FileName:    fileName,
-		Content:     content,
-		ContentType: contentType,
+		Key:                     key,
+		FileName:                fileName,
+		Content:                 content,
+		ContentType:             contentType,
+		ContentTransferEncoding: transferEncoding,
 	})
 }
 func (L *ListContentFile) Clear() {
