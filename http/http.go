@@ -354,6 +354,10 @@ func (H *THttp) Send() (*Response, error) {
 		}
 		if H.Request.ItensSubmitFile != nil {
 			for _, v := range H.Request.ItensSubmitFile {
+				var (
+					fileWriter io.Writer
+					err        error
+				)
 				// boundary := multipartWriter.Boundary()
 				// fileHeader := fmt.Sprintf("--%s\r\nContent-Disposition: form-data; name=\"\"; filename=\"testepaulo.pdf\"\r\nContent-Type: application/pdf\r\n\r\n", boundary)
 				// requestBody.Write([]byte(fileHeader))
@@ -362,7 +366,12 @@ func (H *THttp) Send() (*Response, error) {
 				// 	return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
 				// }
 				// requestBody.Write([]byte(fmt.Sprintf("\r\n--%s--\r\n", boundary)))
-				fileWriter, err := multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				if v.ContentTransferEncoding > 0 {
+					fileWriter, err = multipartWriter.CreateFormFile4(v.Key, v.FileName, v.ContentType, v.ContentTransferEncoding)
+				} else {
+					fileWriter, err = multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				}
+
 				//fileWriter, err := multipartWriter.CreateFormFile(v.Key, v.FileName)
 				if err != nil {
 					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)

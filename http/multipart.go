@@ -11,6 +11,23 @@ import (
 	"strings"
 )
 
+type ContentTransferEncoding int
+
+const (
+	// ContentTransferEncoding7Bit is the 7bit encoding
+	ContentTransferEncodingNull = 0
+	// ContentTransferEncoding7Bit is the 7bit encoding
+	ContentTransferEncoding7Bit = 1
+	// ContentTransferEncoding8Bit is the 8bit encoding
+	ContentTransferEncoding8Bit = 2
+	// ContentTransferEncodingBinary is the binary encoding
+	ContentTransferEncodingBinary = 3
+	// ContentTransferEncodingBase64 is the base64 encoding
+	ContentTransferEncodingBase64 = 4
+	// ContentTransferEncodingQuotedPrintable is the quoted-printable encoding
+	ContentTransferEncodingQuotedPrintable = 5
+)
+
 // A Writer generates multipart messages.
 type Writer struct {
 	w        io.Writer
@@ -154,6 +171,31 @@ func (w *Writer) CreateFormFile3(fieldname string, contenttype string) (io.Write
 	h.Set("Content-Disposition",
 		fmt.Sprintf(`form-data; name="%s"`, fieldname))
 	h.Set("Content-Type", contenttype)
+	return w.CreatePart(h)
+}
+
+func (w *Writer) CreateFormFile4(fieldname string, filename string, contenttype string, cte ContentTransferEncoding) (io.Writer, error) {
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition",
+		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+			escapeQuotes(fieldname), escapeQuotes(filename)))
+	h.Set("Content-Type", contenttype)
+	//Validar se filename tem extensao zip
+	// if filename[len(filename)-4:] == ".zip" {
+	// 	h.Set("Content-Transfer-Encoding", "binary")
+	// }
+	switch cte {
+	case ContentTransferEncoding7Bit:
+		h.Set("Content-Transfer-Encoding", "7bit")
+	case ContentTransferEncoding8Bit:
+		h.Set("Content-Transfer-Encoding", "8bit")
+	case ContentTransferEncodingBinary:
+		h.Set("Content-Transfer-Encoding", "binary")
+	case ContentTransferEncodingBase64:
+		h.Set("Content-Transfer-Encoding", "base64")
+	case ContentTransferEncodingQuotedPrintable:
+		h.Set("Content-Transfer-Encoding", "quoted-printable")
+	}
 	return w.CreatePart(h)
 }
 

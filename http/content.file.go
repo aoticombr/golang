@@ -1,10 +1,11 @@
 package http
 
 type ContentFile struct {
-	Key         string
-	FileName    string
-	ContentType string
-	Content     []byte
+	Key                     string
+	FileName                string
+	ContentType             string
+	ContentTransferEncoding ContentTransferEncoding
+	Content                 []byte
 }
 
 type ListContentFile []*ContentFile
