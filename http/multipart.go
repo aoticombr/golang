@@ -179,11 +179,6 @@ func (w *Writer) CreateFormFile4(fieldname string, filename string, contenttype 
 	h.Set("Content-Disposition",
 		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
 			escapeQuotes(fieldname), escapeQuotes(filename)))
-	h.Set("Content-Type", contenttype)
-	//Validar se filename tem extensao zip
-	// if filename[len(filename)-4:] == ".zip" {
-	// 	h.Set("Content-Transfer-Encoding", "binary")
-	// }
 	switch cte {
 	case ContentTransferEncoding7Bit:
 		h.Set("Content-Transfer-Encoding", "7bit")
@@ -196,6 +191,8 @@ func (w *Writer) CreateFormFile4(fieldname string, filename string, contenttype 
 	case ContentTransferEncodingQuotedPrintable:
 		h.Set("Content-Transfer-Encoding", "quoted-printable")
 	}
+	h.Set("Content-Type", contenttype)
+
 	return w.CreatePart(h)
 }
 
