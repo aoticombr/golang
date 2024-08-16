@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aoticombr/golang/gorm"
+	gorm "github.com/aoticombr/golang/orm"
 )
 
 type tb0001 struct {
