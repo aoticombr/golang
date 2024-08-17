@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	gorm "github.com/aoticombr/golang/orm"
+	orm "github.com/aoticombr/golang/orm"
 )
 
 type tb0001 struct {
 	Id    string  `json:"id" column:"id" table:"tb0001" primarykey:"true"`
-	Email string  `json:"email" column:"email" primarykey:"true"`
+	Email string  `json:"email" column:"email" `
 	Nome  string  `json:"nome" column:"nome"`
 	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
-	CRUD  string  `json:"cpf,crud" `
+	CRUD  string  `json:"CRUD,crud" `
 }
 
 type tb0002 struct {
@@ -20,14 +20,14 @@ type tb0002 struct {
 	Email string  `json:"email" column:"email" `
 	Nome  string  `json:"nome" column:"nome"`
 	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
-	CRUD  string  `json:"cpf,crud" `
+	CRUD  string  `json:"CRUD,crud" `
 }
 type tb0003 struct {
 	Id    string  `json:"id" column:"id" primarykey:"true"`
 	Email string  `json:"email" column:"email" `
 	Nome  string  `json:"nome" column:"nome"`
 	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
-	CRUD  string  `json:"cpf,crud" `
+	CRUD  string  `json:"CRUD,crud" `
 }
 
 func Test_tipo1(t *testing.T) {
@@ -37,7 +37,7 @@ func Test_tipo1(t *testing.T) {
 	// 	Nome:  "Paulo",
 	// }
 
-	tb := gorm.NewTable(&tb0001{})
+	tb := orm.NewTable(&tb0001{})
 
 	fmt.Println(tb)
 	fmt.Println(tb.SqlInsert())
@@ -59,6 +59,10 @@ func Test_tipo2(t *testing.T) {
 			cpf := "cpf " + fmt.Sprintf("%d", i)
 			dado.Cpf = &cpf
 			dado.CRUD = "new"
+		} else if i%3 == 0 {
+			cpf := "cpf " + fmt.Sprintf("%d", i)
+			dado.Cpf = &cpf
+			dado.CRUD = "del"
 		} else {
 			dado.CRUD = "old"
 		}
@@ -66,7 +70,8 @@ func Test_tipo2(t *testing.T) {
 	}
 	for _, dado := range dados {
 
-		tb := gorm.NewTable(dado)
+		tb := orm.NewTable(dado)
+		tb.Options.Delete = orm.D_Disable
 		//fmt.Println(dado)
 		fmt.Println(tb)
 		//fmt.Println(tb.SqlInsert())
@@ -102,7 +107,7 @@ Validando Primary Key
 	}
 	for _, dado := range dados1 {
 
-		tb := gorm.NewTable(dado)
+		tb := orm.NewTable(dado)
 
 		//fmt.Println(dado)
 		fmt.Println(tb)
@@ -134,7 +139,7 @@ Validando Table
 	}
 	for _, dado := range dados2 {
 
-		tb := gorm.NewTable(dado)
+		tb := orm.NewTable(dado)
 		//fmt.Println(dado)
 		fmt.Println(tb)
 		fmt.Println(tb.SqlInsert())

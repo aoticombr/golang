@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+type Delete int
+
+const (
+	D_Remove Delete = iota
+	D_Disable
+)
+
 func GetTable(table interface{}) string {
 	t := reflect.TypeOf(table).Elem()
 	for i := 0; i < t.NumField(); i++ {
@@ -43,6 +50,7 @@ func (c Columns) Exist(col string) bool {
 
 type Options struct {
 	OmitColumnEmpty bool
+	Delete          Delete
 }
 
 type Table struct {
@@ -59,6 +67,7 @@ func NewTable(table interface{}) *Table {
 		table: table,
 		Options: Options{
 			OmitColumnEmpty: false,
+			Delete:          D_Remove,
 		},
 	}
 	t := reflect.TypeOf(tb.table)
@@ -243,6 +252,12 @@ func (tb *Table) SqlDelete() (string, error) {
 	}
 	if len(tb.PrimaryKeys) == 0 {
 		return "", errors.New("primary key not found")
+	}
+	switch tb.Options.Delete {
+	case D_Disable:
+		return "UPDATE " + tb.TableName + " SET deleted_at=true WHERE " + where, nil
+	case D_Remove:
+		return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
 	}
 	return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
 }
