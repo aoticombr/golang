@@ -42,6 +42,7 @@ type Column struct {
 	Key       bool
 	Insert    bool
 	Update    bool
+	Md5       bool
 	Omitempty bool
 }
 
@@ -145,6 +146,9 @@ func NewTable(table interface{}) *Table {
 					if item == "omitempty" {
 						col.Omitempty = true
 					}
+					if item == "md5" {
+						col.Md5 = true
+					}
 
 				}
 				tb.Columns = append(tb.Columns, col)
@@ -214,8 +218,14 @@ func (tb *Table) SqlInsert() (string, error) {
 							columns += ", "
 							values += ", "
 						}
+						if Col.Md5 {
+							columns += "md5("
+						}
 						columns += Col.Name
 						values += ":" + Col.Name
+						if Col.Md5 {
+							columns += ")"
+						}
 					}
 				}
 
