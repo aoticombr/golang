@@ -8,25 +8,25 @@ import (
 )
 
 type tb0001 struct {
-	Id    string  `json:"id" column:"id" table:"tb0001" primarykey:"true"`
-	Email string  `json:"email" column:"email" `
-	Nome  string  `json:"nome" column:"nome"`
-	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
+	Id    string  `json:"id" column:"id,insert,primarykey" table:"tb0001" `
+	Email string  `json:"email" column:"email,insert,update" `
+	Nome  string  `json:"nome" column:"nome,insert,update"`
+	Cpf   *string `json:"cpf" column:"cpf,insert,update,omitempty"`
 	CRUD  string  `json:"CRUD,crud" `
 }
 
 type tb0002 struct {
-	Id    string  `json:"id" column:"id" table:"tb0001""`
-	Email string  `json:"email" column:"email" `
-	Nome  string  `json:"nome" column:"nome"`
-	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
+	Id    string  `json:"id" column:"id,insert,primarykey" table:"tb0001"`
+	Email string  `json:"email" column:"email,insert,update" `
+	Nome  string  `json:"nome" column:"nome,insert,update"`
+	Cpf   *string `json:"cpf" column:"cpf,insert,update,omitempty"`
 	CRUD  string  `json:"CRUD,crud" `
 }
 type tb0003 struct {
-	Id    string  `json:"id" column:"id" primarykey:"true"`
-	Email string  `json:"email" column:"email" `
-	Nome  string  `json:"nome" column:"nome"`
-	Cpf   *string `json:"cpf" column:"cpf,omitempty"`
+	Id    string  `json:"id" column:"id,insert,primarykey" table:"tb0001"`
+	Email string  `json:"email" column:"email,insert,update" `
+	Nome  string  `json:"nome" column:"nome,insert,update"`
+	Cpf   *string `json:"cpf" column:"cpf,insert,update,omitempty"`
 	CRUD  string  `json:"CRUD,crud" `
 }
 

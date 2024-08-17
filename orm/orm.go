@@ -37,15 +37,42 @@ func GetPrimaryKey(table interface{}) []string {
 	return primaryKeys
 }
 
-type Columns []string
+type Column struct {
+	Name      string
+	Key       bool
+	Insert    bool
+	Update    bool
+	Omitempty bool
+}
+
+func NewColumn(name string) *Column {
+	return &Column{
+		Name:   name,
+		Key:    false,
+		Insert: false,
+		Update: false,
+	}
+}
+
+type Columns []*Column
 
 func (c Columns) Exist(col string) bool {
 	for _, v := range c {
-		if v == col {
+		if v.Name == col {
 			return true
 		}
 	}
 	return false
+}
+
+func (c Columns) CountKeys() int {
+	var count int
+	for _, v := range c {
+		if v.Key {
+			count++
+		}
+	}
+	return count
 }
 
 type Options struct {
@@ -54,12 +81,11 @@ type Options struct {
 }
 
 type Table struct {
-	table       interface{}
-	TableName   string
-	CRUD        string
-	PrimaryKeys Columns
-	Columns     Columns
-	Options     Options
+	table     interface{}
+	TableName string
+	CRUD      string
+	Columns   Columns
+	Options   Options
 }
 
 func NewTable(table interface{}) *Table {
@@ -99,27 +125,38 @@ func NewTable(table interface{}) *Table {
 			tb.TableName = table
 		}
 		column := field.Tag.Get("column")
-		if idx := strings.Index(column, ","); idx != -1 {
-			column = column[:idx]
-		}
-		if column != "" {
-			tb.Columns = append(tb.Columns, column)
-		}
-		key := field.Tag.Get("primarykey")
-		if key == "true" && column != "" {
-			tb.PrimaryKeys = append(tb.PrimaryKeys, column)
-		}
+		itens = strings.Split(column, ",")
+		if len(itens) > 0 {
 
+			if column != "" {
+				col := NewColumn(itens[0])
+
+				// Percorre e processa os itens
+				for _, item := range itens {
+					if item == "insert" {
+						col.Insert = true
+					}
+					if item == "update" {
+						col.Update = true
+					}
+					if item == "primarykey" {
+						col.Key = true
+					}
+					if item == "omitempty" {
+						col.Omitempty = true
+					}
+
+				}
+				tb.Columns = append(tb.Columns, col)
+
+			}
+		}
 	}
 	return tb
 }
 
 func (tb *Table) GetTableName() string {
 	return tb.TableName
-}
-
-func (tb *Table) GetPrimaryKeys() Columns {
-	return tb.PrimaryKeys
 }
 
 func (tb *Table) GetColumns() Columns {
@@ -130,7 +167,7 @@ func (tb *Table) Validate() error {
 	if tb.TableName == "" {
 		return errors.New("table name not found")
 	}
-	if len(tb.PrimaryKeys) == 0 {
+	if tb.Columns.CountKeys() == 0 {
 		return errors.New("primary key not found")
 	}
 	if len(tb.Columns) == 0 {
@@ -151,35 +188,38 @@ func (tb *Table) SqlInsert() (string, error) {
 		v = v.Elem()
 		t = t.Elem()
 	}
-	for a := 0; a < len(tb.Columns); a++ {
-		for b := 0; b < t.NumField(); b++ {
-			field := t.Field(b)
-			value := v.Field(b)
+	for _, Col := range tb.Columns {
+		if Col.Insert {
 
-			column := field.Tag.Get("column")
-			if idx := strings.Index(column, ","); idx != -1 {
-				column = column[:idx]
-			}
-			if column != "" {
-				if tb.Columns[a] == column {
-					if tb.Options.OmitColumnEmpty {
-						if value.Kind() == reflect.Ptr {
-							// If it's a pointer and it's nil, skip it
-							if value.IsNil() {
-								continue
+			for b := 0; b < t.NumField(); b++ {
+				field := t.Field(b)
+				value := v.Field(b)
+
+				column := field.Tag.Get("column")
+				if idx := strings.Index(column, ","); idx != -1 {
+					column = column[:idx]
+				}
+				if column != "" {
+					if Col.Name == column {
+						if tb.Options.OmitColumnEmpty {
+							if value.Kind() == reflect.Ptr {
+								// If it's a pointer and it's nil, skip it
+								if value.IsNil() {
+									continue
+								}
 							}
 						}
-					}
 
-					if columns != "" {
-						columns += ", "
-						values += ", "
+						if columns != "" {
+							columns += ", "
+							values += ", "
+						}
+						columns += Col.Name
+						values += ":" + Col.Name
 					}
-					columns += tb.Columns[a]
-					values += ":" + tb.Columns[a]
 				}
-			}
 
+			}
 		}
 	}
 	return "INSERT INTO " + tb.TableName + " (" + columns + ") VALUES (" + values + ")", nil
@@ -199,8 +239,8 @@ func (tb *Table) SqlUpdate() (string, error) {
 		v = v.Elem()
 		t = t.Elem()
 	}
-	for a := 0; a < len(tb.Columns); a++ {
-		if !tb.PrimaryKeys.Exist(tb.Columns[a]) {
+	for _, Col := range tb.Columns {
+		if Col.Update {
 			for b := 0; b < t.NumField(); b++ {
 				field := t.Field(b)
 				value := v.Field(b)
@@ -218,21 +258,23 @@ func (tb *Table) SqlUpdate() (string, error) {
 					}
 				}
 				if column != "" {
-					if tb.Columns[a] == column {
+					if Col.Name == column {
 						if columns != "" {
 							columns += ", "
 						}
-						columns += tb.Columns[a] + "=:" + tb.Columns[a]
+						columns += Col.Name + "=:" + Col.Name
 					}
 				}
 			}
 		}
 	}
-	for i := 0; i < len(tb.PrimaryKeys); i++ {
-		if i > 0 {
-			where += " AND "
+	for _, Col := range tb.Columns {
+		if Col.Key {
+			if where != "" {
+				where += " AND "
+			}
+			where += Col.Name + "=:" + Col.Name
 		}
-		where += tb.PrimaryKeys[i] + "=:" + tb.PrimaryKeys[i]
 	}
 	return "UPDATE " + tb.TableName + " SET " + columns + " WHERE " + where, nil
 }
@@ -244,15 +286,16 @@ func (tb *Table) SqlDelete() (string, error) {
 	}
 
 	var where string
-	for i := 0; i < len(tb.PrimaryKeys); i++ {
-		if i > 0 {
-			where += " AND "
+	for _, Col := range tb.Columns {
+		if Col.Key {
+			if where != "" {
+				where += " AND "
+			}
+			where += Col.Name + "=:" + Col.Name
 		}
-		where += tb.PrimaryKeys[i] + "=:" + tb.PrimaryKeys[i]
+
 	}
-	if len(tb.PrimaryKeys) == 0 {
-		return "", errors.New("primary key not found")
-	}
+
 	switch tb.Options.Delete {
 	case D_Disable:
 		return "UPDATE " + tb.TableName + " SET deleted_at=true WHERE " + where, nil
