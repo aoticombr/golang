@@ -43,15 +43,20 @@ type Column struct {
 	Insert    bool
 	Update    bool
 	Md5       bool
+	Upper     bool
+	Lower     bool
 	Omitempty bool
 }
 
 func NewColumn(name string) *Column {
 	return &Column{
-		Name:   name,
-		Key:    false,
-		Insert: false,
-		Update: false,
+		Name:      name,
+		Key:       false,
+		Insert:    false,
+		Update:    false,
+		Upper:     false,
+		Lower:     false,
+		Omitempty: false,
 	}
 }
 
@@ -149,6 +154,12 @@ func NewTable(table interface{}) *Table {
 					if item == "md5" {
 						col.Md5 = true
 					}
+					if item == "upper" {
+						col.Upper = true
+					}
+					if item == "lower" {
+						col.Lower = true
+					}
 
 				}
 				tb.Columns = append(tb.Columns, col)
@@ -218,13 +229,27 @@ func (tb *Table) SqlInsert() (string, error) {
 							columns += ", "
 							values += ", "
 						}
-						if Col.Md5 {
-							columns += "md5("
-						}
+
 						columns += Col.Name
-						values += ":" + Col.Name
 						if Col.Md5 {
-							columns += ")"
+							values += "md5("
+						}
+						if Col.Upper {
+							values += "upper("
+						}
+						if Col.Lower {
+							values += "lower("
+						}
+						values += ":" + Col.Name
+
+						if Col.Upper {
+							values += ")"
+						}
+						if Col.Lower {
+							values += ")"
+						}
+						if Col.Md5 {
+							values += ")"
 						}
 					}
 				}
@@ -272,7 +297,29 @@ func (tb *Table) SqlUpdate() (string, error) {
 						if columns != "" {
 							columns += ", "
 						}
-						columns += Col.Name + "=:" + Col.Name
+						columns += Col.Name + "="
+
+						columns += Col.Name
+						if Col.Md5 {
+							columns += "md5("
+						}
+						if Col.Upper {
+							columns += "upper("
+						}
+						if Col.Lower {
+							columns += "lower("
+						}
+						columns += ":" + Col.Name
+
+						if Col.Upper {
+							columns += ")"
+						}
+						if Col.Lower {
+							columns += ")"
+						}
+						if Col.Md5 {
+							columns += ")"
+						}
 					}
 				}
 			}
