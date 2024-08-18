@@ -286,6 +286,12 @@ func (tb *Table) SqlInsert() (string, error) {
 			}
 		}
 	}
+	if columns == "" {
+		return "", errors.New("columns not found")
+	}
+	if values == "" {
+		return "", errors.New("values not found")
+	}
 	return "INSERT INTO " + tb.TableName + " (" + columns + ") VALUES (" + values + ")", nil
 }
 
@@ -364,6 +370,9 @@ func (tb *Table) SqlUpdate() (string, error) {
 			}
 			where += Col.Name + "=:" + Col.Name
 		}
+	}
+	if columns == "" {
+		return "", errors.New("columns not found")
 	}
 	return "UPDATE " + tb.TableName + " SET " + columns + " WHERE " + where, nil
 }
