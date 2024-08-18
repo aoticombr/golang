@@ -254,7 +254,6 @@ func (tb *Table) SqlInsert() (string, error) {
 							columns += ", "
 							values += ", "
 						}
-
 						columns += Col.Name
 						if Col.Md5 {
 							values += "md5("
@@ -268,6 +267,7 @@ func (tb *Table) SqlInsert() (string, error) {
 						if Col.AutoGuid {
 							values += "uuid_generate_v4()::uuid"
 						} else {
+
 							values += ":" + Col.Name
 						}
 
@@ -328,7 +328,6 @@ func (tb *Table) SqlUpdate() (string, error) {
 						}
 						columns += Col.Name + "="
 
-						columns += Col.Name
 						if Col.Md5 {
 							columns += "md5("
 						}
