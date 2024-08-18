@@ -82,8 +82,7 @@ func (c Columns) CountKeys() int {
 }
 
 type Options struct {
-	OmitColumnEmpty bool
-	Delete          Delete
+	Delete Delete
 }
 
 type Table struct {
@@ -98,8 +97,7 @@ func NewTable(table interface{}) *Table {
 	tb := &Table{
 		table: table,
 		Options: Options{
-			OmitColumnEmpty: false,
-			Delete:          D_Remove,
+			Delete: D_Remove,
 		},
 	}
 	t := reflect.TypeOf(tb.table)
@@ -216,7 +214,7 @@ func (tb *Table) SqlInsert() (string, error) {
 				}
 				if column != "" {
 					if Col.Name == column {
-						if tb.Options.OmitColumnEmpty {
+						if Col.Omitempty {
 							if value.Kind() == reflect.Ptr {
 								// If it's a pointer and it's nil, skip it
 								if value.IsNil() {
@@ -284,7 +282,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 				if idx := strings.Index(column, ","); idx != -1 {
 					column = column[:idx]
 				}
-				if tb.Options.OmitColumnEmpty {
+				if Col.Omitempty {
 					if value.Kind() == reflect.Ptr {
 						// If it's a pointer and it's nil, skip it
 						if value.IsNil() {
