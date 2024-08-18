@@ -13,6 +13,14 @@ const (
 	D_Disable
 )
 
+type ActionType int
+
+const (
+	A_Insert ActionType = iota
+	A_Update
+	A_Delete
+)
+
 func GetTable(table interface{}) string {
 	t := reflect.TypeOf(table).Elem()
 	for i := 0; i < t.NumField(); i++ {
@@ -38,25 +46,30 @@ func GetPrimaryKey(table interface{}) []string {
 }
 
 type Column struct {
-	Name      string
-	Key       bool
-	Insert    bool
-	Update    bool
-	Md5       bool
-	Upper     bool
-	Lower     bool
-	Omitempty bool
+	Name       string
+	Key        bool
+	Insert     bool
+	Update     bool
+	Md5        bool
+	Upper      bool
+	Lower      bool
+	AutoGuid   bool
+	Omitempty  bool
+	ActionType bool
 }
 
 func NewColumn(name string) *Column {
 	return &Column{
-		Name:      name,
-		Key:       false,
-		Insert:    false,
-		Update:    false,
-		Upper:     false,
-		Lower:     false,
-		Omitempty: false,
+		Name:       name,
+		Key:        false,
+		Insert:     false,
+		Update:     false,
+		Upper:      false,
+		Lower:      false,
+		ActionType: false,
+		Omitempty:  false,
+		Md5:        false,
+		AutoGuid:   false,
 	}
 }
 
@@ -86,11 +99,11 @@ type Options struct {
 }
 
 type Table struct {
-	table     interface{}
-	TableName string
-	CRUD      string
-	Columns   Columns
-	Options   Options
+	table      interface{}
+	TableName  string
+	ActionType ActionType
+	Columns    Columns
+	Options    Options
 }
 
 func NewTable(table interface{}) *Table {
@@ -117,13 +130,6 @@ func NewTable(table interface{}) *Table {
 		}
 		status := field.Tag.Get("json")
 		itens := strings.Split(status, ",")
-		// Percorre e processa os itens
-		for _, item := range itens {
-			if item == "crud" {
-				//capturar valor string do campo
-				tb.CRUD = Value.(string)
-			}
-		}
 
 		if table != "" {
 			tb.TableName = table
@@ -137,25 +143,42 @@ func NewTable(table interface{}) *Table {
 
 				// Percorre e processa os itens
 				for _, item := range itens {
-					if item == "insert" {
+					if item == "#actiontype" {
+						col.ActionType = true
+						switch Value.(string) {
+						case "new":
+							tb.ActionType = A_Insert
+						case "old":
+							tb.ActionType = A_Update
+						case "del":
+							tb.ActionType = A_Delete
+						default:
+							tb.ActionType = A_Insert
+						}
+						continue
+					}
+					if item == "#autoguid" {
+						col.AutoGuid = true
+					}
+					if item == "#insert" {
 						col.Insert = true
 					}
-					if item == "update" {
+					if item == "#update" {
 						col.Update = true
 					}
-					if item == "primarykey" {
+					if item == "#primarykey" {
 						col.Key = true
 					}
-					if item == "omitempty" {
+					if item == "#omitempty" {
 						col.Omitempty = true
 					}
-					if item == "md5" {
+					if item == "#md5" {
 						col.Md5 = true
 					}
-					if item == "upper" {
+					if item == "#upper" {
 						col.Upper = true
 					}
-					if item == "lower" {
+					if item == "#lower" {
 						col.Lower = true
 					}
 
@@ -238,7 +261,11 @@ func (tb *Table) SqlInsert() (string, error) {
 						if Col.Lower {
 							values += "lower("
 						}
-						values += ":" + Col.Name
+						if Col.AutoGuid {
+							values += "uuid_generate_v4()::uuid"
+						} else {
+							values += ":" + Col.Name
+						}
 
 						if Col.Upper {
 							values += ")"
@@ -361,12 +388,12 @@ func (tb *Table) SqlDelete() (string, error) {
 }
 
 func (tb *Table) SqlStatus() (string, error) {
-	switch tb.CRUD {
-	case "new":
+	switch tb.ActionType {
+	case A_Insert:
 		return tb.SqlInsert()
-	case "old":
+	case A_Update:
 		return tb.SqlUpdate()
-	case "del":
+	case A_Delete:
 		return tb.SqlDelete()
 	}
 	return "", errors.New("status not found")
