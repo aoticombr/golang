@@ -314,9 +314,13 @@ func (tb *Table) SqlUpdate() (string, error) {
 					column = column[:idx]
 				}
 				if Col.Omitempty {
-					if value.Kind() == reflect.Ptr {
-						// If it's a pointer and it's nil, skip it
+					switch value.Kind() {
+					case reflect.Ptr:
 						if value.IsNil() {
+							continue
+						}
+					case reflect.String:
+						if value.String() == "" {
 							continue
 						}
 					}
