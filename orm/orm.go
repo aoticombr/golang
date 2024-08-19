@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+type DB int
+
+const (
+	DB_Oracle DB = iota
+	DB_Postgres
+)
+
 type Delete int
 
 const (
@@ -46,30 +53,36 @@ func GetPrimaryKey(table interface{}) []string {
 }
 
 type Column struct {
-	Name       string
-	Key        bool
-	Insert     bool
-	Update     bool
-	Md5        bool
-	Upper      bool
-	Lower      bool
-	AutoGuid   bool
-	Omitempty  bool
-	ActionType bool
+	Name        string
+	PrimaryKey  bool
+	UniqueKey   bool
+	Required    bool
+	Insert      bool
+	Update      bool
+	Md5         bool
+	Upper       bool
+	Lower       bool
+	AutoGuid    bool
+	Omitempty   bool
+	ActionType  bool
+	ReturnValue bool
 }
 
 func NewColumn(name string) *Column {
 	return &Column{
-		Name:       name,
-		Key:        false,
-		Insert:     false,
-		Update:     false,
-		Upper:      false,
-		Lower:      false,
-		ActionType: false,
-		Omitempty:  false,
-		Md5:        false,
-		AutoGuid:   false,
+		Name:        name,
+		PrimaryKey:  false,
+		UniqueKey:   false,
+		Insert:      false,
+		Update:      false,
+		Upper:       false,
+		Lower:       false,
+		ActionType:  false,
+		Omitempty:   false,
+		Md5:         false,
+		AutoGuid:    false,
+		Required:    false,
+		ReturnValue: false,
 	}
 }
 
@@ -87,7 +100,16 @@ func (c Columns) Exist(col string) bool {
 func (c Columns) CountKeys() int {
 	var count int
 	for _, v := range c {
-		if v.Key {
+		if v.PrimaryKey {
+			count++
+		}
+	}
+	return count
+}
+func (c Columns) CountReturn() int {
+	var count int
+	for _, v := range c {
+		if v.ReturnValue {
 			count++
 		}
 	}
@@ -96,6 +118,7 @@ func (c Columns) CountKeys() int {
 
 type Options struct {
 	Delete Delete
+	Db     DB
 }
 
 type Table struct {
@@ -111,6 +134,7 @@ func NewTable(table interface{}) *Table {
 		table: table,
 		Options: Options{
 			Delete: D_Remove,
+			Db:     DB_Postgres,
 		},
 	}
 	t := reflect.TypeOf(tb.table)
@@ -128,14 +152,9 @@ func NewTable(table interface{}) *Table {
 		if table != "" {
 			tb.TableName = table
 		}
-		status := field.Tag.Get("json")
-		itens := strings.Split(status, ",")
 
-		if table != "" {
-			tb.TableName = table
-		}
 		column := field.Tag.Get("column")
-		itens = strings.Split(column, ",")
+		itens := strings.Split(column, ",")
 		if len(itens) > 0 {
 
 			if column != "" {
@@ -167,7 +186,16 @@ func NewTable(table interface{}) *Table {
 						col.Update = true
 					}
 					if item == "#primarykey" {
-						col.Key = true
+						col.PrimaryKey = true
+					}
+					if item == "#uniquekey" {
+						col.UniqueKey = true
+					}
+					if item == "#required" {
+						col.Required = true
+					}
+					if item == "#returnvalue" {
+						col.ReturnValue = true
 					}
 					if item == "#omitempty" {
 						col.Omitempty = true
@@ -211,13 +239,8 @@ func (tb *Table) Validate() error {
 	}
 	return nil
 }
+func (tb *Table) ValidateInc() error {
 
-func (tb *Table) SqlInsert() (string, error) {
-	err := tb.Validate()
-	if err != nil {
-		return "", err
-	}
-	var columns, values string
 	t := reflect.TypeOf(tb.table)
 	v := reflect.ValueOf(tb.table)
 	if v.Kind() == reflect.Ptr {
@@ -237,6 +260,71 @@ func (tb *Table) SqlInsert() (string, error) {
 				}
 				if column != "" {
 					if Col.Name == column {
+						if Col.Required {
+							switch value.Kind() {
+							case reflect.Ptr:
+								if value.IsNil() {
+									return errors.New("column " + Col.Name + " is required")
+								}
+							case reflect.String:
+								if value.String() == "" {
+									return errors.New("column " + Col.Name + " is required")
+								}
+							}
+						}
+
+					}
+				}
+
+			}
+		}
+	}
+	return nil
+
+}
+
+func (tb *Table) SqlInsert() (string, error) {
+	err := tb.Validate()
+	if err != nil {
+		return "", err
+	}
+	err = tb.ValidateInc()
+	if err != nil {
+		return "", err
+	}
+	var columns, values, returncolumn, returninto string
+	t := reflect.TypeOf(tb.table)
+	v := reflect.ValueOf(tb.table)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+		t = t.Elem()
+	}
+	for _, Col := range tb.Columns {
+
+		if Col.Insert || Col.ReturnValue || Col.AutoGuid {
+
+			for b := 0; b < t.NumField(); b++ {
+				field := t.Field(b)
+				value := v.Field(b)
+
+				column := field.Tag.Get("column")
+				if idx := strings.Index(column, ","); idx != -1 {
+					column = column[:idx]
+				}
+				if column != "" && Col.ReturnValue {
+					if Col.Name == column {
+						if returncolumn != "" {
+							returncolumn += ", "
+							returninto += ", "
+						}
+						returncolumn += Col.Name
+						returninto += ":new_" + Col.Name
+					}
+
+				}
+				if column != "" && (Col.Insert || Col.AutoGuid) {
+					if Col.Name == column {
+
 						if Col.Omitempty {
 							switch value.Kind() {
 							case reflect.Ptr:
@@ -254,6 +342,7 @@ func (tb *Table) SqlInsert() (string, error) {
 							columns += ", "
 							values += ", "
 						}
+
 						columns += Col.Name
 						if Col.Md5 {
 							values += "md5("
@@ -267,10 +356,8 @@ func (tb *Table) SqlInsert() (string, error) {
 						if Col.AutoGuid {
 							values += "uuid_generate_v4()::uuid"
 						} else {
-
 							values += ":" + Col.Name
 						}
-
 						if Col.Upper {
 							values += ")"
 						}
@@ -292,7 +379,16 @@ func (tb *Table) SqlInsert() (string, error) {
 	if values == "" {
 		return "", errors.New("values not found")
 	}
-	return "INSERT INTO " + tb.TableName + " (" + columns + ") VALUES (" + values + ")", nil
+	returnvalue := ""
+	if tb.Columns.CountReturn() > 0 {
+		switch tb.Options.Db {
+		case DB_Oracle:
+			returnvalue = " returning " + returncolumn + " into " + returninto
+		case DB_Postgres:
+			returnvalue = " returning " + returncolumn
+		}
+	}
+	return "insert into " + tb.TableName + " (" + columns + ") values (" + values + ")" + returnvalue, nil
 }
 
 func (tb *Table) SqlUpdate() (string, error) {
@@ -363,8 +459,11 @@ func (tb *Table) SqlUpdate() (string, error) {
 			}
 		}
 	}
+	if tb.Options.Delete == D_Disable {
+		where = "deleted_at is null"
+	}
 	for _, Col := range tb.Columns {
-		if Col.Key {
+		if Col.PrimaryKey {
 			if where != "" {
 				where += " AND "
 			}
@@ -384,8 +483,12 @@ func (tb *Table) SqlDelete() (string, error) {
 	}
 
 	var where string
+	if tb.Options.Delete == D_Disable {
+		where = "deleted_at is null"
+	}
 	for _, Col := range tb.Columns {
-		if Col.Key {
+		if Col.PrimaryKey {
+
 			if where != "" {
 				where += " AND "
 			}
@@ -396,7 +499,7 @@ func (tb *Table) SqlDelete() (string, error) {
 
 	switch tb.Options.Delete {
 	case D_Disable:
-		return "UPDATE " + tb.TableName + " SET deleted_at=true WHERE " + where, nil
+		return "UPDATE " + tb.TableName + " SET deleted_at=current_timestamp  WHERE " + where, nil
 	case D_Remove:
 		return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
 	}
