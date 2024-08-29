@@ -354,7 +354,19 @@ func (tb *Table) SqlInsert() (string, error) {
 							values += "lower("
 						}
 						if Col.AutoGuid {
-							values += "uuid_generate_v4()::uuid"
+							switch value.Kind() {
+							case reflect.Ptr:
+								if value.IsNil() {
+									values += "uuid_generate_v4()::uuid"
+								}
+							case reflect.String:
+								if value.String() == "" {
+									values += "uuid_generate_v4()::uuid"
+								}
+							default:
+								values += ":" + Col.Name
+							}
+
 						} else {
 							values += ":" + Col.Name
 						}

@@ -58,8 +58,12 @@ func (A *auth2) GetToken() (string, error) {
 	} else {
 		HttpToken.AuthorizationType = AT_Nenhum
 		HttpToken.Request.AddFormField("grant_type", "client_credentials")
-		HttpToken.Request.AddFormField("client_id", A.ClientId)
-		HttpToken.Request.AddFormField("client_secret", A.ClientSecret)
+		if A.ClientId != "" {
+			HttpToken.Request.AddFormField("client_id", A.ClientId)
+		}
+		if A.ClientSecret != "" {
+			HttpToken.Request.AddFormField("client_secret", A.ClientSecret)
+		}
 		if A.Scope != "" {
 			HttpToken.Request.AddFormField("scope", A.Scope)
 		}
