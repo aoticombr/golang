@@ -64,6 +64,7 @@ type Column struct {
 	Lower       bool
 	AutoGuid    bool
 	Omitempty   bool
+	Nullempty   bool
 	ActionType  bool
 	ReturnValue bool
 }
@@ -79,6 +80,7 @@ func NewColumn(name string) *Column {
 		Lower:       false,
 		ActionType:  false,
 		Omitempty:   false,
+		Nullempty:   false,
 		Md5:         false,
 		AutoGuid:    false,
 		Required:    false,
@@ -199,6 +201,9 @@ func NewTable(table interface{}) *Table {
 					}
 					if item == "#omitempty" {
 						col.Omitempty = true
+					}
+					if item == "#nullempty" {
+						col.Nullempty = true
 					}
 					if item == "#md5" {
 						col.Md5 = true
@@ -353,15 +358,29 @@ func (tb *Table) SqlInsert() (string, error) {
 						if Col.Lower {
 							values += "lower("
 						}
+						if Col.Nullempty {
+							switch value.Kind() {
+							case reflect.Ptr:
+								if value.IsNil() {
+									values += "null"
+								} else {
+									values += ":" + Col.Name
+								}
+							}
+						}
 						if Col.AutoGuid {
 							switch value.Kind() {
 							case reflect.Ptr:
 								if value.IsNil() {
 									values += "uuid_generate_v4()::uuid"
+								} else {
+									values += ":" + Col.Name
 								}
 							case reflect.String:
 								if value.String() == "" {
 									values += "uuid_generate_v4()::uuid"
+								} else {
+									values += ":" + Col.Name
 								}
 							default:
 								values += ":" + Col.Name
@@ -455,7 +474,18 @@ func (tb *Table) SqlUpdate() (string, error) {
 						if Col.Lower {
 							columns += "lower("
 						}
-						columns += ":" + Col.Name
+						if Col.Nullempty {
+							switch value.Kind() {
+							case reflect.Ptr:
+								if value.IsNil() {
+									columns += "null"
+								} else {
+									columns += ":" + Col.Name
+								}
+							}
+						} else {
+							columns += ":" + Col.Name
+						}
 
 						if Col.Upper {
 							columns += ")"
