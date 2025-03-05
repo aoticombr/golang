@@ -25,9 +25,10 @@ const (
 
 type THttp struct {
 	/*privado*/
-	req *http.Request
-	ws  *websocket.Conn
-	url string
+	req      *http.Request
+	ws       *websocket.Conn
+	url      string
+	urlFinal string
 
 	/*publico*/
 	Auth2             *auth2
@@ -269,6 +270,10 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	return nil
 }
 
+func (H *THttp) GetUrlFinal() string {
+	return H.urlFinal
+}
+
 func (H *THttp) Send() (*Response, error) {
 	//fmt.Println("==================")
 	//fmt.Println("Send..")
@@ -292,7 +297,7 @@ func (H *THttp) Send() (*Response, error) {
 		Config.Certificates = []tls.Certificate{cert}
 	}
 	if trans != nil {
-		if strings.EqualFold(H.Protocolo, "HTTPS") {
+		if strings.EqualFold(strings.ToUpper(H.Protocolo), "HTTPS") {
 			trans.TLSClientConfig = Config
 		}
 	} else {
@@ -306,13 +311,14 @@ func (H *THttp) Send() (*Response, error) {
 	}
 
 	uri := H.GetUrl()
+	H.urlFinal = uri
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
 		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
 	}
 	switch H.EncType {
 	case ET_NONE:
 		//fmt.Println("CT_NONE:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, nil)
 
 	case ET_FORM_DATA:
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
@@ -384,7 +390,7 @@ func (H *THttp) Send() (*Response, error) {
 		}
 		multipartWriter.Close() //isso aqui nao fecha e sim escreve a ultima linha
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, &requestBody)
 
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 
@@ -396,10 +402,10 @@ func (H *THttp) Send() (*Response, error) {
 				formData.Add(v.FieldName, v.FieldValue)
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(formData.Encode()))
 	case ET_RAW:
 		//fmt.Println("CT_TEXT:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
 		fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
@@ -413,7 +419,7 @@ func (H *THttp) Send() (*Response, error) {
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), fileBuffer)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, fileBuffer)
 	}
 
 	if err != nil {
