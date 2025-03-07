@@ -59,6 +59,7 @@ type Column struct {
 	Required    bool
 	Insert      bool
 	Update      bool
+	Delete      bool
 	Md5         bool
 	Upper       bool
 	Lower       bool
@@ -76,6 +77,7 @@ func NewColumn(name string) *Column {
 		UniqueKey:   false,
 		Insert:      false,
 		Update:      false,
+		Delete:      false,
 		Upper:       false,
 		Lower:       false,
 		ActionType:  false,
@@ -186,6 +188,9 @@ func NewTable(table interface{}) *Table {
 					}
 					if item == "#update" {
 						col.Update = true
+					}
+					if item == "#delete" {
+						col.Delete = true
 					}
 					if item == "#primarykey" {
 						col.PrimaryKey = true
@@ -367,8 +372,7 @@ func (tb *Table) SqlInsert() (string, error) {
 									values += ":" + Col.Name
 								}
 							}
-						}
-						if Col.AutoGuid {
+						} else if Col.AutoGuid {
 							switch value.Kind() {
 							case reflect.Ptr:
 								if value.IsNil() {
@@ -529,7 +533,7 @@ func (tb *Table) SqlDelete() (string, error) {
 		where = "deleted_at is null"
 	}
 	for _, Col := range tb.Columns {
-		if Col.PrimaryKey {
+		if Col.PrimaryKey && Col.Delete {
 
 			if where != "" {
 				where += " AND "
