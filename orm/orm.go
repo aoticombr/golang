@@ -533,7 +533,7 @@ func (tb *Table) SqlDelete() (string, error) {
 		where = "deleted_at is null"
 	}
 	for _, Col := range tb.Columns {
-		if Col.PrimaryKey && Col.Delete {
+		if Col.PrimaryKey || Col.Delete {
 
 			if where != "" {
 				where += " AND "
