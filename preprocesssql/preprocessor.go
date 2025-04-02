@@ -1082,14 +1082,14 @@ func PreprocessSQL(commandtext string, ACreateParams, ACreateMacros, AExpandMacr
 	if AParseSQL {
 		oPrep.Instrs.Add(piParseSQL)
 	}
-	oPrep.Execute()
+	erro := oPrep.Execute()
 	// for _, par := range oPrep.Params.Items {
 	// 	fmt.Println("param.Name:", par.Name)
 	// }
 	// for _, mac := range oPrep.MacrosUpd.Items {
 	// 	fmt.Println("macro.Name:", mac.Name)
 	// }
-	return oPrep.Params, oPrep.MacrosUpd, oPrep.MacrosRead, nil
+	return oPrep.Params, oPrep.MacrosUpd, oPrep.MacrosRead, erro
 }
 
 func main() {

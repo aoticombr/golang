@@ -61,6 +61,7 @@ type Column struct {
 	Update      bool
 	Delete      bool
 	Where       bool
+	TimeNow     bool
 	Md5         bool
 	Upper       bool
 	Lower       bool
@@ -80,6 +81,7 @@ func NewColumn(name string) *Column {
 		Update:      false,
 		Delete:      false,
 		Where:       false,
+		TimeNow:     false,
 		Upper:       false,
 		Lower:       false,
 		ActionType:  false,
@@ -195,7 +197,10 @@ func NewTable(table interface{}) *Table {
 						col.Delete = true
 					}
 					if item == "#where" {
-						col.Delete = true
+						col.Where = true
+					}
+					if item == "#timenow" {
+						col.TimeNow = true
 					}
 					if item == "#primarykey" {
 						col.PrimaryKey = true
@@ -316,7 +321,7 @@ func (tb *Table) SqlInsert() (string, error) {
 	}
 	for _, Col := range tb.Columns {
 
-		if Col.Insert || Col.ReturnValue || Col.AutoGuid {
+		if Col.Insert || Col.ReturnValue || Col.AutoGuid || Col.TimeNow {
 
 			for b := 0; b < t.NumField(); b++ {
 				field := t.Field(b)
@@ -337,10 +342,10 @@ func (tb *Table) SqlInsert() (string, error) {
 					}
 
 				}
-				if column != "" && (Col.Insert || Col.AutoGuid) {
+				if column != "" && (Col.Insert || Col.AutoGuid || Col.TimeNow) {
 					if Col.Name == column {
 
-						if Col.Omitempty {
+						if Col.Omitempty && !Col.TimeNow {
 							switch value.Kind() {
 							case reflect.Ptr:
 								if value.IsNil() {
@@ -395,6 +400,8 @@ func (tb *Table) SqlInsert() (string, error) {
 								values += ":" + Col.Name
 							}
 
+						} else if Col.TimeNow {
+							values += "current_timestamp"
 						} else {
 							values += ":" + Col.Name
 						}
@@ -446,7 +453,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 		t = t.Elem()
 	}
 	for _, Col := range tb.Columns {
-		if Col.Update {
+		if Col.Update || Col.TimeNow {
 			for b := 0; b < t.NumField(); b++ {
 				field := t.Field(b)
 				value := v.Field(b)
@@ -455,7 +462,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 				if idx := strings.Index(column, ","); idx != -1 {
 					column = column[:idx]
 				}
-				if Col.Omitempty {
+				if Col.Omitempty && !Col.TimeNow {
 					switch value.Kind() {
 					case reflect.Ptr:
 						if value.IsNil() {
@@ -472,7 +479,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 						if columns != "" {
 							columns += ", "
 						}
-						columns += Col.Name + "="
+						columns += Col.Name + " = "
 
 						if Col.Md5 {
 							columns += "md5("
@@ -492,6 +499,9 @@ func (tb *Table) SqlUpdate() (string, error) {
 									columns += ":" + Col.Name
 								}
 							}
+						} else if Col.TimeNow {
+							columns += "current_timestamp"
+
 						} else {
 							columns += ":" + Col.Name
 						}
@@ -550,7 +560,7 @@ func (tb *Table) SqlDelete() (string, error) {
 
 	switch tb.Options.Delete {
 	case D_Disable:
-		return "UPDATE " + tb.TableName + " SET deleted_at=current_timestamp  WHERE " + where, nil
+		return "UPDATE " + tb.TableName + " SET deleted_at = current_timestamp  WHERE " + where, nil
 	case D_Remove:
 		return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
 	}
