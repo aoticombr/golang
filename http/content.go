@@ -106,6 +106,29 @@ func GetContentTypeFromString(str string) ContentType {
 		return CT_X_WWW_FORM_URLENCODED
 	case "application/octet-stream":
 		return CT_BINARY
+	case "application/soap+xml":
+		return CT_SOAPXML
+	case "application/pdf":
+		return CT_PDF
+	case "application/zip":
+		return CT_ZIP
+	case "image/png":
+		return CT_PNG
+	case "image/jpeg":
+		return CT_JPEG
+	case "image/gif":
+		return CT_GIF
+	case "image/svg+xml":
+		return CT_SVGXML
+	case "audio/mpeg":
+		return CT_MPEG
+	case "audio/ogg":
+		return CT_OGG
+	case "video/mp4":
+		return CT_MP4
+	case "video/webm":
+		return CT_WEBM
+
 	default:
 		return CT_NONE
 	}
