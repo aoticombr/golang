@@ -71,6 +71,22 @@ func NewHttp() *THttp {
 	return ht
 }
 
+func (H *THttp) Free() {
+	if H.ws != nil {
+		H.ws.Close()
+		H.ws = nil
+	}
+
+	H.Request = nil
+	H.Response = nil
+	H.Auth2 = nil
+	H.WebSocket = nil
+	H.Params = nil
+	H.Varibles = nil
+	H.Proxy = nil
+	H.req = nil
+}
+
 func (H *THttp) SetMetodoStr(value string) error {
 	H.Metodo, _ = GetStrFromMethod(value)
 	return nil
@@ -193,7 +209,7 @@ func (H *THttp) completAutorization(req *http.Request) error {
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
-			return fmt.Errorf("Erro ao obter o token:", err.Error())
+			return fmt.Errorf("erro ao obter o token: %v", err.Error())
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
@@ -350,11 +366,11 @@ func (H *THttp) Send() (*Response, error) {
 			for _, v := range H.Request.ItensContentBin {
 				fileWriter, err := multipartWriter.CreateFormFile(v.Name, v.FileName)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao criar o arquivo %s: %v", v.FileName, err)
 				}
 				_, err = fileWriter.Write(v.Value)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao escrever o arquivo %s: %v", v.FileName, err)
 				}
 			}
 		}
@@ -523,7 +539,7 @@ func (H *THttp) websocketClient() error {
 	go func() {
 		for {
 
-			fmt.Println("################", err)
+			//fmt.Println("################", err)
 			if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == true) {
 				H.WebSocket.connect = CONNECTING
 				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
