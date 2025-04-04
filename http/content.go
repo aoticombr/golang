@@ -30,6 +30,15 @@ const (
 	CT_BINARY                ContentType = 8
 	CT_SOAPXML               ContentType = 9
 	CT_PDF                   ContentType = 10
+	CT_ZIP                   ContentType = 11
+	CT_PNG                   ContentType = 12
+	CT_JPEG                  ContentType = 13
+	CT_GIF                   ContentType = 14
+	CT_SVGXML                ContentType = 15
+	CT_MPEG                  ContentType = 16
+	CT_OGG                   ContentType = 17
+	CT_MP4                   ContentType = 18
+	CT_WEBM                  ContentType = 19
 )
 
 func GeContentTypeStr(value ContentType) string {
@@ -55,6 +64,24 @@ func GeContentTypeStr(value ContentType) string {
 		return "application/soap+xml"
 	case CT_PDF:
 		return "application/pdf"
+	case CT_ZIP:
+		return "application/zip"
+	case CT_PNG:
+		return "image/png"
+	case CT_JPEG:
+		return "image/jpeg"
+	case CT_GIF:
+		return "image/gif"
+	case CT_SVGXML:
+		return "image/svg+xml"
+	case CT_MPEG:
+		return "audio/mpeg"
+	case CT_OGG:
+		return "audio/ogg"
+	case CT_MP4:
+		return "video/mp4"
+	case CT_WEBM:
+		return "video/webm"
 	default:
 		return ""
 	}
