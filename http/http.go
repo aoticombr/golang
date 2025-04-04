@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-
 	"net/http"
 	"net/url"
 	"strings"
@@ -209,7 +208,7 @@ func (H *THttp) completAutorization(req *http.Request) error {
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
-			return fmt.Errorf("erro ao obter o token: %v", err.Error())
+			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
@@ -252,11 +251,11 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	}
 	//	fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
-		fmt.Println("passou aqui 2.1")
+		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
-			return fmt.Errorf("Erro ao obter o token:", err.Error())
+			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
@@ -290,12 +289,18 @@ func (H *THttp) GetUrlFinal() string {
 	return H.urlFinal
 }
 
-func (H *THttp) Send() (*Response, error) {
-	//fmt.Println("==================")
+func (H *THttp) Send() (RES *Response, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			//fmt.Printf("Recuperado de um panic no método Send: %v\n", r)
+			RES = nil
+			err = fmt.Errorf("recuperado de um panic no método Send: %v", r)
+		}
+	}()
 	//fmt.Println("Send..")
 	//fmt.Println("------------------")
 	H.Response = NewResponse()
-	var err error
+
 	var resp *http.Response
 	var trans *http.Transport
 	var cert tls.Certificate
@@ -305,7 +310,7 @@ func (H *THttp) Send() (*Response, error) {
 	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
 		cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("erro ao carregar certificado: %v", err)
 		}
 	}
 	Config = &tls.Config{InsecureSkipVerify: true}
@@ -329,7 +334,7 @@ func (H *THttp) Send() (*Response, error) {
 	uri := H.GetUrl()
 	H.urlFinal = uri
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
-		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
+		return nil, fmt.Errorf("erro ao validar URL, variáveis não substituídas: %s", uri)
 	}
 	switch H.EncType {
 	case ET_NONE:
@@ -346,11 +351,11 @@ func (H *THttp) Send() (*Response, error) {
 				if v.ContentType != "" {
 					fileWriter, err := multipartWriter.CreateFormFile3(v.FieldName, v.ContentType)
 					if err != nil {
-						return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FieldName, err)
+						return nil, fmt.Errorf("erro ao criar o arquivo %s: %s\n", v.FieldName, err)
 					}
 					_, err = fileWriter.Write([]byte(v.FieldValue))
 					if err != nil {
-						return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
+						return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
 					}
 				} else {
 					multipartWriter.WriteField(v.FieldName, v.FieldValue)
@@ -396,11 +401,11 @@ func (H *THttp) Send() (*Response, error) {
 
 				//fileWriter, err := multipartWriter.CreateFormFile(v.Key, v.FileName)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao criar o arquivo %s: %s\n", v.FileName, err)
 				}
 				_, err = fileWriter.Write(v.Content)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FileName, err)
 				}
 			}
 		}
@@ -423,7 +428,7 @@ func (H *THttp) Send() (*Response, error) {
 		//fmt.Println("CT_TEXT:")
 		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
-		fmt.Println("CT_BINARY:")
+		//fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
@@ -439,7 +444,7 @@ func (H *THttp) Send() (*Response, error) {
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+		return nil, fmt.Errorf("erro ao criar a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
 
 	H.completAutorization(H.req)
@@ -447,15 +452,15 @@ func (H *THttp) Send() (*Response, error) {
 	resp, err = client.Do(H.req)
 
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao fazer a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+		return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
 	defer resp.Body.Close()
 	// Ler a resposta (opcional)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao ler body : %s\n", err)
+		return nil, fmt.Errorf("erro ao ler body: %v", err)
 	}
-	RES := &Response{
+	RES = &Response{
 		StatusCode:    resp.StatusCode,
 		StatusMessage: resp.Status,
 		Body:          body,
@@ -637,29 +642,32 @@ func (H *THttp) IsConect() bool {
 	return false
 }
 func (H *THttp) Desconectar() error {
+	if H.ws == nil {
+		return fmt.Errorf("conexão WebSocket não inicializada")
+	}
 	return H.ws.Close()
 }
 func (H *THttp) EnviarBinario(messageType int, data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(messageType, data)
 }
 func (H *THttp) EnviarTexto(messageType int, data string) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(messageType, []byte(data))
 }
 func (H *THttp) EnviarTextTypeTextMessage(data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(websocket.TextMessage, data)
 }
 func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(websocket.BinaryMessage, data)
 }

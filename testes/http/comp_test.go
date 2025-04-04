@@ -67,6 +67,26 @@ func TestAuth2_tipo2(t *testing.T) {
 	fmt.Println("Body string:", string(resp.Body))
 
 }
+func TestGetRaw(t *testing.T) {
+	fmt.Println("Teste")
+	cp := http.NewHttp()
+	cp.SetUrl("https://aoti123.free.beeceptor.com")
+
+	cp.Metodo = http.M_GET
+	cp.EncType = http.ET_RAW
+	cp.Request.Header.ContentType = "application/json"
+	resp, err := cp.Send()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Code:", resp.StatusCode)
+	fmt.Println("Msg:", resp.StatusMessage)
+	for k, v := range resp.Header {
+		fmt.Println("Header:", k, v)
+	}
+	fmt.Println("Body:", resp.Body)
+	fmt.Println("Body string:", string(resp.Body))
+}
 func TestSendRaw(t *testing.T) {
 	fmt.Println("Teste")
 	cp := http.NewHttp()
