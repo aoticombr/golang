@@ -28,6 +28,8 @@ const (
 	CT_MULTIPART_FORM_DATA   ContentType = 6
 	CT_X_WWW_FORM_URLENCODED ContentType = 7
 	CT_BINARY                ContentType = 8
+	CT_SOAPXML               ContentType = 9
+	CT_PDF                   ContentType = 10
 )
 
 func GeContentTypeStr(value ContentType) string {
@@ -49,6 +51,10 @@ func GeContentTypeStr(value ContentType) string {
 		return "application/x-www-form-urlencoded"
 	case CT_BINARY:
 		return "application/octet-stream"
+	case CT_SOAPXML:
+		return "application/soap+xml"
+	case CT_PDF:
+		return "application/pdf"
 	default:
 		return ""
 	}
