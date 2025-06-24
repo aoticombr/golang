@@ -400,7 +400,7 @@ func (tb *Table) SqlInsert() (string, error) {
 								values += ":" + Col.Name
 							}
 
-						} else if Col.TimeNow {
+						} else if Col.TimeNow && Col.Insert {
 							values += "current_timestamp"
 						} else {
 							values += ":" + Col.Name
@@ -453,7 +453,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 		t = t.Elem()
 	}
 	for _, Col := range tb.Columns {
-		if Col.Update || Col.TimeNow {
+		if Col.Update {
 			for b := 0; b < t.NumField(); b++ {
 				field := t.Field(b)
 				value := v.Field(b)
@@ -499,7 +499,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 									columns += ":" + Col.Name
 								}
 							}
-						} else if Col.TimeNow {
+						} else if Col.TimeNow && Col.Update {
 							columns += "current_timestamp"
 
 						} else {
