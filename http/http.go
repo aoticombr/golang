@@ -194,14 +194,7 @@ func (H *THttp) completHeader() {
 }
 func (H *THttp) completAutorization(req *http.Request) error {
 	//	fmt.Println("passou aqui 1")
-	if H.AuthorizationType == AT_AutoDetect {
-		//	fmt.Println("passou aqui 1.1")
-		if H.Authorization != "" {
-			H.AuthorizationType = AT_Bearer
-		} else if H.UserName != "" && H.Password != "" {
-			H.AuthorizationType = AT_Basic
-		}
-	}
+
 	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
 		//	fmt.Println("passou aqui 2.1")
@@ -445,6 +438,14 @@ func (H *THttp) Send() (RES *Response, err error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar a requisição %s: %v", GetMethodStr(H.Metodo), err)
+	}
+	if H.AuthorizationType == AT_AutoDetect {
+		//	fmt.Println("passou aqui 1.1")
+		if H.Authorization != "" {
+			H.AuthorizationType = AT_Bearer
+		} else if H.UserName != "" && H.Password != "" {
+			H.AuthorizationType = AT_Basic
+		}
 	}
 	if H.AuthorizationType == AT_Auth2 && H.Auth2.AuthUrl != "" && (H.Auth2.AuthUrl == H.GetUrl() || H.GetUrl() == "") {
 		RES, err = H.Auth2.Send()
