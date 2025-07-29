@@ -446,17 +446,18 @@ func (H *THttp) Send() (RES *Response, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
-	if H.Auth2.AuthUrl != H.GetUrl() {
-		H.completAutorization(H.req)
-		H.completHeader()
-		resp, err = client.Do(H.req)
-	} else {
+	if H.AuthorizationType == AT_Auth2 && H.Auth2.AuthUrl != "" && (H.Auth2.AuthUrl == H.GetUrl() || H.GetUrl() == "") {
 		RES, err = H.Auth2.Send()
 		if err != nil {
 			return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
 		}
 		H.Response = RES
 		return RES, nil
+
+	} else {
+		H.completAutorization(H.req)
+		H.completHeader()
+		resp, err = client.Do(H.req)
 	}
 
 	if err != nil {
