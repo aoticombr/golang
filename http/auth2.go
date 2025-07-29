@@ -32,10 +32,7 @@ type auth2 struct {
 	Erro         error
 }
 
-func (A *auth2) GetToken() (string, error) {
-	var (
-		TokenResponse TokenResponse
-	)
+func (A *auth2) Send() (RES *Response, err error) {
 	HttpToken := NewHttp()
 	HttpToken.Request.Header.ContentType = "application/x-www-form-urlencoded"
 	HttpToken.Request.Header.Accept = "*/*"
@@ -70,7 +67,15 @@ func (A *auth2) GetToken() (string, error) {
 	}
 	HttpToken.EncType = ET_X_WWW_FORM_URLENCODED
 	//fmt.Println("send.. auth...token 1")
-	Resp, err := HttpToken.Send()
+	return HttpToken.Send()
+}
+
+func (A *auth2) GetToken() (string, error) {
+	var (
+		TokenResponse TokenResponse
+	)
+
+	Resp, err := A.Send()
 
 	A.Resp = Resp
 	A.Erro = err
@@ -94,8 +99,6 @@ func (A *auth2) GetToken() (string, error) {
 		return TokenResponse.AccessToken, nil
 
 	}
-
-	return "", nil
 }
 
 func NewAuth2() *auth2 {
