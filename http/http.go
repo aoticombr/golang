@@ -269,8 +269,13 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	}
 	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
-		//fmt.Println("passou aqui 5", H.UserName, H.Password)
-		auth := H.UserName + ":" + H.Password
+		var auth string
+		if H.UserName != "" && H.Password != "" {
+			auth = H.UserName + ":" + H.Password
+		} else if H.UserName != "" {
+			auth = H.UserName
+		}
+
 		basic := base64.StdEncoding.EncodeToString([]byte(auth))
 		H.Request.Header.Authorization = "Basic " + basic
 
