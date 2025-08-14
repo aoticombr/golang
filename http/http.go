@@ -40,6 +40,7 @@ type THttp struct {
 	Password          string
 	UserName          string
 	Certificate       TCert
+	TransportType     TTransport
 
 	Protocolo string // http, https
 	Host      string // www.example.com
@@ -65,6 +66,7 @@ func NewHttp() *THttp {
 		Metodo:            M_GET,
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
+		TransportType:     TNenhum,
 	}
 	ht.Auth2.Owner = ht
 	return ht
@@ -323,10 +325,12 @@ func (H *THttp) Send() (RES *Response, err error) {
 		trans = &http.Transport{TLSClientConfig: Config}
 	}
 
-	var client *http.Client
-	client = &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
+	var client = &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
 	if trans != nil {
-		client.Transport = trans
+		if (H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") || H.TransportType != TNenhum {
+			client.Transport = trans
+		}
+
 	}
 
 	uri := H.GetUrl()
