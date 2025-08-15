@@ -30,17 +30,18 @@ type THttp struct {
 	urlFinal string
 
 	/*publico*/
-	Auth2             *auth2
-	Request           *Request
-	Response          *Response
-	Metodo            TMethod
-	AuthorizationType AuthorizationType
-	WebSocket         *WebSocket
-	Authorization     string
-	Password          string
-	UserName          string
-	Certificate       TCert
-	TransportType     TTransport
+	Auth2              *auth2
+	Request            *Request
+	Response           *Response
+	Metodo             TMethod
+	AuthorizationType  AuthorizationType
+	WebSocket          *WebSocket
+	Authorization      string
+	Password           string
+	UserName           string
+	Certificate        TCert
+	TransportType      TTransport
+	InsecureSkipVerify bool // usado para TLS, se for true, ignora a verificação do certificado
 
 	Protocolo string // http, https
 	Host      string // www.example.com
@@ -289,6 +290,44 @@ func (H *THttp) GetUrlFinal() string {
 	return H.urlFinal
 }
 
+func (H *THttp) GetTransport() *http.Transport {
+	var needTransport bool
+	var transport *http.Transport
+
+	// Verificar se precisamos de um transport customizado
+	if H.Proxy != nil && H.Proxy.Ativo {
+		needTransport = true
+	}
+	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+		needTransport = true
+	}
+	if H.TransportType != TNenhum {
+		needTransport = true
+	}
+	// Adicionar verificação para HTTPS como critério (removido porque será tratado no Send())
+	// if strings.EqualFold(H.Protocolo, "HTTPS") {
+	//     needTransport = true
+	// }
+
+	// Só criar transport se realmente precisar
+	if needTransport {
+		transport = &http.Transport{}
+
+		// Configurar proxy se ativo
+		if H.Proxy != nil && H.Proxy.Ativo {
+			err := H.Proxy.SetProxy(transport)
+			if err != nil {
+				// Log do erro, mas continua sem proxy
+				fmt.Printf("Erro ao configurar proxy: %v\n", err)
+			}
+		}
+
+		return transport
+	}
+
+	return nil
+}
+
 func (H *THttp) Send() (RES *Response, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -305,32 +344,54 @@ func (H *THttp) Send() (RES *Response, err error) {
 	var trans *http.Transport
 	var cert tls.Certificate
 	var Config *tls.Config
-	trans, _ = H.Proxy.GetTransport()
 
+	// Obter transport (só será criado se necessário)
+	trans = H.GetTransport()
+
+	// Configurar certificados se necessário
 	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
 		cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
 		if err != nil {
 			return nil, fmt.Errorf("erro ao carregar certificado: %v", err)
 		}
 	}
-	Config = &tls.Config{InsecureSkipVerify: true}
-	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
-		Config.Certificates = []tls.Certificate{cert}
-	}
-	if trans != nil {
-		if strings.EqualFold(strings.ToUpper(H.Protocolo), "HTTPS") {
-			trans.TLSClientConfig = Config
+
+	// Determinar se precisa de configuração TLS
+	var needsTLS bool
+	var isHTTPS = strings.EqualFold(H.Protocolo, "HTTPS")
+
+	// Precisa TLS se:
+	needsTLS = isHTTPS || // URL é HTTPS
+		H.TransportType == TSSL || // Forçado por TransportType
+		H.TransportType == TSSLTLS || // Forçado por TransportType
+		(H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") // Tem certificados
+
+	// Configurar TLS se necessário
+	if needsTLS {
+		Config = &tls.Config{
+			InsecureSkipVerify: H.InsecureSkipVerify,
 		}
-	} else {
-		trans = &http.Transport{TLSClientConfig: Config}
+
+		// Adicionar certificados se existirem
+		if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+			Config.Certificates = []tls.Certificate{cert}
+		}
+
+		// Se não temos transport mas precisamos de TLS, criar um
+		if trans == nil {
+			trans = &http.Transport{}
+		}
+
+		// Aplicar configuração TLS ao transport
+		trans.TLSClientConfig = Config
 	}
 
-	var client = &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
-	if trans != nil {
-		if (H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") || H.TransportType != TNenhum {
-			client.Transport = trans
-		}
+	// Criar cliente HTTP
+	client := &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
 
+	// Usar transport apenas se ele foi criado (significa que é necessário)
+	if trans != nil {
+		client.Transport = trans
 	}
 
 	uri := H.GetUrl()
@@ -697,4 +758,61 @@ func (H *THttp) ConvertBodyInStruct(value any) error {
 		return err
 	}
 	return nil
+}
+
+// Métodos para configuração de proxy
+
+// SetProxyConfig configura o proxy básico
+func (H *THttp) SetProxyConfig(host string, port int, username, password string) {
+	H.Proxy.SetProxyConfig(host, port, username, password)
+}
+
+// SetProxyAtivo ativa ou desativa o uso do proxy
+func (H *THttp) SetProxyAtivo(ativo bool) {
+	H.Proxy.SetAtivo(ativo)
+}
+
+// GetProxyAtivo verifica se o proxy está ativo
+func (H *THttp) GetProxyAtivo() bool {
+	return H.Proxy.GetAtivo()
+}
+
+// SetProxyHost define o host do proxy
+func (H *THttp) SetProxyHost(host string) {
+	H.Proxy.SetHost(host)
+}
+
+// GetProxyHost retorna o host do proxy
+func (H *THttp) GetProxyHost() string {
+	return H.Proxy.GetHost()
+}
+
+// SetProxyPort define a porta do proxy
+func (H *THttp) SetProxyPort(port int) {
+	H.Proxy.SetPort(port)
+}
+
+// GetProxyPort retorna a porta do proxy
+func (H *THttp) GetProxyPort() int {
+	return H.Proxy.GetPort()
+}
+
+// SetProxyUserName define o usuário para autenticação no proxy
+func (H *THttp) SetProxyUserName(username string) {
+	H.Proxy.SetUserName(username)
+}
+
+// GetProxyUserName retorna o usuário do proxy
+func (H *THttp) GetProxyUserName() string {
+	return H.Proxy.GetUserName()
+}
+
+// SetProxyPassword define a senha para autenticação no proxy
+func (H *THttp) SetProxyPassword(password string) {
+	H.Proxy.SetPassword(password)
+}
+
+// GetProxyPassword retorna a senha do proxy
+func (H *THttp) GetProxyPassword() string {
+	return H.Proxy.GetPassword()
 }
