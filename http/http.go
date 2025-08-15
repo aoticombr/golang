@@ -358,13 +358,13 @@ func (H *THttp) Send() (RES *Response, err error) {
 
 	// Determinar se precisa de configuração TLS
 	var needsTLS bool
-	var isHTTPS = strings.EqualFold(H.Protocolo, "HTTPS")
+	//var isHTTPS = strings.EqualFold(H.Protocolo, "HTTPS")
 
 	// Precisa TLS se:
-	needsTLS = isHTTPS || // URL é HTTPS
-		H.TransportType == TSSL || // Forçado por TransportType
-		H.TransportType == TSSLTLS || // Forçado por TransportType
-		(H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") // Tem certificados
+	needsTLS =
+		H.TransportType == TTLS || // Forçado por TransportType
+			H.TransportType == TSSLTLS || // Forçado por TransportType
+			(H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") // Tem certificados
 
 	// Configurar TLS se necessário
 	if needsTLS {
