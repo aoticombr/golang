@@ -25,6 +25,11 @@ func (s *Strings) Count() int {
 func (s *Strings) Text() string {
 	return strings.Join(s.itens, s.Delimiter)
 }
+
+func (s *Strings) Byte() []byte {
+	return []byte(s.Text())
+}
+
 func NewStrings() *Strings {
 	return &Strings{
 		Delimiter: " ",
