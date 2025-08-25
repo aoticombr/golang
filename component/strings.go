@@ -3,7 +3,8 @@ package component
 import "strings"
 
 type Strings struct {
-	itens []string
+	Delimiter string
+	itens     []string
 }
 
 func (s *Strings) Append(value string) *Strings {
@@ -22,8 +23,10 @@ func (s *Strings) Count() int {
 	return len(s.itens)
 }
 func (s *Strings) Text() string {
-	return strings.Join(s.itens, " ")
+	return strings.Join(s.itens, s.Delimiter)
 }
 func NewStrings() *Strings {
-	return &Strings{}
+	return &Strings{
+		Delimiter: " ",
+	}
 }
