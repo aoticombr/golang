@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/pkcs12"
 )
 
 const (
@@ -328,6 +330,26 @@ func (H *THttp) GetTransport() *http.Transport {
 	return nil
 }
 
+func (H *THttp) UseCert() bool {
+	return (H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") ||
+		(len(H.Certificate.CertPEMBlock) > 0 && len(H.Certificate.KeyPEMBlock) > 0) ||
+		(len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "")
+
+}
+
+func (H *THttp) LoadPfx() (tls.Certificate, error) {
+	privateKey, certificate, errPfx := pkcs12.Decode(H.Certificate.PfxBlock, H.Certificate.PfxPass)
+	if errPfx != nil {
+		return tls.Certificate{}, errPfx
+	}
+	cert := tls.Certificate{
+		Certificate: [][]byte{certificate.Raw},
+		PrivateKey:  privateKey,
+		Leaf:        certificate,
+	}
+	return cert, nil
+}
+
 func (H *THttp) Send() (RES *Response, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -336,21 +358,25 @@ func (H *THttp) Send() (RES *Response, err error) {
 			err = fmt.Errorf("recuperado de um panic no método Send: %v", r)
 		}
 	}()
-	//fmt.Println("Send..")
-	//fmt.Println("------------------")
 	H.Response = NewResponse()
 
 	var resp *http.Response
 	var trans *http.Transport
-	var cert tls.Certificate
 	var Config *tls.Config
+	var cert tls.Certificate
 
 	// Obter transport (só será criado se necessário)
 	trans = H.GetTransport()
 
 	// Configurar certificados se necessário
-	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
-		cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
+	if H.UseCert() {
+		if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+			cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
+		} else if len(H.Certificate.CertPEMBlock) > 0 && len(H.Certificate.KeyPEMBlock) > 0 {
+			cert, err = tls.X509KeyPair(H.Certificate.CertPEMBlock, H.Certificate.KeyPEMBlock)
+		} else if len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "" {
+			cert, err = H.LoadPfx()
+		}
 		if err != nil {
 			return nil, fmt.Errorf("erro ao carregar certificado: %v", err)
 		}
@@ -364,7 +390,8 @@ func (H *THttp) Send() (RES *Response, err error) {
 	needsTLS =
 		H.TransportType == TTLS || // Forçado por TransportType
 			H.TransportType == TSSLTLS || // Forçado por TransportType
-			(H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") // Tem certificados
+			H.UseCert() ||
+			H.InsecureSkipVerify // Tem certificados
 
 	// Configurar TLS se necessário
 	if needsTLS {
@@ -373,8 +400,14 @@ func (H *THttp) Send() (RES *Response, err error) {
 		}
 
 		// Adicionar certificados se existirem
-		if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+		if H.UseCert() {
 			Config.Certificates = []tls.Certificate{cert}
+			// Se for PFX, adicionar CA pool (opcional, só se quiser confiar na raiz do próprio certificado)
+			if len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "" && cert.Leaf != nil {
+				caPool := x509.NewCertPool()
+				caPool.AddCert(cert.Leaf)
+				Config.RootCAs = caPool
+			}
 		}
 
 		// Se não temos transport mas precisamos de TLS, criar um

@@ -11,6 +11,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	golang.org/x/crypto v0.37.0
 	golang.org/x/text v0.26.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 )
