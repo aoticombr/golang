@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/aoticombr/golangprivate/models"
 )
 
 /*
@@ -82,8 +80,8 @@ ListarArquivosPastaFiltro:
 Lista arquivos de uma pasta, porem voce pode filtrar por tipo de arquivos e tambem colocar um prefixo de procura
 exemplo: ListarArquivosPastaFiltro("c:\", "VRIN*", ".txt")
 */
-func ListarArquivosPastaFiltro(pasta, prefixo, extensao string) ([]models.File, error) {
-	var arquivos []models.File
+func ListarArquivosPastaFiltro(pasta, prefixo, extensao string) ([]MFile, error) {
+	var arquivos []MFile
 
 	err := filepath.Walk(pasta,
 		func(caminho string, info os.FileInfo, err error) error {
@@ -93,7 +91,7 @@ func ListarArquivosPastaFiltro(pasta, prefixo, extensao string) ([]models.File, 
 
 			// Verifica se é um arquivo e se o nome começa com o prefixo e tem a extensão desejada
 			if !info.IsDir() && strings.HasPrefix(info.Name(), prefixo) && strings.HasSuffix(info.Name(), extensao) {
-				arquivo := models.File{
+				arquivo := MFile{
 					Nome:            info.Name(),
 					CaminhoCompleto: caminho,
 					Tamanho:         info.Size(),
