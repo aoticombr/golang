@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -563,10 +564,13 @@ func (H *THttp) Send() (RES *Response, err error) {
 		H.completHeader()
 		resp, err = client.Do(H.req)
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
+	if resp == nil && err == nil {
+		return nil, errors.New("retorno vazio, sem erro, possivelmente pode ser certificado invalido, configurei modo inseguro")
+	}
+
 	defer resp.Body.Close()
 	// Ler a resposta (opcional)
 	body, err := io.ReadAll(resp.Body)
