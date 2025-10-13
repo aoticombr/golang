@@ -1,6 +1,6 @@
 package http
 
-import ST "github.com/aoticombr/golang/component"
+import ST "github.com/aoticombr/golang/stringlist"
 
 type Request struct {
 	Header           *Header

@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/aoticombr/golang/http"
+	//"github.com/aoticombr/golang/http"
 )
 
 func main() {
@@ -34,4 +33,3 @@ func main() {
 	fmt.Println("Body string:", string(resp.Body))*/
 
 }
-

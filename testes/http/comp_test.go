@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aoticombr/golang/component"
 	"github.com/aoticombr/golang/http"
+	"github.com/aoticombr/golang/stringlist"
 )
 
 func TestAuth2_tipo1(t *testing.T) {
@@ -145,7 +145,7 @@ func TestMultPart(t *testing.T) {
 	cp.Metodo = http.M_POST
 	cp.EncType = http.ET_FORM_DATA
 	cp.Request.Header.ContentType = "multipart/form-data"
-	a := component.NewStrings()
+	a := stringlist.NewStrings()
 	a.Add("xxxxxyyyy")
 	a.Add("eeeeee")
 	cp.Request.AddContentText("txt1", a)
