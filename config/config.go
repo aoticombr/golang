@@ -14,17 +14,16 @@ var onceConfig sync.Once
 var InstanceConfig *Config
 
 type Config struct {
-	Dbs       []*Database `json:"dbs"`
-	Services  []*Service  `json:"services"`
-	Bots      []*Bot      `json:"bots"`
-	Apis      []*Api      `json:"apis"`
-	Parans    Params      `json:"parans"`
-	Certs     Certs       `json:"certs"`
-	TokenJwt  string      `json:"tokenjwt"`
-	LogNivel  int         `json:"logNivel"`
-	LogScreen bool        `json:"LogScreen"`
-	Path      string      `json:"path"`
-	JsonFile  string
+	Dbs      []*Database `json:"dbs"`
+	Services []*Service  `json:"services"`
+	Bots     []*Bot      `json:"bots"`
+	Apis     []*Api      `json:"apis"`
+	Jwt      []*Jwt      `json:"jwt"`
+	Parans   Params      `json:"parans"`
+	Certs    Certs       `json:"certs"`
+	Log      Log         `json:"log"`
+	Path     string      `json:"path"`
+	JsonFile string
 }
 
 func NewConfig() *Config {
@@ -88,9 +87,12 @@ func NewConfig() *Config {
 							Ativo: true,
 						},
 					},
-					LogNivel:  1,
-					LogScreen: true,
-					Path:      "",
+					Log: Log{
+						Nivel:  5,
+						Screen: true,
+					},
+
+					Path: "",
 				}
 				jsonFile, _ := json.MarshalIndent(InstanceConfig, "", "  ")
 				err = os.WriteFile("config.json", jsonFile, 0644)
