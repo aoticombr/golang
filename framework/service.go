@@ -16,7 +16,7 @@ import (
 
 	"github.com/aoticombr/golang/framework/srv"
 
-	lib "github.com/aoticombr/golang/framework/lib"
+	lib "github.com/aoticombr/golang/lib"
 	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 )

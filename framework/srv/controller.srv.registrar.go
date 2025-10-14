@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/aoticombr/golang/framework/lib"
+	"github.com/aoticombr/golang/lib"
 )
 
 type RegisterClasses map[string]reflect.Type

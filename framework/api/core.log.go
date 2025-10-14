@@ -1,6 +1,6 @@
 package api
 
-import lib "github.com/aoticombr/golang/framework/lib"
+import lib "github.com/aoticombr/golang/lib"
 
 func (api *CoreApi) LogDebug(v ...interface{}) {
 	lib.NewLog().Debug(api.Api.Name, v...)

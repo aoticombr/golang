@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/aoticombr/golang/config"
-	"github.com/aoticombr/golang/framework/lib"
+	"github.com/aoticombr/golang/lib"
 )
 
 type CoreBot struct {

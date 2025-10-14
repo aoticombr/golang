@@ -6,8 +6,8 @@ import (
 
 	"github.com/aoticombr/golang/framework/api"
 	"github.com/aoticombr/golang/framework/bot"
-	lib "github.com/aoticombr/golang/framework/lib"
 	"github.com/aoticombr/golang/framework/srv"
+	lib "github.com/aoticombr/golang/lib"
 )
 
 type OptionsApp func(*App)

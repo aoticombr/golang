@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/aoticombr/golang/config"
-	lib "github.com/aoticombr/golang/framework/lib"
+	lib "github.com/aoticombr/golang/lib"
 )
 
 type CoreSrv struct {
