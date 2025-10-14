@@ -91,6 +91,13 @@ func NewConfig() *Config {
 						Nivel:  5,
 						Screen: true,
 					},
+					Jwt: []*Jwt{
+						{
+							Name:           "name",
+							ExpirationTime: 60,
+							SecretKey:      "minha_senha",
+						},
+					},
 
 					Path: "",
 				}
@@ -161,7 +168,7 @@ func (c *Config) RemoveApi(api Api) {
 }
 func (c *Config) GetDB(name string) (bool, *Database) {
 	for _, v := range c.Dbs {
-		if strings.ToUpper(v.Name) == strings.ToUpper(name) {
+		if strings.EqualFold(v.Name, name) {
 			if v.Ativo {
 				return true, v
 			}
@@ -207,6 +214,16 @@ func (c *Config) GetApi(name string) (bool, *Api) {
 			if v.Ativo {
 				return true, v
 			}
+		}
+	}
+	return false, nil
+}
+func (c *Config) GetJwt(name string) (bool, *Jwt) {
+	for _, v := range c.Jwt {
+		if strings.ToUpper(v.Name) == strings.ToUpper(name) {
+
+			return true, v
+
 		}
 	}
 	return false, nil
