@@ -13,10 +13,8 @@ import (
 	"github.com/aoticombr/golang/dbconndataset"
 	"github.com/aoticombr/golang/framework/api"
 	"github.com/aoticombr/golang/framework/bot"
-
 	"github.com/aoticombr/golang/framework/srv"
-
-	lib "github.com/aoticombr/golang/lib"
+	"github.com/aoticombr/golang/lib"
 	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 )
