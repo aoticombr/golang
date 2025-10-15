@@ -49,6 +49,17 @@ func NewConfig() *Config {
 							PoolSize: 20,
 							MaxConn:  100,
 							Ativo:    true,
+							Trace: Trace{
+								Ativo: false,
+								Path:  "trace",
+							},
+						},
+					},
+					Bots: []*Bot{
+						{
+							Name:  lib.GetApplicationName(),
+							Dbs:   []string{"db1"},
+							Ativo: false,
 						},
 					},
 					Services: []*Service{
@@ -58,6 +69,7 @@ func NewConfig() *Config {
 							Ativo: false,
 						},
 					},
+
 					Apis: []*Api{
 						{
 							Name: lib.GetApplicationName(),
@@ -87,6 +99,7 @@ func NewConfig() *Config {
 							Ativo: true,
 						},
 					},
+
 					Log: Log{
 						Nivel:  5,
 						Screen: true,
@@ -98,8 +111,9 @@ func NewConfig() *Config {
 							SecretKey:      "minha_senha",
 						},
 					},
-
-					Path: "",
+					Parans: []*Param{},
+					Certs:  []*Cert{},
+					Path:   "",
 				}
 				jsonFile, _ := json.MarshalIndent(InstanceConfig, "", "  ")
 				err = os.WriteFile("config.json", jsonFile, 0644)

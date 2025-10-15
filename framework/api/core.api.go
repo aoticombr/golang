@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
 	"github.com/aoticombr/golang/config"
 	"github.com/aoticombr/golang/dbconndataset"
 	"github.com/go-chi/chi/v5"
@@ -32,9 +33,6 @@ func NewCoreApi(
 	}
 
 	return api
-}
-func init() {
-
 }
 
 func (ca *CoreApi) Start() error {
