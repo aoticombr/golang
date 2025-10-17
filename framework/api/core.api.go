@@ -62,25 +62,34 @@ func (ca *CoreApi) Start() error {
 			}
 			for _, Route := range RouteGroup.Routes {
 				Pattern := "/{db}" + Route.Pattern
+				PatterComplet := ""
+				if ca.Api.Https.Ativo {
+					PatterComplet += "https://"
+				} else {
+					PatterComplet += "http://"
+				}
+				PatterComplet += ca.Api.Host
+				PatterComplet += ":" + ca.Api.GetPortStr()
+				PatterComplet += "/{db}" + Route.Pattern
 				switch Route.Method {
 				case GET:
 					r.Get(Pattern, Route.HandlerFunc)
-					ca.LogInfo("GET", Pattern)
+					ca.LogInfo("GET", PatterComplet)
 				case POST:
 					r.Post(Pattern, Route.HandlerFunc)
-					ca.LogInfo("POST", Pattern)
+					ca.LogInfo("POST", PatterComplet)
 				case PUT:
 					r.Put(Pattern, Route.HandlerFunc)
-					ca.LogInfo("PUT", Pattern)
+					ca.LogInfo("PUT", PatterComplet)
 				case DELETE:
 					r.Delete(Pattern, Route.HandlerFunc)
-					ca.LogInfo("DELETE", Pattern)
+					ca.LogInfo("DELETE", PatterComplet)
 				case PATCH:
 					r.Patch(Pattern, Route.HandlerFunc)
-					ca.LogInfo("PATCH", Pattern)
+					ca.LogInfo("PATCH", PatterComplet)
 				case WEBSOCKET:
 					r.HandleFunc(Pattern, Route.HandlerFunc)
-					ca.LogInfo("WEBSOCKET", Pattern)
+					ca.LogInfo("WEBSOCKET", PatterComplet)
 				}
 			}
 		})
