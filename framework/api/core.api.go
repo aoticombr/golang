@@ -41,15 +41,17 @@ func (ca *CoreApi) Start() error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(cors.Handler(cors.Options{
+	if ca.Api.Cors.Ativo {
+		r.Use(cors.Handler(cors.Options{
 
-		AllowedOrigins:   ca.Api.Cors.AllowOrigins,     // Allow only this origin - http://localhost:3000
-		AllowedMethods:   ca.Api.Cors.AllowMethods,     //[]string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   ca.Api.Cors.AllowHeaders,     //[]string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   ca.Api.Cors.ExposedHeaders,   //[]string{"Link"},
-		AllowCredentials: ca.Api.Cors.AllowCredentials, //true,
-		MaxAge:           ca.Api.Cors.MaxAge,           //300, // Maximum value not to check for CORS request again (in seconds)
-	}))
+			AllowedOrigins:   ca.Api.Cors.AllowOrigins,     // Allow only this origin - http://localhost:3000
+			AllowedMethods:   ca.Api.Cors.AllowMethods,     //[]string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+			AllowedHeaders:   ca.Api.Cors.AllowHeaders,     //[]string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   ca.Api.Cors.ExposedHeaders,   //[]string{"Link"},
+			AllowCredentials: ca.Api.Cors.AllowCredentials, //true,
+			MaxAge:           ca.Api.Cors.MaxAge,           //300, // Maximum value not to check for CORS request again (in seconds)
+		}))
+	}
 
 	RouteGroups := GetRegistraInstance().RouteGroups
 	for _, RouteGroup := range RouteGroups {
