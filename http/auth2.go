@@ -17,14 +17,15 @@ const (
 )
 
 type auth2 struct {
-	Owner        *THttp
-	AuthUrl      string
-	ClientId     string
-	ClientSecret string
-	Scope        string
-	ClientAuth   ClientAuth
-	Resp         *Response
-	Erro         error
+	Owner                   *THttp
+	AuthUrl                 string
+	ClientId                string
+	ClientSecret            string
+	Scope                   string
+	ClientAuth              ClientAuth
+	Resp                    *Response
+	Erro                    error
+	UseSameCertificateOwner bool
 }
 
 func (A *auth2) Send() (RES *Response, err error) {
@@ -36,8 +37,9 @@ func (A *auth2) Send() (RES *Response, err error) {
 	//fmt.Println("A.AuthUrl...", A.AuthUrl)
 	HttpToken.Metodo = M_POST
 	if A.Owner != nil {
-		HttpToken.Certificate.PathCrt = A.Owner.Certificate.PathCrt
-		HttpToken.Certificate.PathPriv = A.Owner.Certificate.PathPriv
+		if A.UseSameCertificateOwner {
+			HttpToken.Certificate = A.Owner.Certificate
+		}
 	}
 	if A.ClientAuth == CA_SendBasicAuthHeader {
 		HttpToken.AuthorizationType = AT_Basic
