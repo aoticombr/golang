@@ -26,13 +26,14 @@ type auth2 struct {
 	Resp                    *Response
 	Erro                    error
 	UseSameCertificateOwner bool
+	InsecureSkipVerify      bool
 }
 
 func (A *auth2) Send() (RES *Response, err error) {
 	HttpToken := NewHttp()
 	HttpToken.Request.Header.ContentType = "application/x-www-form-urlencoded"
 	HttpToken.Request.Header.Accept = "*/*"
-
+	HttpToken.InsecureSkipVerify = A.InsecureSkipVerify
 	HttpToken.SetUrl(A.AuthUrl)
 	//fmt.Println("A.AuthUrl...", A.AuthUrl)
 	HttpToken.Metodo = M_POST
