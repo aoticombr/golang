@@ -32,6 +32,8 @@ func (v *Variant) AsString() string {
 		value = ""
 	case time.Time:
 		value = val.String()
+	case *time.Time:
+		value = val.String()
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		value = fmt.Sprintf("%v", val)
 	case float32, float64:

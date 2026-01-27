@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -1031,32 +1032,27 @@ func (ds *DataSet) SqlParam() string {
 		case time.Time:
 			data := limitStr(value.AsString(), 19)
 			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
+		case *time.Time:
+			data := limitStr(value.AsString(), 19)
+			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
 		case int:
 			replacement = strconv.Itoa(val)
-		case int8:
-			replacement = strconv.FormatInt(int64(val), 10)
-		case int16:
-			replacement = strconv.FormatInt(int64(val), 10)
-		case int32:
-			replacement = strconv.FormatInt(int64(val), 10)
-		case int64:
-			replacement = strconv.FormatInt(val, 10)
-		case uint:
-			replacement = strconv.FormatUint(uint64(val), 10)
-		case uint8:
-			replacement = strconv.FormatUint(uint64(val), 10)
-		case uint16:
-			replacement = strconv.FormatUint(uint64(val), 10)
-		case uint32:
-			replacement = strconv.FormatUint(uint64(val), 10)
-		case uint64:
-			replacement = strconv.FormatUint(val, 10)
-		case float32:
-			replacement = strconv.FormatFloat(float64(val), 'f', -1, 32)
-		case float64:
-			replacement = strconv.FormatFloat(val, 'f', -1, 64)
+		case int8, int16, int32, int64:
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
+		case uint, uint8, uint16, uint32, uint64:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
+		case float32, float64:
+			replacement = strconv.FormatFloat(reflect.ValueOf(val).Float(), 'f', -1, 64)
 		case string:
 			replacement = "'" + val + "'"
+		case *int, *int8, *int16, *int32, *int64:
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
+		case *uint, *uint8, *uint16, *uint32, *uint64:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
+		case *float32, *float64:
+			replacement = strconv.FormatFloat(reflect.ValueOf(val).Elem().Float(), 'f', -1, 64)
+		case *string:
+			replacement = "'" + *val + "'"
 		case []byte:
 			replacement = "'" + string(val) + "'"
 		case goOra.Clob:
@@ -1068,10 +1064,20 @@ func (ds *DataSet) SqlParam() string {
 		}
 	}
 
-	// Faz as substituicoes em uma unica passada
+	// Ordena parametros por tamanho (maior primeiro) para evitar substituicoes parciais
+	keys := make([]string, 0, len(replacements))
+	for k := range replacements {
+		keys = append(keys, k)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return len(keys[i]) > len(keys[j])
+	})
+
+	// Substitui os parametros
 	result := vsql
-	for oldStr, newStr := range replacements {
-		result = strings.ReplaceAll(result, oldStr, newStr)
+	for _, key := range keys {
+		result = strings.ReplaceAll(result, key, replacements[key])
 	}
 
 	return result
