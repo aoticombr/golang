@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -17,6 +18,7 @@ import (
 	"github.com/aoticombr/golang/preprocesssql"
 	"github.com/aoticombr/golang/stringlist"
 	"github.com/aoticombr/golang/variant"
+	goOra "github.com/sijms/go-ora/v2"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 )
@@ -1015,24 +1017,64 @@ func limitStr(value string, limit int) string {
 
 func (ds *DataSet) SqlParam() string {
 	vsql := ds.Sql.Text()
+
+	replacements := make(map[string]string, len(ds.Params.List))
+
 	for i := 0; i < len(ds.Params.List); i++ {
 		key := ds.Params.List[i].Name
 		value := ds.Params.List[i].Value
+
+		var replacement string
 		switch val := value.Value.(type) {
 		case nil:
-			vsql = strings.ReplaceAll(vsql, ":"+key, "null")
+			replacement = "null"
 		case time.Time:
 			data := limitStr(value.AsString(), 19)
-			vsql = strings.ReplaceAll(vsql, ":"+key, "to_date('"+data+"','rrrr-mm-dd hh24:mi:ss')")
-		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-			vsql = strings.ReplaceAll(vsql, ":"+key, fmt.Sprintf("%v", val))
-		case float32, float64:
-			vsql = strings.ReplaceAll(vsql, ":"+key, fmt.Sprintf("%f", val))
+			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
+		case int:
+			replacement = strconv.Itoa(val)
+		case int8:
+			replacement = strconv.FormatInt(int64(val), 10)
+		case int16:
+			replacement = strconv.FormatInt(int64(val), 10)
+		case int32:
+			replacement = strconv.FormatInt(int64(val), 10)
+		case int64:
+			replacement = strconv.FormatInt(val, 10)
+		case uint:
+			replacement = strconv.FormatUint(uint64(val), 10)
+		case uint8:
+			replacement = strconv.FormatUint(uint64(val), 10)
+		case uint16:
+			replacement = strconv.FormatUint(uint64(val), 10)
+		case uint32:
+			replacement = strconv.FormatUint(uint64(val), 10)
+		case uint64:
+			replacement = strconv.FormatUint(val, 10)
+		case float32:
+			replacement = strconv.FormatFloat(float64(val), 'f', -1, 32)
+		case float64:
+			replacement = strconv.FormatFloat(val, 'f', -1, 64)
 		case string:
-			vsql = strings.ReplaceAll(vsql, ":"+key, "'"+value.AsString()+"'")
+			replacement = "'" + val + "'"
+		case []byte:
+			replacement = "'" + string(val) + "'"
+		case goOra.Clob:
+			replacement = "q'[" + value.AsString() + "]'"
+		}
+
+		if ds.Params.List[i].ParamType != OUT {
+			replacements[":"+key] = replacement
 		}
 	}
-	return vsql
+
+	// Faz as substituicoes em uma unica passada
+	result := vsql
+	for oldStr, newStr := range replacements {
+		result = strings.ReplaceAll(result, oldStr, newStr)
+	}
+
+	return result
 }
 
 func StrNotEmpty(s string) bool {
