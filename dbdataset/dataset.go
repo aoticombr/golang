@@ -1033,6 +1033,10 @@ func (ds *DataSet) SqlParam() string {
 			data := limitStr(value.AsString(), 19)
 			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
 		case *time.Time:
+			if val == nil {
+				replacement = "to_date(null,'rrrr-mm-dd hh24:mi:ss')"
+				break
+			}
 			data := limitStr(value.AsString(), 19)
 			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
 		case int:
@@ -1046,12 +1050,28 @@ func (ds *DataSet) SqlParam() string {
 		case string:
 			replacement = "'" + val + "'"
 		case *int, *int8, *int16, *int32, *int64:
+			if val == nil {
+				replacement = "null"
+				break
+			}
 			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
 		case *uint, *uint8, *uint16, *uint32, *uint64:
+			if val == nil {
+				replacement = "null"
+				break
+			}
 			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
 		case *float32, *float64:
+			if val == nil {
+				replacement = "null"
+				break
+			}
 			replacement = strconv.FormatFloat(reflect.ValueOf(val).Elem().Float(), 'f', -1, 64)
 		case *string:
+			if val == nil {
+				replacement = "null"
+				break
+			}
 			replacement = "'" + *val + "'"
 		case []byte:
 			replacement = "'" + string(val) + "'"
