@@ -443,6 +443,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	err = tb.ValidateRequired()
 	if err != nil {
 		return "", err
