@@ -259,7 +259,7 @@ func (tb *Table) Validate() error {
 	}
 	return nil
 }
-func (tb *Table) ValidateInc() error {
+func (tb *Table) ValidateRequired() error {
 
 	t := reflect.TypeOf(tb.table)
 	v := reflect.ValueOf(tb.table)
@@ -308,7 +308,7 @@ func (tb *Table) SqlInsert() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = tb.ValidateInc()
+	err = tb.ValidateRequired()
 	if err != nil {
 		return "", err
 	}
@@ -440,6 +440,10 @@ func (tb *Table) SqlInsert() (string, error) {
 
 func (tb *Table) SqlUpdate() (string, error) {
 	err := tb.Validate()
+	if err != nil {
+		return "", err
+	}
+	err = tb.ValidateRequired()
 	if err != nil {
 		return "", err
 	}
