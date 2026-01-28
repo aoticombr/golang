@@ -1034,7 +1034,7 @@ func (ds *DataSet) SqlParam() string {
 			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
 		case *time.Time:
 			if val == nil {
-				replacement = "to_date(null,'rrrr-mm-dd hh24:mi:ss')"
+				replacement = "null"
 				break
 			}
 			data := limitStr(value.AsString(), 19)
