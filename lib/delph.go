@@ -6,25 +6,29 @@ import "strings"
 Copy:
 Imita a funcao Copy delphi
 */
-func Copy(value string, col_ini, qtde_caracteres int) string {
-	t_value := len(value)
-	if t_value > 0 { //precisa
-		if col_ini < 1 {
-			col_ini = 1
-		}
-		if col_ini < t_value {
-			t := t_value
-			if col_ini > 1 {
-				t = t_value - col_ini + 1
-			}
-			if t >= qtde_caracteres {
-				return value[col_ini-1 : col_ini-1+qtde_caracteres]
-			} else {
-				return value[col_ini-1 : col_ini-1+t]
-			}
-		}
+func Copy(value string, colIni, qtdeCaracteres int) string {
+	vrunes := []rune(value)
+	n := len(vrunes)
+
+	if n == 0 || qtdeCaracteres <= 0 {
+		return ""
 	}
-	return ""
+
+	if colIni < 1 {
+		colIni = 1
+	}
+
+	start := colIni - 1
+	if start >= n {
+		return ""
+	}
+
+	end := start + qtdeCaracteres
+	if end > n {
+		end = n
+	}
+
+	return string(vrunes[start:end])
 }
 
 /*
