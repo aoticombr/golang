@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/openpgp"
 )
 
-func DecodePGP(encString, secretKeyring, passphrase string) string {
+func DecodePGPKeyPass(encString, secretKeyring, passphrase string) string {
 
 	//log.Println("Secret Keyring:", secretKeyring)
 	//log.Println("Passphrase:", passphrase)
@@ -58,9 +58,58 @@ func DecodePGP(encString, secretKeyring, passphrase string) string {
 	return decStr
 }
 
-func EncodePGP(secretString, NameFile string) (string, error) {
+func EncodePGPKey(secretString, secretKeyring string) (string, error) {
 
-	keyringFileBuffer, _ := os.Open(NameFile)
+	keyringFileBuffer := bytes.NewBufferString(secretKeyring)
+	entityList, err := openpgp.ReadArmoredKeyRing(keyringFileBuffer)
+	if err != nil {
+		return "", err
+	}
+
+	// encrypt string
+	buf := new(bytes.Buffer)
+	w, err := openpgp.Encrypt(buf, entityList, nil, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	_, err = w.Write([]byte(secretString))
+	if err != nil {
+		return "", err
+	}
+	err = w.Close()
+	if err != nil {
+		return "", err
+	}
+
+	// Encode to base64
+	bytes, err := ioutil.ReadAll(buf)
+	if err != nil {
+		return "", err
+	}
+	encStr := base64.StdEncoding.EncodeToString(bytes)
+
+	return encStr, nil
+}
+
+func EncodePGPFile(secretString, NameFile string) (string, error) {
+
+	keyringFileBuffer, err := os.Open(NameFile)
+	if err != nil {
+		return "", err
+	}
+	defer keyringFileBuffer.Close()
+
+	keyringBytes, err := ioutil.ReadAll(keyringFileBuffer)
+	if err != nil {
+		return "", err
+	}
+
+	return EncodePGPKey(secretString, string(keyringBytes))
+}
+
+/*func EncodePGPFile(secretString, NameFile string) (string, error) {
+
+	keyringFileBuffer, err := os.Open(NameFile)
 	defer keyringFileBuffer.Close()
 
 	entityList, err := openpgp.ReadArmoredKeyRing(keyringFileBuffer)
@@ -91,4 +140,4 @@ func EncodePGP(secretString, NameFile string) (string, error) {
 	encStr := base64.StdEncoding.EncodeToString(bytes)
 
 	return encStr, nil
-}
+}*/
