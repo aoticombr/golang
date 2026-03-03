@@ -3,13 +3,37 @@ module github.com/aoticombr/golang
 go 1.24.0
 
 require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/blastrain/vitess-sqlparser v0.0.0-20201030050434-a139afbb1aba
+	github.com/go-chi/chi/v5 v5.2.5
+	github.com/go-chi/cors v1.2.2
+	github.com/go-chi/jwtauth v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
+	github.com/jackc/pgx/v5 v5.8.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kardianos/service v1.2.2
-	github.com/lib/pq v1.10.9
 	github.com/sijms/go-ora/v2 v2.7.6
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	golang.org/x/crypto v0.48.0
+	golang.org/x/text v0.34.0
+	golang.org/x/time v0.14.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 )
 
-require golang.org/x/sys v0.41.0 // indirect
+require (
+	github.com/goccy/go-json v0.3.5 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68 // indirect
+	github.com/lestrrat-go/backoff/v2 v2.0.7 // indirect
+	github.com/lestrrat-go/httpcc v1.0.0 // indirect
+	github.com/lestrrat-go/iter v1.0.0 // indirect
+	github.com/lestrrat-go/jwx v1.1.0 // indirect
+	github.com/lestrrat-go/option v1.0.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+)

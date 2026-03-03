@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/aoticombr/golang/http"
+	//"github.com/aoticombr/golang/http"
 )
 
 func main() {
 	fmt.Println("Teste")
-	cp1 := http.NewHttp()
+	/*cp1 := http.NewHttp()
 	cp1.SetUrl("http://100.0.66.81:3003/token3")
 	cp1.AuthorizationType = http.AT_Auth2
 	cp1.Auth2.ClientId = "ddddddddd"
@@ -31,6 +30,6 @@ func main() {
 		fmt.Println("Header:", k, v)
 	}
 	fmt.Println("Body:", resp.Body)
-	fmt.Println("Body string:", string(resp.Body))
+	fmt.Println("Body string:", string(resp.Body))*/
 
 }

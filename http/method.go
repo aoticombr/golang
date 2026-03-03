@@ -61,3 +61,12 @@ func GetStrFromMethod(methodStr string) (TMethod, error) {
 		return -1, fmt.Errorf("Método HTTP não reconhecido!")
 	}
 }
+
+type TTransport = int
+
+const (
+	TNenhum TTransport = 0
+	TSSL    TTransport = 1
+	TTLS    TTransport = 2
+	TSSLTLS TTransport = 3
+)

@@ -89,7 +89,7 @@ func replacePathInURL(baseURL, newPath string) (string, error) {
 func GetFile(url, fileName string) error {
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err.Error())
+		//fmt.Println(err.Error())
 		return err
 	}
 	if resp.StatusCode == 403 {
@@ -126,7 +126,7 @@ func GetFileByte(url string, old []byte, headers map[string]string) ([]byte, err
 	// Criar uma solicitação HTTP personalizada com o método GET e o URL fornecido
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println(err.Error())
+		//fmt.Println(err.Error())
 		return nil, err
 	}
 
@@ -138,7 +138,7 @@ func GetFileByte(url string, old []byte, headers map[string]string) ([]byte, err
 	// Executar a solicitação HTTP personalizada
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err.Error())
+		//fmt.Println(err.Error())
 		return nil, err
 	}
 	defer resp.Body.Close()

@@ -3,17 +3,18 @@ package http
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"golang.org/x/crypto/pkcs12"
 )
 
 const (
@@ -25,21 +26,24 @@ const (
 
 type THttp struct {
 	/*privado*/
-	req *http.Request
-	ws  *websocket.Conn
-	url string
+	req      *http.Request
+	ws       *websocket.Conn
+	url      string
+	urlFinal string
 
 	/*publico*/
-	Auth2             *auth2
-	Request           *Request
-	Response          *Response
-	Metodo            TMethod
-	AuthorizationType AuthorizationType
-	WebSocket         *WebSocket
-	Authorization     string
-	Password          string
-	UserName          string
-	Certificate       TCert
+	Auth2              *auth2
+	Request            *Request
+	Response           *Response
+	Metodo             TMethod
+	AuthorizationType  AuthorizationType
+	WebSocket          *WebSocket
+	Authorization      string
+	Password           string
+	UserName           string
+	Certificate        TCert
+	TransportType      TTransport
+	InsecureSkipVerify bool // usado para TLS, se for true, ignora a verificação do certificado
 
 	Protocolo string // http, https
 	Host      string // www.example.com
@@ -65,9 +69,26 @@ func NewHttp() *THttp {
 		Metodo:            M_GET,
 		Timeout:           30,
 		AuthorizationType: AT_AutoDetect,
+		TransportType:     TNenhum,
 	}
 	ht.Auth2.Owner = ht
 	return ht
+}
+
+func (H *THttp) Free() {
+	if H.ws != nil {
+		H.ws.Close()
+		H.ws = nil
+	}
+
+	H.Request = nil
+	H.Response = nil
+	H.Auth2 = nil
+	H.WebSocket = nil
+	H.Params = nil
+	H.Varibles = nil
+	H.Proxy = nil
+	H.req = nil
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
@@ -178,21 +199,14 @@ func (H *THttp) completHeader() {
 }
 func (H *THttp) completAutorization(req *http.Request) error {
 	//	fmt.Println("passou aqui 1")
-	if H.AuthorizationType == AT_AutoDetect {
-		//	fmt.Println("passou aqui 1.1")
-		if H.Authorization != "" {
-			H.AuthorizationType = AT_Bearer
-		} else if H.UserName != "" && H.Password != "" {
-			H.AuthorizationType = AT_Basic
-		}
-	}
+
 	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
 		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
-			return fmt.Errorf("Erro ao obter o token:", err.Error())
+			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
@@ -235,11 +249,11 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	}
 	//	fmt.Println("passou aqui 2:>", H.AuthorizationType)
 	if H.AuthorizationType == AT_Auth2 {
-		fmt.Println("passou aqui 2.1")
+		//	fmt.Println("passou aqui 2.1")
 		token, err := H.Auth2.GetToken()
 		if err != nil {
 			//fmt.Println("Erro ao obter o token:", err.Error())
-			return fmt.Errorf("Erro ao obter o token:", err.Error())
+			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
 		H.AuthorizationType = AT_Bearer
 		H.Authorization = token
@@ -260,8 +274,13 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	}
 	//fmt.Println("passou aqui 4")
 	if H.AuthorizationType == AT_Basic {
-		//fmt.Println("passou aqui 5", H.UserName, H.Password)
-		auth := H.UserName + ":" + H.Password
+		var auth string
+		if H.UserName != "" && H.Password != "" {
+			auth = H.UserName + ":" + H.Password
+		} else if H.UserName != "" {
+			auth = H.UserName
+		}
+
 		basic := base64.StdEncoding.EncodeToString([]byte(auth))
 		H.Request.Header.Authorization = "Basic " + basic
 
@@ -269,56 +288,176 @@ func (H *THttp) completAutorizationSocket(req http.Header) error {
 	return nil
 }
 
-func (H *THttp) Send() (*Response, error) {
-	//fmt.Println("==================")
-	//fmt.Println("Send..")
-	//fmt.Println("------------------")
+func (H *THttp) GetUrlFinal() string {
+	return H.urlFinal
+}
+
+func (H *THttp) GetTransport() *http.Transport {
+	var needTransport bool
+	var transport *http.Transport
+
+	// Verificar se precisamos de um transport customizado
+	if H.Proxy != nil && H.Proxy.Ativo {
+		needTransport = true
+	}
+	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+		needTransport = true
+	}
+	if H.TransportType != TNenhum {
+		needTransport = true
+	}
+	// Adicionar verificação para HTTPS como critério (removido porque será tratado no Send())
+	// if strings.EqualFold(H.Protocolo, "HTTPS") {
+	//     needTransport = true
+	// }
+
+	// Só criar transport se realmente precisar
+	if needTransport {
+		transport = &http.Transport{}
+
+		// Configurar proxy se ativo
+		if H.Proxy != nil && H.Proxy.Ativo {
+			err := H.Proxy.SetProxy(transport)
+			if err != nil {
+				// Log do erro, mas continua sem proxy
+				fmt.Printf("Erro ao configurar proxy: %v\n", err)
+			}
+		}
+
+		return transport
+	}
+
+	return nil
+}
+
+func (H *THttp) UseCert() bool {
+	return (H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "") ||
+		(len(H.Certificate.CertPEMBlock) > 0 && len(H.Certificate.KeyPEMBlock) > 0) ||
+		(len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "")
+
+}
+
+func (H *THttp) LoadPfx() (tls.Certificate, error) {
+	privateKey, certificate, errPfx := pkcs12.Decode(H.Certificate.PfxBlock, H.Certificate.PfxPass)
+	if errPfx != nil {
+		return tls.Certificate{}, errPfx
+	}
+	cert := tls.Certificate{
+		Certificate: [][]byte{certificate.Raw},
+		PrivateKey:  privateKey,
+		Leaf:        certificate,
+	}
+	return cert, nil
+}
+
+func (H *THttp) Send() (RES *Response, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			//fmt.Printf("Recuperado de um panic no método Send: %v\n", r)
+			RES = nil
+			err = fmt.Errorf("recuperado de um panic no método Send: %v", r)
+		}
+	}()
 	H.Response = NewResponse()
-	var err error
+
 	var resp *http.Response
 	var trans *http.Transport
-	var cert tls.Certificate
 	var Config *tls.Config
-	trans, _ = H.Proxy.GetTransport()
+	var cert tls.Certificate
 
-	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
-		cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
+	// Obter transport (só será criado se necessário)
+	trans = H.GetTransport()
+
+	// Configurar certificados se necessário
+	if H.UseCert() {
+		if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
+			cert, err = tls.LoadX509KeyPair(H.Certificate.PathCrt, H.Certificate.PathPriv)
+		} else if len(H.Certificate.CertPEMBlock) > 0 && len(H.Certificate.KeyPEMBlock) > 0 {
+			cert, err = tls.X509KeyPair(H.Certificate.CertPEMBlock, H.Certificate.KeyPEMBlock)
+		} else if len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "" {
+			cert, err = H.LoadPfx()
+		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("erro ao carregar certificado: %v", err)
 		}
-	}
-	Config = &tls.Config{InsecureSkipVerify: true}
-	if H.Certificate.PathCrt != "" && H.Certificate.PathPriv != "" {
-		Config.Certificates = []tls.Certificate{cert}
-	}
-	if trans != nil {
-		if strings.EqualFold(H.Protocolo, "HTTPS") {
-			trans.TLSClientConfig = Config
-		}
-	} else {
-		trans = &http.Transport{TLSClientConfig: Config}
 	}
 
-	var client *http.Client
-	client = &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
+	// Determinar se precisa de configuração TLS
+	var needsTLS bool
+	//var isHTTPS = strings.EqualFold(H.Protocolo, "HTTPS")
+
+	// Precisa TLS se:
+	needsTLS =
+		H.TransportType == TTLS || // Forçado por TransportType
+			H.TransportType == TSSLTLS || // Forçado por TransportType
+			H.UseCert() ||
+			H.InsecureSkipVerify // Tem certificados
+
+	// Configurar TLS se necessário
+	if needsTLS {
+		Config = &tls.Config{
+			InsecureSkipVerify: H.InsecureSkipVerify,
+		}
+
+		// Adicionar certificados se existirem
+		if H.UseCert() {
+			Config.Certificates = []tls.Certificate{cert}
+			// Se for PFX, adicionar CA pool (opcional, só se quiser confiar na raiz do próprio certificado)
+			if len(H.Certificate.PfxBlock) > 0 && H.Certificate.PfxPass != "" && cert.Leaf != nil {
+				caPool := x509.NewCertPool()
+				caPool.AddCert(cert.Leaf)
+				Config.RootCAs = caPool
+			}
+		}
+
+		// Se não temos transport mas precisamos de TLS, criar um
+		if trans == nil {
+			trans = &http.Transport{}
+		}
+
+		// Aplicar configuração TLS ao transport
+		trans.TLSClientConfig = Config
+	}
+
+	// Criar cliente HTTP
+	client := &http.Client{Timeout: time.Duration(H.Timeout) * time.Second}
+
+	// Usar transport apenas se ele foi criado (significa que é necessário)
 	if trans != nil {
 		client.Transport = trans
 	}
 
 	uri := H.GetUrl()
+	H.urlFinal = uri
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
-		return nil, fmt.Errorf("Erro ao validar url, variaveis não substituidas:", uri, err)
+		return nil, fmt.Errorf("erro ao validar URL, variáveis não substituídas: %s", uri)
 	}
 	switch H.EncType {
 	case ET_NONE:
 		//fmt.Println("CT_NONE:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), nil)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, nil)
 
 	case ET_FORM_DATA:
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
 		var requestBody bytes.Buffer
 		multipartWriter := NewWriter(&requestBody)
 		//defer multipartWriter.Close()
+		if H.Request.ItensFormField != nil {
+			for _, v := range H.Request.ItensFormField {
+				if v.ContentType != "" {
+					fileWriter, err := multipartWriter.CreateFormFile3(v.FieldName, v.ContentType)
+					if err != nil {
+						return nil, fmt.Errorf("erro ao criar o arquivo %s: %s\n", v.FieldName, err)
+					}
+					_, err = fileWriter.Write([]byte(v.FieldValue))
+					if err != nil {
+						return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
+					}
+				} else {
+					multipartWriter.WriteField(v.FieldName, v.FieldValue)
+				}
+			}
+		}
 		if H.Request.ItensContentText != nil {
 			for _, v := range H.Request.ItensContentText {
 				multipartWriter.WriteField(v.Name, v.Value.Text())
@@ -328,16 +467,20 @@ func (H *THttp) Send() (*Response, error) {
 			for _, v := range H.Request.ItensContentBin {
 				fileWriter, err := multipartWriter.CreateFormFile(v.Name, v.FileName)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao criar o arquivo %s: %v", v.FileName, err)
 				}
 				_, err = fileWriter.Write(v.Value)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao escrever o arquivo %s: %v", v.FileName, err)
 				}
 			}
 		}
 		if H.Request.ItensSubmitFile != nil {
 			for _, v := range H.Request.ItensSubmitFile {
+				var (
+					fileWriter io.Writer
+					err        error
+				)
 				// boundary := multipartWriter.Boundary()
 				// fileHeader := fmt.Sprintf("--%s\r\nContent-Disposition: form-data; name=\"\"; filename=\"testepaulo.pdf\"\r\nContent-Type: application/pdf\r\n\r\n", boundary)
 				// requestBody.Write([]byte(fileHeader))
@@ -346,20 +489,25 @@ func (H *THttp) Send() (*Response, error) {
 				// 	return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
 				// }
 				// requestBody.Write([]byte(fmt.Sprintf("\r\n--%s--\r\n", boundary)))
-				fileWriter, err := multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				if v.ContentTransferEncoding > 0 {
+					fileWriter, err = multipartWriter.CreateFormFile4(v.Key, v.FileName, v.ContentType, v.ContentTransferEncoding)
+				} else {
+					fileWriter, err = multipartWriter.CreateFormFile2(v.Key, v.FileName, v.ContentType)
+				}
+
 				//fileWriter, err := multipartWriter.CreateFormFile(v.Key, v.FileName)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao criar o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao criar o arquivo %s: %s\n", v.FileName, err)
 				}
 				_, err = fileWriter.Write(v.Content)
 				if err != nil {
-					return nil, fmt.Errorf("Erro ao escrever o arquivo %s: %s\n", v.FileName, err)
+					return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FileName, err)
 				}
 			}
 		}
 		multipartWriter.Close() //isso aqui nao fecha e sim escreve a ultima linha
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), &requestBody)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, &requestBody)
 
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 
@@ -371,12 +519,12 @@ func (H *THttp) Send() (*Response, error) {
 				formData.Add(v.FieldName, v.FieldValue)
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), strings.NewReader(formData.Encode()))
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(formData.Encode()))
 	case ET_RAW:
 		//fmt.Println("CT_TEXT:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), bytes.NewReader(H.Request.Body))
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
-		fmt.Println("CT_BINARY:")
+		//fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
 		fileBuffer.Reset()
 		if H.Request.ItensContentBin != nil {
@@ -388,27 +536,47 @@ func (H *THttp) Send() (*Response, error) {
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), H.GetUrl(), fileBuffer)
+		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, fileBuffer)
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao criar a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+		return nil, fmt.Errorf("erro ao criar a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
+	if H.AuthorizationType == AT_AutoDetect {
+		//	fmt.Println("passou aqui 1.1")
+		if H.Authorization != "" {
+			H.AuthorizationType = AT_Bearer
+		} else if H.UserName != "" && H.Password != "" {
+			H.AuthorizationType = AT_Basic
+		}
+	}
+	if H.AuthorizationType == AT_Auth2 && H.Auth2.AuthUrl != "" && (H.Auth2.AuthUrl == H.GetUrl() || H.GetUrl() == "") {
+		RES, err = H.Auth2.Send()
+		if err != nil {
+			return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
+		}
+		H.Response = RES
+		return RES, nil
 
-	H.completAutorization(H.req)
-	H.completHeader()
-	resp, err = client.Do(H.req)
-
+	} else {
+		H.completAutorization(H.req)
+		H.completHeader()
+		resp, err = client.Do(H.req)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao fazer a requisição %s: %s\n", GetMethodStr(H.Metodo), err)
+		return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
+	if resp == nil && err == nil {
+		return nil, errors.New("retorno vazio, sem erro, possivelmente pode ser certificado invalido, configurei modo inseguro")
+	}
+
 	defer resp.Body.Close()
 	// Ler a resposta (opcional)
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Erro ao ler body : %s\n", err)
+		return nil, fmt.Errorf("erro ao ler body: %v", err)
 	}
-	RES := &Response{
+	RES = &Response{
 		StatusCode:    resp.StatusCode,
 		StatusMessage: resp.Status,
 		Body:          body,
@@ -492,7 +660,7 @@ func (H *THttp) websocketClient() error {
 	go func() {
 		for {
 
-			fmt.Println("################", err)
+			//fmt.Println("################", err)
 			if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == true) {
 				H.WebSocket.connect = CONNECTING
 				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
@@ -590,36 +758,32 @@ func (H *THttp) IsConect() bool {
 	return false
 }
 func (H *THttp) Desconectar() error {
+	if H.ws == nil {
+		return fmt.Errorf("conexão WebSocket não inicializada")
+	}
 	return H.ws.Close()
 }
 func (H *THttp) EnviarBinario(messageType int, data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(messageType, data)
 }
 func (H *THttp) EnviarTexto(messageType int, data string) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(messageType, []byte(data))
 }
 func (H *THttp) EnviarTextTypeTextMessage(data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(websocket.TextMessage, data)
 }
 func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
 	if H.ws == nil {
-		return fmt.Errorf("Erro ao enviar mensagem, conexão não estabelecida")
+		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
 	return H.ws.WriteMessage(websocket.BinaryMessage, data)
-}
-func (H *THttp) ConvertBodyInStruct(value any) error {
-	err := json.Unmarshal(H.Response.Body, value)
-	if err != nil {
-		return err
-	}
-	return nil
 }

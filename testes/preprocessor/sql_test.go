@@ -871,3 +871,23 @@ func Test_Sql18(t *testing.T) {
 	}
 
 }
+
+func Test_Sql19(t *testing.T) {
+	//teste para postrgres
+	sql := "select :id as xxx'"
+	Params, MacrosUpd, MacrosRead, err := preprocesssql.PreprocessSQL(sql, true, true, true, true, true)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, p := range Params.Items {
+			fmt.Println("param.Name:", p.Name)
+		}
+		for _, m := range MacrosUpd.Items {
+			fmt.Println("macro.Name:", m.Name)
+		}
+		for _, m := range MacrosRead.Items {
+			fmt.Println("macro.Name:", m.Name)
+		}
+	}
+
+}

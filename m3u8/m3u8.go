@@ -48,10 +48,10 @@ func (m3 *M3u8) GetVideoByte(url string) ([]byte, error) {
 	//fmt.Println("Escolhida:", max_atrib.Uri)
 	urlnew, err := replacePathInURL(m3.url, max_atrib.Uri)
 	if err != nil {
-		fmt.Println("Erro ao concatenar a URL:", err)
+		//fmt.Println("Erro ao concatenar a URL:", err)
 		return nil, err
 	}
-	fmt.Println(urlnew)
+	//fmt.Println(urlnew)
 	link2 := httpaoti.NewHttp()
 	link2.SetUrl(urlnew)
 	link2.SetMetodo(httpaoti.M_GET)
