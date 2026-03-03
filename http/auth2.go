@@ -42,6 +42,20 @@ func (A *auth2) Send() (RES *Response, err error) {
 			HttpToken.Certificate = A.Owner.Certificate
 		}
 	}
+	/*
+		No OAuth2, existem 2 formas de enviar as credenciais do cliente (client_id e client_secret):
+
+		1. Enviar as credenciais no cabeçalho de autorização usando o esquema de autenticação básica (Basic Authentication).
+		   Nesse caso, o client_id e o client_secret são codificados em Base64 e enviados no cabeçalho Authorization.
+		2. Enviar as credenciais no corpo da requisição usando o tipo de conteúdo application/x-www-form-urlencoded.
+		   Nesse caso, o client_id e o client_secret são incluídos como parâmetros no corpo da requisição.
+
+		A escolha entre essas duas formas depende das preferências do servidor de autorização e das práticas recomendadas de segurança.
+		O envio das credenciais no cabeçalho de autorização é geralmente considerado mais seguro,
+		pois as credenciais não ficam expostas no corpo da requisição. No entanto, alguns servidores de autorização
+		podem exigir que as credenciais sejam enviadas no corpo da requisição, especialmente se o servidor
+		não suportar autenticação básica.
+	*/
 	if A.ClientAuth == CA_SendBasicAuthHeader {
 		HttpToken.AuthorizationType = AT_Basic
 		HttpToken.UserName = A.ClientId
