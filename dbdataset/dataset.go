@@ -1049,7 +1049,13 @@ func (ds *DataSet) SqlParam() string {
 			replacement = strconv.FormatFloat(reflect.ValueOf(val).Float(), 'f', -1, 64)
 		case string:
 			replacement = "'" + val + "'"
-		case *int, *int8, *int16, *int32, *int64:
+		case *int, *int8, *int16, *int32:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
+		case *int64:
 			if val == nil {
 				replacement = "null"
 				break
