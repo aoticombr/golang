@@ -715,6 +715,82 @@ func (ds *DataSet) FieldByName(fieldName string) *Field {
 	return ds.Fields.FieldByName(fieldName)
 }
 
+func (ds *DataSet) GetAny(fieldName string) any {
+	return ds.FieldByName(fieldName).AsValue()
+}
+func (ds *DataSet) GetString(fieldName string) string {
+	return ds.FieldByName(fieldName).AsString()
+}
+func (ds *DataSet) GetStringNil(fieldName string) *string {
+	return ds.FieldByName(fieldName).AsStringNil()
+}
+func (ds *DataSet) GetInt(fieldName string) int {
+	return ds.FieldByName(fieldName).AsInt()
+}
+func (ds *DataSet) GetIntNil(fieldName string) *int {
+	return ds.FieldByName(fieldName).AsIntNil()
+}
+func (ds *DataSet) GetInt8(fieldName string) int8 {
+	return ds.FieldByName(fieldName).AsInt8()
+}
+func (ds *DataSet) GetInt8Nil(fieldName string) *int8 {
+	return ds.FieldByName(fieldName).AsInt8Nil()
+}
+func (ds *DataSet) GetInt16(fieldName string) int16 {
+	return ds.FieldByName(fieldName).AsInt16()
+}
+func (ds *DataSet) GetInt16Nil(fieldName string) *int16 {
+	return ds.FieldByName(fieldName).AsInt16Nil()
+}
+func (ds *DataSet) GetInt32(fieldName string) int32 {
+	return ds.FieldByName(fieldName).AsInt32()
+}
+func (ds *DataSet) GetInt32Nil(fieldName string) *int32 {
+	return ds.FieldByName(fieldName).AsInt32Nil()
+}
+func (ds *DataSet) GetInt64(fieldName string) int64 {
+	return ds.FieldByName(fieldName).AsInt64()
+}
+func (ds *DataSet) GetInt64Nil(fieldName string) *int64 {
+	return ds.FieldByName(fieldName).AsInt64Nil()
+}
+func (ds *DataSet) GetFloat(fieldName string) float32 {
+	return ds.FieldByName(fieldName).AsFloat()
+}
+func (ds *DataSet) GetFloatNil(fieldName string) *float32 {
+	return ds.FieldByName(fieldName).AsFloatNil()
+}
+func (ds *DataSet) GetFloat64(fieldName string) float64 {
+	return ds.FieldByName(fieldName).AsFloat64()
+}
+func (ds *DataSet) GetFloat64Nil(fieldName string) *float64 {
+	return ds.FieldByName(fieldName).AsFloat64Nil()
+}
+func (ds *DataSet) GetBool(fieldName string) bool {
+	return ds.FieldByName(fieldName).AsBool()
+}
+func (ds *DataSet) GetBoolNil(fieldName string) *bool {
+	return ds.FieldByName(fieldName).AsBoolNil()
+}
+func (ds *DataSet) GetDateTime(fieldName string) time.Time {
+	return ds.FieldByName(fieldName).AsDateTime()
+}
+func (ds *DataSet) GetDateTimeNil(fieldName string) *time.Time {
+	return ds.FieldByName(fieldName).AsDateTimeNil()
+}
+func (ds *DataSet) GetByte(fieldName string) []byte {
+	return ds.FieldByName(fieldName).AsByte()
+}
+func (ds *DataSet) GetByteNil(fieldName string) *[]byte {
+	return ds.FieldByName(fieldName).AsByteNil()
+}
+func (ds *DataSet) IsNull(fieldName string) bool {
+	return ds.FieldByName(fieldName).IsNull()
+}
+func (ds *DataSet) IsNotNull(fieldName string) bool {
+	return ds.FieldByName(fieldName).IsNotNull()
+}
+
 func (ds *DataSet) Locate(key string, value any) bool {
 	ds.First()
 	for !ds.Eof() {
