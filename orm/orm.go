@@ -165,7 +165,7 @@ func NewTable(table interface{}) *Table {
 		itens := strings.Split(column, ",")
 		if len(itens) > 0 {
 
-			if column != "" {
+			if column != "" && column != "-" {
 				col := NewColumn(itens[0])
 
 				// Percorre e processa os itens

@@ -911,6 +911,9 @@ func (ds *DataSet) toStructUniqResult(modelValue reflect.Value) error {
 				}
 				fieldName = itens[0]
 			} else if fieldColumn != "" {
+				if fieldColumn == "-" {
+					continue
+				}
 				itens := strings.Split(fieldColumn, ",")
 				if strings.Contains(itens[0], "#") {
 					continue
