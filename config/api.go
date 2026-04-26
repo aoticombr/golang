@@ -8,12 +8,13 @@ type Api struct {
 	Port int    `json:"port"`
 	Path string `json:"path"`
 
-	Swagger Swagger  `json:"swagger"`
-	Cors    Cors     `json:"cors"`
-	Https   Https    `json:"https"`
-	Gateway Gateway  `json:"gateway"`
-	Dbs     []string `json:"dbs"`
-	Ativo   bool     `json:"ativo"`
+	Swagger  Swagger  `json:"swagger"`
+	Cors     Cors     `json:"cors"`
+	Https    Https    `json:"https"`
+	Gateway  Gateway  `json:"gateway"`
+	Timeouts Timeouts `json:"timeouts"`
+	Dbs      []string `json:"dbs"`
+	Ativo    bool     `json:"ativo"`
 }
 
 func (a *Api) GetPortStr() string {

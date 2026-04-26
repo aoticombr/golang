@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -18,6 +19,7 @@ type CoreApi struct {
 	Parans     config.Params
 	Connection *dbconndataset.ConnDataSet
 	Processo   *Processo
+	server     *http.Server
 }
 
 func NewCoreApi(
@@ -97,10 +99,33 @@ func (ca *CoreApi) Start() error {
 		})
 	}
 
-	// Inicie o servidor
-	http.ListenAndServe(":"+ca.Api.GetPortStr(), r)
+	addr := ":" + ca.Api.GetPortStr()
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           r,
+		ReadHeaderTimeout: ca.Api.Timeouts.ReadHeader(),
+		ReadTimeout:       ca.Api.Timeouts.Read(),
+		WriteTimeout:      ca.Api.Timeouts.Write(),
+		IdleTimeout:       ca.Api.Timeouts.Idle(),
+	}
+	ca.server = srv
 
-	return nil
+	if ca.Api.Https.Ativo {
+		ca.LogInfo("Iniciando API HTTPS em", addr)
+		return srv.ListenAndServeTLS(ca.Api.Https.Cert, ca.Api.Https.Key)
+	}
+	ca.LogInfo("Iniciando API HTTP em", addr)
+	return srv.ListenAndServe()
+}
+
+// Shutdown encerra o servidor HTTP de forma graciosa: para de aceitar
+// novas conexões e aguarda as requisições em andamento terminarem até
+// o ctx expirar. Após o ctx, conexões pendentes são cortadas.
+func (ca *CoreApi) Shutdown(ctx context.Context) error {
+	if ca.server == nil {
+		return nil
+	}
+	return ca.server.Shutdown(ctx)
 }
 
 func ErrorHandler(w http.ResponseWriter, r *http.Request, code int, body []byte, err error) {

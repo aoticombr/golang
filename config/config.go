@@ -22,6 +22,7 @@ type Config struct {
 	Parans   Params      `json:"parans"`
 	Certs    Certs       `json:"certs"`
 	Log      Log         `json:"log"`
+	Monitor  *Monitor    `json:"monitor,omitempty"`
 	Path     string      `json:"path"`
 	JsonFile string
 }
@@ -103,6 +104,22 @@ func NewConfig() *Config {
 					Log: Log{
 						Nivel:  5,
 						Screen: true,
+					},
+					Monitor: &Monitor{
+						Ativo:        false,
+						Host:         "localhost",
+						Port:         6060,
+						User:         "admin",
+						Pass:         "",
+						SessionKey:   "",
+						IntervalSec:  2,
+						RetentionMin: 60,
+						Alerts: []MonitorRule{
+							{Name: "goroutines_high", Metric: "goroutines", Op: ">", Threshold: 1000, Severity: "warn", Ativo: true},
+							{Name: "heap_huge", Metric: "heapInuse", Op: ">", Threshold: 536870912, Severity: "critical", Ativo: true},
+							{Name: "heap_growing", Metric: "heapInuse", Op: "growth", Threshold: 50, WindowSec: 300, Severity: "warn", Ativo: true},
+							{Name: "gc_pause_high", Metric: "gcPauseMs", Op: ">", Threshold: 100, Severity: "warn", Ativo: true},
+						},
 					},
 					Jwt: []*Jwt{
 						{

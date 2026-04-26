@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Monitor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+      <span id="appName">Monitor</span>
+      <span class="status" id="connStatus" data-state="connecting">conectando…</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="alerts">Alertas <span class="badge" id="alertBadge" hidden>0</span></button>
+      <button class="tab" data-tab="rules">Regras</button>
+      <button class="tab" data-tab="actions">Ações</button>
+      <button class="tab" data-tab="settings">Configurações</button>
+    </nav>
+    <div class="user">
+      <span id="userName"></span>
+      <form method="post" action="/logout"><button class="link-btn" type="submit">sair</button></form>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel" data-panel="dashboard">
+      <div class="cards">
+        <div class="card"><div class="lbl">Goroutines</div><div class="val" id="cardGoroutines">—</div></div>
+        <div class="card"><div class="lbl">Heap em uso</div><div class="val" id="cardHeap">—</div></div>
+        <div class="card"><div class="lbl">Sys total</div><div class="val" id="cardSys">—</div></div>
+        <div class="card"><div class="lbl">Threads OS</div><div class="val" id="cardThreads">—</div></div>
+        <div class="card"><div class="lbl">GC count</div><div class="val" id="cardGC">—</div></div>
+        <div class="card"><div class="lbl">Uptime</div><div class="val" id="cardUptime">—</div></div>
+      </div>
+
+      <div class="info-row">
+        <span><b>App:</b> <span id="infoApp">—</span></span>
+        <span><b>Host:</b> <span id="infoHost">—</span></span>
+        <span><b>PID:</b> <span id="infoPid">—</span></span>
+        <span><b>Go:</b> <span id="infoGo">—</span></span>
+        <span><b>CPUs:</b> <span id="infoCpu">—</span></span>
+        <span><b>GOMAXPROCS:</b> <span id="infoMaxProc">—</span></span>
+      </div>
+
+      <div class="charts">
+        <div class="chart-box">
+          <h3>Heap (MB)</h3>
+          <canvas id="chartHeap" height="180"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Goroutines / Threads</h3>
+          <canvas id="chartGoroutines" height="180"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>GC pause (ms) e %CPU em GC</h3>
+          <canvas id="chartGC" height="180"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Alocação (MB/s)</h3>
+          <canvas id="chartAlloc" height="180"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="alerts" hidden>
+      <h2>Histórico de alertas</h2>
+      <div id="alertList" class="alert-list"><div class="empty">sem alertas</div></div>
+    </section>
+
+    <section class="panel" data-panel="rules" hidden>
+      <h2>Regras de alerta</h2>
+      <p class="subtitle">As mudanças são salvas no <code>config.json</code>.</p>
+      <table class="rules">
+        <thead><tr>
+          <th>Ativo</th><th>Nome</th><th>Métrica</th><th>Operador</th>
+          <th>Threshold</th><th>Janela (s)</th><th>Severidade</th><th></th>
+        </tr></thead>
+        <tbody id="rulesBody"></tbody>
+      </table>
+      <div class="actions-row">
+        <button id="addRule" class="btn">+ adicionar regra</button>
+        <button id="saveRules" class="btn primary">salvar</button>
+        <span class="hint">Métricas: goroutines, threads, heapAlloc, heapInuse, heapIdle, heapSys, heapObjects, stackInuse, sys, numGC, gcPauseMs, gcCpuPercent, allocRate. Operadores: &gt;, &gt;=, &lt;, &lt;=, growth (%).</span>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="actions" hidden>
+      <h2>Ações de runtime</h2>
+      <div class="action-grid">
+        <div class="action-box">
+          <h3>Forçar GC</h3>
+          <p>Executa <code>runtime.GC()</code> no servidor.</p>
+          <button class="btn" id="btnGC">executar</button>
+        </div>
+        <div class="action-box">
+          <h3>Liberar memória OS</h3>
+          <p><code>debug.FreeOSMemory()</code> — devolve heap idle ao SO.</p>
+          <button class="btn" id="btnFree">executar</button>
+        </div>
+        <div class="action-box">
+          <h3>Dump de goroutines</h3>
+          <p>Captura todas as stacks ativas (texto puro).</p>
+          <button class="btn" id="btnDump">baixar</button>
+        </div>
+        <div class="action-box">
+          <h3>Profiles pprof</h3>
+          <p>Atalhos para os profiles padrões.</p>
+          <ul class="pprof-links">
+            <li><a href="/debug/pprof/" target="_blank">índice</a></li>
+            <li><a href="/debug/pprof/heap?debug=1" target="_blank">heap</a></li>
+            <li><a href="/debug/pprof/allocs?debug=1" target="_blank">allocs</a></li>
+            <li><a href="/debug/pprof/goroutine?debug=1" target="_blank">goroutine</a></li>
+            <li><a href="/debug/pprof/block?debug=1" target="_blank">block</a></li>
+            <li><a href="/debug/pprof/threadcreate?debug=1" target="_blank">threadcreate</a></li>
+            <li><a href="/debug/pprof/profile?seconds=30" target="_blank">CPU 30s</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="settings" hidden>
+      <h2>Configurações</h2>
+      <form id="passForm" class="form-card">
+        <h3>Trocar credenciais</h3>
+        <label>Usuário<input name="user" id="newUser"></label>
+        <label>Senha atual<input type="password" name="current" required></label>
+        <label>Nova senha<input type="password" name="new" required minlength="4"></label>
+        <button class="btn primary" type="submit">salvar</button>
+        <div class="msg" id="passMsg"></div>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

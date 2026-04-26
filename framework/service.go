@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/aoticombr/golang/dbconndataset"
 	"github.com/aoticombr/golang/framework/api"
 	"github.com/aoticombr/golang/framework/bot"
+	"github.com/aoticombr/golang/framework/monitor"
 	"github.com/aoticombr/golang/framework/srv"
 	"github.com/aoticombr/golang/lib"
 	"github.com/joho/godotenv"
@@ -25,11 +27,14 @@ var logOS service.Logger
 var CoreApi *api.CoreApi
 var CoreSrv *srv.CoreSrv
 var CoreBot *bot.CoreBot
+var CoreMonitor *monitor.Monitor
 
 type App struct {
 	Name    string
 	Config  *config.Config
 	options []OptionsApp
+	Ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 func NewApp() *App {
@@ -135,14 +140,37 @@ func (app *App) Start(s service.Service) error {
 }
 
 func (app *App) Stop(s service.Service) error {
-	//	for _, core := range app.CoresSrv {
-	//		core.Parar()
-	//	}
-	// Stop should not block. Return with a few seconds.
-	<-time.After(time.Second * 2)
+	if app.cancel != nil {
+		app.cancel()
+	}
+
+	if CoreApi != nil {
+		ok, apiCfg := app.Config.GetApi(app.Name)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), func() time.Duration {
+			if ok {
+				return apiCfg.Timeouts.Shutdown()
+			}
+			return 10 * time.Second
+		}())
+		defer cancel()
+
+		if err := CoreApi.Shutdown(shutdownCtx); err != nil {
+			lib.NewLog().Error(app.Name, "Erro no shutdown da API:", err.Error())
+		}
+	}
+
+	if CoreMonitor != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := CoreMonitor.Shutdown(shutdownCtx); err != nil {
+			lib.NewLog().Error(app.Name, "Erro no shutdown do Monitor:", err.Error())
+		}
+	}
 	return nil
 }
 func (app *App) Run() error {
+	app.Ctx, app.cancel = context.WithCancel(context.Background())
+
 	lib.NewLog().TypePrint = lib.LG_Silent
 	lib.NewLog().AppName = app.Name
 	// Le o json de configuração

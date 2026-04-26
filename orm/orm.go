@@ -1,4 +1,4 @@
-package gorm
+package orm
 
 import (
 	"errors"
@@ -28,24 +28,30 @@ const (
 	A_Delete
 )
 
+func structType(table interface{}) reflect.Type {
+	t := reflect.TypeOf(table)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t
+}
+
 func GetTable(table interface{}) string {
-	t := reflect.TypeOf(table).Elem()
+	t := structType(table)
 	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldName := field.Tag.Get("table")
-		if fieldName != "" {
-			return fieldName
+		if name := t.Field(i).Tag.Get("table"); name != "" {
+			return name
 		}
 	}
 	return ""
 }
+
 func GetPrimaryKey(table interface{}) []string {
-	t := reflect.TypeOf(table)
+	t := structType(table)
 	var primaryKeys []string
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		fieldName := field.Tag.Get("primarykey")
-		if fieldName != "" {
+		if field.Tag.Get("primarykey") != "" {
 			primaryKeys = append(primaryKeys, field.Name)
 		}
 	}
@@ -54,6 +60,7 @@ func GetPrimaryKey(table interface{}) []string {
 
 type Column struct {
 	Name        string
+	fieldIndex  int
 	PrimaryKey  bool
 	UniqueKey   bool
 	Required    bool
@@ -73,25 +80,7 @@ type Column struct {
 }
 
 func NewColumn(name string) *Column {
-	return &Column{
-		Name:        name,
-		PrimaryKey:  false,
-		UniqueKey:   false,
-		Insert:      false,
-		Update:      false,
-		Delete:      false,
-		Where:       false,
-		TimeNow:     false,
-		Upper:       false,
-		Lower:       false,
-		ActionType:  false,
-		Omitempty:   false,
-		Nullempty:   false,
-		Md5:         false,
-		AutoGuid:    false,
-		Required:    false,
-		ReturnValue: false,
-	}
+	return &Column{Name: name, fieldIndex: -1}
 }
 
 type Columns []*Column
@@ -114,6 +103,7 @@ func (c Columns) CountKeys() int {
 	}
 	return count
 }
+
 func (c Columns) CountReturn() int {
 	var count int
 	for _, v := range c {
@@ -137,6 +127,48 @@ type Table struct {
 	Options    Options
 }
 
+// applyFlag aplica um item da tag em col. Aceita "#flag" e "flag" (retrocompat).
+// Retorna false quando o item não corresponde a nenhuma flag conhecida.
+func applyFlag(col *Column, item string) bool {
+	switch strings.TrimPrefix(item, "#") {
+	case "autoguid":
+		col.AutoGuid = true
+	case "insert":
+		col.Insert = true
+	case "update":
+		col.Update = true
+	case "delete":
+		col.Delete = true
+	case "where":
+		col.Where = true
+	case "timenow":
+		col.TimeNow = true
+	case "primarykey":
+		col.PrimaryKey = true
+	case "uniquekey":
+		col.UniqueKey = true
+	case "required":
+		col.Required = true
+	case "returnvalue":
+		col.ReturnValue = true
+	case "omitempty":
+		col.Omitempty = true
+	case "nullempty":
+		col.Nullempty = true
+	case "md5":
+		col.Md5 = true
+	case "upper":
+		col.Upper = true
+	case "lower":
+		col.Lower = true
+	case "actiontype":
+		col.ActionType = true
+	default:
+		return false
+	}
+	return true
+}
+
 func NewTable(table interface{}) *Table {
 	tb := &Table{
 		table: table,
@@ -145,96 +177,51 @@ func NewTable(table interface{}) *Table {
 			Db:     DB_Postgres,
 		},
 	}
-	t := reflect.TypeOf(tb.table)
-	v := reflect.ValueOf(tb.table)
-	// Check if data is a pointer, if yes, dereference it
+	t := reflect.TypeOf(table)
+	v := reflect.ValueOf(table)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 		t = t.Elem()
 	}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		Value := v.Field(i).Interface()
-		table := field.Tag.Get("table")
 
-		if table != "" {
-			tb.TableName = table
+		if name := field.Tag.Get("table"); name != "" {
+			tb.TableName = name
 		}
 
 		column := field.Tag.Get("column")
+		if column == "" || column == "-" {
+			continue
+		}
 		itens := strings.Split(column, ",")
-		if len(itens) > 0 {
+		colName := strings.TrimSpace(itens[0])
+		if colName == "" {
+			continue
+		}
+		col := NewColumn(colName)
+		col.fieldIndex = i
 
-			if column != "" && column != "-" {
-				col := NewColumn(itens[0])
+		for _, item := range itens[1:] {
+			item = strings.TrimSpace(item)
+			if item == "" {
+				continue
+			}
+			applyFlag(col, item)
 
-				// Percorre e processa os itens
-				for _, item := range itens {
-					if item == "#actiontype" {
-						col.ActionType = true
-						switch Value.(string) {
-						case "new":
-							tb.ActionType = A_Insert
-						case "old":
-							tb.ActionType = A_Update
-						case "del":
-							tb.ActionType = A_Delete
-						default:
-							tb.ActionType = A_Insert
-						}
-						continue
-					}
-					if item == "#autoguid" {
-						col.AutoGuid = true
-					}
-					if item == "#insert" {
-						col.Insert = true
-					}
-					if item == "#update" {
-						col.Update = true
-					}
-					if item == "#delete" {
-						col.Delete = true
-					}
-					if item == "#where" {
-						col.Where = true
-					}
-					if item == "#timenow" {
-						col.TimeNow = true
-					}
-					if item == "#primarykey" {
-						col.PrimaryKey = true
-					}
-					if item == "#uniquekey" {
-						col.UniqueKey = true
-					}
-					if item == "#required" {
-						col.Required = true
-					}
-					if item == "#returnvalue" {
-						col.ReturnValue = true
-					}
-					if item == "#omitempty" {
-						col.Omitempty = true
-					}
-					if item == "#nullempty" {
-						col.Nullempty = true
-					}
-					if item == "#md5" {
-						col.Md5 = true
-					}
-					if item == "#upper" {
-						col.Upper = true
-					}
-					if item == "#lower" {
-						col.Lower = true
-					}
-
+			if col.ActionType && strings.TrimPrefix(item, "#") == "actiontype" {
+				s, _ := v.Field(i).Interface().(string)
+				switch s {
+				case "old":
+					tb.ActionType = A_Update
+				case "del":
+					tb.ActionType = A_Delete
+				default:
+					tb.ActionType = A_Insert
 				}
-				tb.Columns = append(tb.Columns, col)
-
 			}
 		}
+		tb.Columns = append(tb.Columns, col)
 	}
 	return tb
 }
@@ -259,317 +246,203 @@ func (tb *Table) Validate() error {
 	}
 	return nil
 }
-func (tb *Table) ValidateRequired() error {
 
-	t := reflect.TypeOf(tb.table)
+func (tb *Table) fieldValue(col *Column) (reflect.Value, bool) {
 	v := reflect.ValueOf(tb.table)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
-		t = t.Elem()
 	}
-	for _, Col := range tb.Columns {
-		if Col.Insert {
+	if col.fieldIndex < 0 || col.fieldIndex >= v.NumField() {
+		return reflect.Value{}, false
+	}
+	return v.Field(col.fieldIndex), true
+}
 
-			for b := 0; b < t.NumField(); b++ {
-				field := t.Field(b)
-				value := v.Field(b)
+func isEmpty(value reflect.Value) bool {
+	switch value.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map:
+		return value.IsNil()
+	case reflect.String:
+		return value.String() == ""
+	}
+	return false
+}
 
-				column := field.Tag.Get("column")
-				if idx := strings.Index(column, ","); idx != -1 {
-					column = column[:idx]
-				}
-				if column != "" {
-					if Col.Name == column {
-						if Col.Required {
-							switch value.Kind() {
-							case reflect.Ptr:
-								if value.IsNil() {
-									return errors.New("column " + Col.Name + " is required")
-								}
-							case reflect.String:
-								if value.String() == "" {
-									return errors.New("column " + Col.Name + " is required")
-								}
-							}
-						}
-
-					}
-				}
-
-			}
+func (tb *Table) ValidateRequired() error {
+	for _, col := range tb.Columns {
+		if !col.Insert || !col.Required {
+			continue
+		}
+		value, ok := tb.fieldValue(col)
+		if !ok {
+			continue
+		}
+		if isEmpty(value) {
+			return errors.New("column " + col.Name + " is required")
 		}
 	}
 	return nil
+}
 
+func wrapValue(col *Column, base string) string {
+	if col.Md5 {
+		base = "md5(" + base + ")"
+	}
+	if col.Upper {
+		base = "upper(" + base + ")"
+	}
+	if col.Lower {
+		base = "lower(" + base + ")"
+	}
+	return base
+}
+
+func (tb *Table) autoGuidExpr() string {
+	if tb.Options.Db == DB_Oracle {
+		return "sys_guid()"
+	}
+	return "uuid_generate_v4()::uuid"
 }
 
 func (tb *Table) SqlInsert() (string, error) {
-	err := tb.Validate()
-	if err != nil {
+	if err := tb.Validate(); err != nil {
 		return "", err
 	}
-	err = tb.ValidateRequired()
-	if err != nil {
+	if err := tb.ValidateRequired(); err != nil {
 		return "", err
 	}
-	var columns, values, returncolumn, returninto string
-	t := reflect.TypeOf(tb.table)
-	v := reflect.ValueOf(tb.table)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		t = t.Elem()
-	}
-	for _, Col := range tb.Columns {
 
-		if Col.Insert || Col.ReturnValue || Col.AutoGuid || Col.TimeNow {
-
-			for b := 0; b < t.NumField(); b++ {
-				field := t.Field(b)
-				value := v.Field(b)
-
-				column := field.Tag.Get("column")
-				if idx := strings.Index(column, ","); idx != -1 {
-					column = column[:idx]
-				}
-				if column != "" && Col.ReturnValue {
-					if Col.Name == column {
-						if returncolumn != "" {
-							returncolumn += ", "
-							returninto += ", "
-						}
-						returncolumn += Col.Name
-						returninto += ":new_" + Col.Name
-					}
-
-				}
-				if column != "" && (Col.Insert || Col.AutoGuid || Col.TimeNow) {
-					if Col.Name == column {
-
-						if Col.Omitempty && !Col.TimeNow {
-							switch value.Kind() {
-							case reflect.Ptr:
-								if value.IsNil() {
-									continue
-								}
-							case reflect.String:
-								if value.String() == "" {
-									continue
-								}
-							}
-						}
-
-						if columns != "" {
-							columns += ", "
-							values += ", "
-						}
-
-						columns += Col.Name
-						if Col.Md5 {
-							values += "md5("
-						}
-						if Col.Upper {
-							values += "upper("
-						}
-						if Col.Lower {
-							values += "lower("
-						}
-						if Col.Nullempty {
-							switch value.Kind() {
-							case reflect.Ptr:
-								if value.IsNil() {
-									values += "null"
-								} else {
-									values += ":" + Col.Name
-								}
-							}
-						} else if Col.AutoGuid {
-							switch value.Kind() {
-							case reflect.Ptr:
-								if value.IsNil() {
-									values += "uuid_generate_v4()::uuid"
-								} else {
-									values += ":" + Col.Name
-								}
-							case reflect.String:
-								if value.String() == "" {
-									values += "uuid_generate_v4()::uuid"
-								} else {
-									values += ":" + Col.Name
-								}
-							default:
-								values += ":" + Col.Name
-							}
-
-						} else if Col.TimeNow && Col.Insert {
-							values += "current_timestamp"
-						} else {
-							values += ":" + Col.Name
-						}
-						if Col.Upper {
-							values += ")"
-						}
-						if Col.Lower {
-							values += ")"
-						}
-						if Col.Md5 {
-							values += ")"
-						}
-					}
-				}
-
-			}
+	var columns, values, returncolumn, returninto []string
+	for _, col := range tb.Columns {
+		if col.ReturnValue {
+			returncolumn = append(returncolumn, col.Name)
+			returninto = append(returninto, ":new_"+col.Name)
 		}
+
+		if !(col.Insert || col.AutoGuid || col.TimeNow) {
+			continue
+		}
+		value, ok := tb.fieldValue(col)
+		if !ok {
+			continue
+		}
+		if col.Omitempty && !col.TimeNow && isEmpty(value) {
+			continue
+		}
+
+		var expr string
+		switch {
+		case col.TimeNow && col.Insert:
+			expr = "current_timestamp"
+		case col.Nullempty && isEmpty(value):
+			expr = "null"
+		case col.AutoGuid && isEmpty(value):
+			expr = tb.autoGuidExpr()
+		default:
+			expr = ":" + col.Name
+		}
+
+		columns = append(columns, col.Name)
+		values = append(values, wrapValue(col, expr))
 	}
-	if columns == "" {
+
+	if len(columns) == 0 {
 		return "", errors.New("columns not found")
 	}
-	if values == "" {
+	if len(values) == 0 {
 		return "", errors.New("values not found")
 	}
-	returnvalue := ""
-	if tb.Columns.CountReturn() > 0 {
+
+	sql := "insert into " + tb.TableName +
+		" (" + strings.Join(columns, ", ") + ")" +
+		" values (" + strings.Join(values, ", ") + ")"
+
+	if len(returncolumn) > 0 {
 		switch tb.Options.Db {
 		case DB_Oracle:
-			returnvalue = " returning " + returncolumn + " into " + returninto
+			sql += " returning " + strings.Join(returncolumn, ", ") +
+				" into " + strings.Join(returninto, ", ")
 		case DB_Postgres:
-			returnvalue = " returning " + returncolumn
+			sql += " returning " + strings.Join(returncolumn, ", ")
 		}
 	}
-	return "insert into " + tb.TableName + " (" + columns + ") values (" + values + ")" + returnvalue, nil
+	return sql, nil
 }
 
 func (tb *Table) SqlUpdate() (string, error) {
-	err := tb.Validate()
-	if err != nil {
+	if err := tb.Validate(); err != nil {
+		return "", err
+	}
+	if err := tb.ValidateRequired(); err != nil {
 		return "", err
 	}
 
-	err = tb.ValidateRequired()
-	if err != nil {
-		return "", err
-	}
-	var (
-		columns, where string
-	)
-	t := reflect.TypeOf(tb.table)
-	v := reflect.ValueOf(tb.table)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		t = t.Elem()
-	}
-	for _, Col := range tb.Columns {
-		if Col.Update {
-			for b := 0; b < t.NumField(); b++ {
-				field := t.Field(b)
-				value := v.Field(b)
-
-				column := field.Tag.Get("column")
-				if idx := strings.Index(column, ","); idx != -1 {
-					column = column[:idx]
-				}
-				if Col.Omitempty && !Col.TimeNow {
-					switch value.Kind() {
-					case reflect.Ptr:
-						if value.IsNil() {
-							continue
-						}
-					case reflect.String:
-						if value.String() == "" {
-							continue
-						}
-					}
-				}
-				if column != "" {
-					if Col.Name == column {
-						if columns != "" {
-							columns += ", "
-						}
-						columns += Col.Name + " = "
-
-						if Col.Md5 {
-							columns += "md5("
-						}
-						if Col.Upper {
-							columns += "upper("
-						}
-						if Col.Lower {
-							columns += "lower("
-						}
-						if Col.Nullempty {
-							switch value.Kind() {
-							case reflect.Ptr:
-								if value.IsNil() {
-									columns += "null"
-								} else {
-									columns += ":" + Col.Name
-								}
-							}
-						} else if Col.TimeNow && Col.Update {
-							columns += "current_timestamp"
-
-						} else {
-							columns += ":" + Col.Name
-						}
-
-						if Col.Upper {
-							columns += ")"
-						}
-						if Col.Lower {
-							columns += ")"
-						}
-						if Col.Md5 {
-							columns += ")"
-						}
-					}
-				}
-			}
+	var sets, where []string
+	for _, col := range tb.Columns {
+		if !col.Update {
+			continue
 		}
-	}
-	if tb.Options.Delete == D_Disable {
-		where = "deleted_at is null"
-	}
-	for _, Col := range tb.Columns {
-		if Col.PrimaryKey || Col.Where {
-			if where != "" {
-				where += " AND "
-			}
-			where += Col.Name + "=:" + Col.Name
+		value, ok := tb.fieldValue(col)
+		if !ok {
+			continue
 		}
+		if col.Omitempty && !col.TimeNow && isEmpty(value) {
+			continue
+		}
+
+		var expr string
+		switch {
+		case col.TimeNow && col.Update:
+			expr = "current_timestamp"
+		case col.Nullempty && isEmpty(value):
+			expr = "null"
+		default:
+			expr = ":" + col.Name
+		}
+		sets = append(sets, col.Name+" = "+wrapValue(col, expr))
 	}
-	if columns == "" {
+
+	if len(sets) == 0 {
 		return "", errors.New("columns not found")
 	}
-	return "UPDATE " + tb.TableName + " SET " + columns + " WHERE " + where, nil
+
+	if tb.Options.Delete == D_Disable {
+		where = append(where, "deleted_at is null")
+	}
+	for _, col := range tb.Columns {
+		if col.PrimaryKey || col.Where {
+			where = append(where, col.Name+"=:"+col.Name)
+		}
+	}
+	return "UPDATE " + tb.TableName +
+		" SET " + strings.Join(sets, ", ") +
+		" WHERE " + strings.Join(where, " AND "), nil
 }
 
 func (tb *Table) SqlDelete() (string, error) {
-	err := tb.Validate()
-	if err != nil {
+	if err := tb.Validate(); err != nil {
 		return "", err
 	}
 
-	var where string
+	var where []string
 	if tb.Options.Delete == D_Disable {
-		where = "deleted_at is null"
+		where = append(where, "deleted_at is null")
 	}
-	for _, Col := range tb.Columns {
-		if Col.PrimaryKey || Col.Delete || Col.Where {
-
-			if where != "" {
-				where += " AND "
-			}
-			where += Col.Name + "=:" + Col.Name
+	for _, col := range tb.Columns {
+		if col.PrimaryKey || col.Delete || col.Where {
+			where = append(where, col.Name+"=:"+col.Name)
 		}
-
 	}
 
 	switch tb.Options.Delete {
 	case D_Disable:
-		return "UPDATE " + tb.TableName + " SET deleted_at = current_timestamp  WHERE " + where, nil
-	case D_Remove:
-		return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
+		return "UPDATE " + tb.TableName +
+			" SET deleted_at = current_timestamp" +
+			" WHERE " + strings.Join(where, " AND "), nil
+	default:
+		return "DELETE FROM " + tb.TableName +
+			" WHERE " + strings.Join(where, " AND "), nil
 	}
-	return "DELETE FROM " + tb.TableName + " WHERE " + where, nil
 }
 
 func (tb *Table) SqlStatus() (string, error) {

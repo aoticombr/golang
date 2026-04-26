@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"time"
 
 	"github.com/aoticombr/golang/config"
@@ -41,23 +42,32 @@ func NewCoreBot(certs []*config.Cert, dbs []*config.Database, bot *config.Bot) *
 	return srv
 }
 
-func (c *CoreBot) Executar() error {
+func (c *CoreBot) Executar(ctx context.Context) error {
 	for name, bot := range GetRegistraBotInstance().RegisteredClasses {
-		Controller, err := GetRegistraBotInstance().FindBotClassByKeyAndNewAsObject(name)
+		controller, err := GetRegistraBotInstance().FindBotClassByKeyAndNewAsObject(name)
 		if err != nil {
 			return err
 		}
 
 		go func(name string, tempo int, cl IControllerBot) {
-
+			ticker := time.NewTicker(time.Duration(tempo) * time.Minute)
+			defer ticker.Stop()
 			for {
+				select {
+				case <-ctx.Done():
+					lib.NewLog().Debug("[Bot]", "Core.Bot.Executar(", name, ") encerrando por shutdown")
+					return
+				default:
+				}
 				lib.NewLog().Debug("[Bot]", "Core.Bot.Executar(", name, ")", "Ciclo:", tempo, "minutos")
-				go cl.Executar()
-				time.Sleep(time.Duration(tempo) * time.Minute)
+				cl.Executar()
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+				}
 			}
-
-		}(name, bot.Tempo, Controller)
-
+		}(name, bot.Tempo, controller)
 	}
 
 	return nil

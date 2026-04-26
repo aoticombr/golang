@@ -1,6 +1,7 @@
 package srv
 
 import (
+	"context"
 	"time"
 
 	"github.com/aoticombr/golang/config"
@@ -22,23 +23,32 @@ func NewCoreSrv(certs []*config.Cert, dbs []*config.Database, service *config.Se
 	return srv
 }
 
-func (c *CoreSrv) Executar() error {
+func (c *CoreSrv) Executar(ctx context.Context) error {
 	for name := range GetRegistraSrvInstance().RegisteredClasses {
-		Controller, err := GetRegistraSrvInstance().FindSrvClassByKeyAndNewAsObject(name)
+		controller, err := GetRegistraSrvInstance().FindSrvClassByKeyAndNewAsObject(name)
 		if err != nil {
 			return err
 		}
 
 		go func(name string, cl IControllerSrv) {
-
+			ticker := time.NewTicker(1 * time.Minute)
+			defer ticker.Stop()
 			for {
+				select {
+				case <-ctx.Done():
+					lib.NewLog().Debug("[Srv]", "Core.Srv.Executar(", name, ") encerrando por shutdown")
+					return
+				default:
+				}
 				lib.NewLog().Debug("[Srv]", "Core.Srv.Executar(", name, ")")
-				go cl.Executar()
-				time.Sleep(1 * time.Minute)
+				cl.Executar()
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+				}
 			}
-
-		}(name, Controller)
-
+		}(name, controller)
 	}
 	return nil
 }
