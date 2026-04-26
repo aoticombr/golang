@@ -564,13 +564,19 @@ func (H *THttp) Send() (RES *Response, err error) {
 		return RES, nil
 
 	} else {
-		H.completAutorization(req)
+		if err = H.completAutorization(req); err != nil {
+			return nil, err
+		}
 		H.completHeader(req)
 		resp, err = client.Do(req)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
+	// Guarda intencional: pelo contrato do net/http, client.Do não devolve
+	// (nil, nil), mas em produção já foram observados casos (combinações de
+	// transport/proxy/cert) em que ambos vêm nil. Sem este return o
+	// `defer resp.Body.Close()` abaixo dispararia panic. Não remova.
 	if resp == nil && err == nil {
 		return nil, errors.New("retorno vazio, sem erro, possivelmente pode ser certificado invalido, configurei modo inseguro")
 	}
@@ -592,7 +598,9 @@ func (H *THttp) Send() (RES *Response, err error) {
 }
 func (H *THttp) websocketClient() error {
 	headers := make(http.Header)
-	H.completAutorizationSocket(headers)
+	if err := H.completAutorizationSocket(headers); err != nil {
+		return err
+	}
 	H.applyHeaders(headers)
 
 	dialer := websocket.DefaultDialer
@@ -622,9 +630,10 @@ func (H *THttp) websocketClient() error {
 		for {
 			ws := H.getConn()
 
-			if (ws == nil || err2 != nil) && H.WebSocket.AutoReconnect {
+			autoReconnect := H.getAutoReconnect()
+			if (ws == nil || err2 != nil) && autoReconnect {
 				H.setStatus(CONNECTING)
-				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
+				if H.getAttempts() >= H.getMaxAttempts() {
 					break
 				}
 				if H.OnSend != nil {
@@ -653,7 +662,7 @@ func (H *THttp) websocketClient() error {
 				} else {
 					fmt.Printf(MSG_RECONECTADO)
 				}
-			} else if (ws == nil || err2 != nil) && !H.WebSocket.AutoReconnect {
+			} else if (ws == nil || err2 != nil) && !autoReconnect {
 				H.setStatus(CLOSED)
 				break
 			}
@@ -747,6 +756,33 @@ func (H *THttp) resetAttempts() {
 		H.WebSocket.attempts = 0
 	}
 	H.wsMu.Unlock()
+}
+
+func (H *THttp) getAttempts() int {
+	H.wsMu.RLock()
+	defer H.wsMu.RUnlock()
+	if H.WebSocket == nil {
+		return 0
+	}
+	return H.WebSocket.attempts
+}
+
+func (H *THttp) getAutoReconnect() bool {
+	H.wsMu.RLock()
+	defer H.wsMu.RUnlock()
+	if H.WebSocket == nil {
+		return false
+	}
+	return H.WebSocket.AutoReconnect
+}
+
+func (H *THttp) getMaxAttempts() int {
+	H.wsMu.RLock()
+	defer H.wsMu.RUnlock()
+	if H.WebSocket == nil {
+		return 0
+	}
+	return H.WebSocket.NumberOfAttempts
 }
 
 func (H *THttp) IsConect() bool {
