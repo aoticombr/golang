@@ -17,7 +17,9 @@ type proxy struct {
 func (p *proxy) getUrl() string {
 	var auth string
 	if p.UserName != "" && p.Password != "" {
-		auth = p.UserName + ":" + p.Password + "@"
+		// url.UserPassword().String() faz o escape correto de caracteres
+		// como '@', ':', '/', '%' que apareceriam quebrando a URL crua.
+		auth = url.UserPassword(p.UserName, p.Password).String() + "@"
 	}
 
 	proxyURL := fmt.Sprintf("http://%s%s:%d", auth, p.Host, p.Port)

@@ -29,11 +29,12 @@ func (R *Response) GetHeader() map[string][]string {
 
 func (R *Response) GetAllFields() map[string]string {
 	headerValues := make(map[string]string)
-	// Adicionando os campos extras do cabeçalho (ExtraFields)
 	for fieldName, fieldValues := range R.Header {
 		if len(fieldValues) > 0 {
-			// Se houver múltiplos valores para o campo, concatenamos eles em uma única string
-			headerValues[fieldName] = strings.Join(fieldValues, "; ")
+			// RFC 7230 §3.2.2: cabeçalhos multi-valor são combinados com ", ".
+			// Nota: "Set-Cookie" é a exceção da RFC e não pode ser combinado com segurança;
+			// para acessar todos os cookies, use R.GetHeader()["Set-Cookie"] diretamente.
+			headerValues[fieldName] = strings.Join(fieldValues, ", ")
 		}
 	}
 

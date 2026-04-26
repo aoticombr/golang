@@ -72,7 +72,7 @@ func GeContentTypeStr(value ContentType) string {
 	case CT_XML:
 		return "application/xml"
 	case CT_MULTIPART_FORM_DATA:
-		return "multipar/form-data"
+		return "multipart/form-data"
 	case CT_X_WWW_FORM_URLENCODED:
 		return "application/x-www-form-urlencoded"
 	case CT_BINARY:
@@ -139,8 +139,13 @@ func GeContentTypeStr(value ContentType) string {
 }
 
 func GetContentTypeFromString(str string) ContentType {
-	//fmt.Println("GetContentTypeFromString: '%s'", strings.ToLower(str))
-	switch strings.ToLower(str) {
+	// Headers reais costumam vir com parâmetros (ex.: "application/json; charset=utf-8");
+	// pegamos só a parte do media type antes do ';' para fazer o match.
+	mediaType := strings.TrimSpace(str)
+	if i := strings.Index(mediaType, ";"); i >= 0 {
+		mediaType = strings.TrimSpace(mediaType[:i])
+	}
+	switch strings.ToLower(mediaType) {
 	case "text/plain":
 		return CT_TEXT
 	case "application/javascript":

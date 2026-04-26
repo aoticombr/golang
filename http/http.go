@@ -98,22 +98,21 @@ func (H *THttp) Free() {
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
-	H.Metodo, _ = GetStrFromMethod(value)
-	return nil
+	var err error
+	H.Metodo, err = GetStrFromMethod(value)
+	return err
 }
 func (H *THttp) GetMetodoStr() string {
 	return GetMethodStr(H.Metodo)
 }
-func (H *THttp) SetMetodo(value TMethod) error {
+func (H *THttp) SetMetodo(value TMethod) {
 	H.Metodo = value
-	return nil
 }
 func (H *THttp) GetMetodo() TMethod {
 	return H.Metodo
 }
-func (H *THttp) SetAuthorizationType(value AuthorizationType) error {
+func (H *THttp) SetAuthorizationType(value AuthorizationType) {
 	H.AuthorizationType = value
-	return nil
 }
 func (H *THttp) GetAuthorizationType() AuthorizationType {
 	return H.AuthorizationType
@@ -160,6 +159,7 @@ func (H *THttp) GetUrl() string {
 
 	return baseURL
 }
+
 // applyHeaders copia os campos não-vazios de H.Request.Header para um http.Header
 // destino. Compartilhado entre completHeader() (HTTP) e websocketClient() (WS) para
 // evitar 30+ linhas duplicadas.
@@ -453,11 +453,11 @@ func (H *THttp) Send() (RES *Response, err error) {
 				if v.ContentType != "" {
 					fileWriter, err := multipartWriter.CreateFormFile3(v.FieldName, v.ContentType)
 					if err != nil {
-						return nil, fmt.Errorf("erro ao criar o arquivo %s: %s\n", v.FieldName, err)
+						return nil, fmt.Errorf("erro ao criar o arquivo %s: %v\n", v.FieldName, err)
 					}
 					_, err = fileWriter.Write([]byte(v.FieldValue))
 					if err != nil {
-						return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
+						return nil, fmt.Errorf("erro ao escrever o arquivo %s: %v\n", v.FieldName, err)
 					}
 				} else {
 					if err := multipartWriter.WriteField(v.FieldName, v.FieldValue); err != nil {
@@ -717,6 +717,7 @@ func (H *THttp) Conectar() error {
 	//}
 	return nil
 }
+
 // getConn devolve um snapshot do *websocket.Conn atual sob lock de leitura.
 // Use o ponteiro retornado em vez de H.ws diretamente para evitar race
 // com Free()/Desconectar()/reconexão na goroutine de leitura.

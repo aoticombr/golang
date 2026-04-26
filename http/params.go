@@ -12,7 +12,9 @@ func (P Params) Get(key string) string {
 	return P[key]
 }
 func (P Params) Clear() {
-	P = make(map[string]string)
+	for k := range P {
+		delete(P, k)
+	}
 }
 func NewParams() Params {
 	return make(Params)
