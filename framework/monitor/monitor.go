@@ -59,6 +59,9 @@ func New(cfg *config.Config, appName string) (*Monitor, error) {
 	}
 
 	// Bootstrap de credenciais e segredo de sessão na primeira execução.
+	// Se "pass" estiver vazio, gera "admin"; se estiver em texto puro
+	// (não é hash bcrypt), faz o hash e regrava — assim o usuário pode
+	// editar o config.json com a senha desejada normalmente.
 	dirty := false
 	if mc.Pass == "" {
 		hash, err := HashPassword("admin")
@@ -71,6 +74,14 @@ func New(cfg *config.Config, appName string) (*Monitor, error) {
 		}
 		dirty = true
 		lib.NewLog().Info("[Monitor]", "Senha padrão 'admin' gerada — troque após o primeiro login.")
+	} else if !isBcryptHash(mc.Pass) {
+		hash, err := HashPassword(mc.Pass)
+		if err != nil {
+			return nil, err
+		}
+		mc.Pass = hash
+		dirty = true
+		lib.NewLog().Info("[Monitor]", "Senha em texto puro detectada no config.json — convertida para bcrypt.")
 	}
 	if mc.SessionKey == "" {
 		mc.SessionKey = GenerateSecret()

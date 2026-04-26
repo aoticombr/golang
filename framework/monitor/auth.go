@@ -77,6 +77,17 @@ func HashPassword(plain string) (string, error) {
 	return string(h), nil
 }
 
+// isBcryptHash detecta se a string já está no formato bcrypt
+// (prefixos $2a$, $2b$, $2y$ — variantes geradas por libs distintas).
+func isBcryptHash(s string) bool {
+	if len(s) < 60 {
+		return false
+	}
+	return strings.HasPrefix(s, "$2a$") ||
+		strings.HasPrefix(s, "$2b$") ||
+		strings.HasPrefix(s, "$2y$")
+}
+
 // GenerateSecret produz uma chave hex de 32 bytes para assinar sessões.
 func GenerateSecret() string {
 	b := make([]byte, 32)
