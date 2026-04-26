@@ -17,7 +17,6 @@ import (
 	"github.com/aoticombr/golang/framework/monitor"
 	"github.com/aoticombr/golang/framework/srv"
 	"github.com/aoticombr/golang/lib"
-	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 )
 
@@ -86,10 +85,10 @@ func (app *App) Execute(options ...OptionsApp) {
 			}
 		}
 	}
-	err := godotenv.Load()
+	/*err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
-	}
+	}*/
 
 	svcConfig := &service.Config{
 		Name:        app.Name,
