@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -27,8 +28,8 @@ const (
 
 type THttp struct {
 	/*privado*/
-	req      *http.Request
 	ws       *websocket.Conn
+	wsMu     sync.RWMutex // protege ws e o estado interno de WebSocket (connect, attempts) acessado pela goroutine de leitura
 	url      string
 	urlFinal string
 
@@ -76,11 +77,16 @@ func NewHttp() *THttp {
 	return ht
 }
 
+// Free libera explicitamente todos os recursos internos para o GC.
+// Usado quando o componente recebeu payloads grandes e precisamos garantir
+// que tudo seja recuperado de imediato (não confiamos só no escopo do caller).
 func (H *THttp) Free() {
+	H.wsMu.Lock()
 	if H.ws != nil {
 		H.ws.Close()
 		H.ws = nil
 	}
+	H.wsMu.Unlock()
 
 	H.Request = nil
 	H.Response = nil
@@ -89,7 +95,6 @@ func (H *THttp) Free() {
 	H.Params = nil
 	H.Varibles = nil
 	H.Proxy = nil
-	H.req = nil
 }
 
 func (H *THttp) SetMetodoStr(value string) error {
@@ -155,136 +160,133 @@ func (H *THttp) GetUrl() string {
 
 	return baseURL
 }
-func (H *THttp) completHeader() {
-	if H.Request.Header.Accept != "" {
-		H.req.Header.Set("Accept", H.Request.Header.Accept)
+// applyHeaders copia os campos não-vazios de H.Request.Header para um http.Header
+// destino. Compartilhado entre completHeader() (HTTP) e websocketClient() (WS) para
+// evitar 30+ linhas duplicadas.
+func (H *THttp) applyHeaders(dst http.Header) {
+	if H.Request == nil {
+		return
 	}
-	if H.Request.Header.AcceptCharset != "" {
-		H.req.Header.Set("Accept-Charset", H.Request.Header.AcceptCharset)
+	h := H.Request.Header
+	if h.Accept != "" {
+		dst.Set("Accept", h.Accept)
 	}
-	if H.Request.Header.AcceptEncoding != "" {
-		H.req.Header.Set("Accept-Encoding", H.Request.Header.AcceptEncoding)
+	if h.AcceptCharset != "" {
+		dst.Set("Accept-Charset", h.AcceptCharset)
 	}
-	if H.Request.Header.AcceptLanguage != "" {
-		H.req.Header.Set("Accept-Language", H.Request.Header.AcceptLanguage)
+	if h.AcceptEncoding != "" {
+		dst.Set("Accept-Encoding", h.AcceptEncoding)
 	}
-	if H.Request.Header.Authorization != "" {
-		H.req.Header.Set("Authorization", H.Request.Header.Authorization)
+	if h.AcceptLanguage != "" {
+		dst.Set("Accept-Language", h.AcceptLanguage)
 	}
-	if H.Request.Header.Charset != "" {
-		H.req.Header.Set("Charset", H.Request.Header.Charset)
+	if h.Authorization != "" {
+		dst.Set("Authorization", h.Authorization)
 	}
-	if H.Request.Header.ContentType != "" {
-		H.req.Header.Set("Content-Type", H.Request.Header.ContentType)
+	if h.Charset != "" {
+		dst.Set("Charset", h.Charset)
 	}
-	if H.Request.Header.ContentLength != "" {
-		H.req.Header.Set("Content-Length", H.Request.Header.ContentLength)
+	if h.ContentType != "" {
+		dst.Set("Content-Type", h.ContentType)
 	}
-	if H.Request.Header.ContentEncoding != "" {
-		H.req.Header.Set("Content-Encoding", H.Request.Header.ContentEncoding)
+	if h.ContentLength != "" {
+		dst.Set("Content-Length", h.ContentLength)
 	}
-	if H.Request.Header.ContentVersion != "" {
-		H.req.Header.Set("Content-Version", H.Request.Header.ContentVersion)
+	if h.ContentEncoding != "" {
+		dst.Set("Content-Encoding", h.ContentEncoding)
 	}
-	if H.Request.Header.ContentLocation != "" {
-		H.req.Header.Set("Content-Location", H.Request.Header.ContentLocation)
+	if h.ContentVersion != "" {
+		dst.Set("Content-Version", h.ContentVersion)
 	}
-
-	if H.Request.Header.ExtraFields != nil {
-		for k, v := range H.Request.Header.ExtraFields {
+	if h.ContentLocation != "" {
+		dst.Set("Content-Location", h.ContentLocation)
+	}
+	if h.ExtraFields != nil {
+		for k, v := range h.ExtraFields {
 			for _, v2 := range v {
-				H.req.Header.Add(k, v2)
+				dst.Add(k, v2)
 			}
 		}
 	}
 }
-func (H *THttp) completAutorization(req *http.Request) error {
-	//	fmt.Println("passou aqui 1")
 
-	//fmt.Println("passou aqui 2:>", H.AuthorizationType)
-	if H.AuthorizationType == AT_Auth2 {
-		//	fmt.Println("passou aqui 2.1")
+func (H *THttp) completHeader(req *http.Request) {
+	H.applyHeaders(req.Header)
+}
+func (H *THttp) completAutorization(req *http.Request) error {
+	// Usa variáveis locais para não mutar H.AuthorizationType / H.Authorization,
+	// senão a próxima chamada de Send() não renovaria o token Auth2.
+	effectiveType := H.AuthorizationType
+	bearerToken := H.Authorization
+
+	if effectiveType == AT_AutoDetect {
+		if bearerToken != "" {
+			effectiveType = AT_Bearer
+		} else if H.UserName != "" && H.Password != "" {
+			effectiveType = AT_Basic
+		}
+	}
+	if effectiveType == AT_Auth2 {
 		token, err := H.Auth2.GetToken()
 		if err != nil {
-			//fmt.Println("Erro ao obter o token:", err.Error())
 			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
-		H.AuthorizationType = AT_Bearer
-		H.Authorization = token
-		//	fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
+		effectiveType = AT_Bearer
+		bearerToken = token
 	}
-	//	fmt.Println("passou aqui 3")
-	if H.AuthorizationType == AT_Bearer {
-		//fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
-		inputStringLower := strings.ToLower(H.Authorization)
-		searchTermLower := "bearer"
-
-		if strings.Contains(inputStringLower, searchTermLower) {
-			req.Header.Set("Authorization", H.Authorization)
+	if effectiveType == AT_Bearer {
+		if strings.Contains(strings.ToLower(bearerToken), "bearer") {
+			req.Header.Set("Authorization", bearerToken)
 		} else {
-			req.Header.Set("Authorization", "Bearer "+H.Authorization)
+			req.Header.Set("Authorization", "Bearer "+bearerToken)
 		}
-
 	}
-	//fmt.Println("passou aqui 4")
-	if H.AuthorizationType == AT_Basic {
-		//fmt.Println("passou aqui 5", H.UserName, H.Password)
+	if effectiveType == AT_Basic {
 		auth := H.UserName + ":" + H.Password
 		basic := base64.StdEncoding.EncodeToString([]byte(auth))
 		H.Request.Header.Authorization = "Basic " + basic
-
-		//fmt.Println("H.Request.Header.Authorization:", H.Request.Header.Authorization)
 		req.SetBasicAuth(H.UserName, H.Password)
 	}
 	return nil
 }
 func (H *THttp) completAutorizationSocket(req http.Header) error {
-	//	fmt.Println("passou aqui 1")
-	if H.AuthorizationType == AT_AutoDetect {
-		//	fmt.Println("passou aqui 1.1")
-		if H.Authorization != "" {
-			H.AuthorizationType = AT_Bearer
+	// Usa variáveis locais para não mutar H.AuthorizationType / H.Authorization
+	// — assim Conectar() pode ser chamado várias vezes e o auto-detect / refresh
+	// de token Auth2 continuam funcionando em chamadas subsequentes.
+	effectiveType := H.AuthorizationType
+	bearerToken := H.Authorization
+
+	if effectiveType == AT_AutoDetect {
+		if bearerToken != "" {
+			effectiveType = AT_Bearer
 		} else if H.UserName != "" && H.Password != "" {
-			H.AuthorizationType = AT_Basic
+			effectiveType = AT_Basic
 		}
 	}
-	//	fmt.Println("passou aqui 2:>", H.AuthorizationType)
-	if H.AuthorizationType == AT_Auth2 {
-		//	fmt.Println("passou aqui 2.1")
+	if effectiveType == AT_Auth2 {
 		token, err := H.Auth2.GetToken()
 		if err != nil {
-			//fmt.Println("Erro ao obter o token:", err.Error())
 			return fmt.Errorf("erro ao obter o token: %v", err)
 		}
-		H.AuthorizationType = AT_Bearer
-		H.Authorization = token
-		//fmt.Println("passou aqui 3.a", "H.Authorization "+H.Authorization)
+		effectiveType = AT_Bearer
+		bearerToken = token
 	}
-	//fmt.Println("passou aqui 3")
-	if H.AuthorizationType == AT_Bearer {
-		//fmt.Println("passou aqui 3.1", "Bearer "+H.Authorization)
-		inputStringLower := strings.ToLower(H.Authorization)
-		searchTermLower := "bearer"
-
-		if strings.Contains(inputStringLower, searchTermLower) {
-			req.Set("Authorization", H.Authorization)
+	if effectiveType == AT_Bearer {
+		if strings.Contains(strings.ToLower(bearerToken), "bearer") {
+			req.Set("Authorization", bearerToken)
 		} else {
-			req.Set("Authorization", "Bearer "+H.Authorization)
+			req.Set("Authorization", "Bearer "+bearerToken)
 		}
-
 	}
-	//fmt.Println("passou aqui 4")
-	if H.AuthorizationType == AT_Basic {
+	if effectiveType == AT_Basic {
 		var auth string
 		if H.UserName != "" && H.Password != "" {
 			auth = H.UserName + ":" + H.Password
 		} else if H.UserName != "" {
 			auth = H.UserName
 		}
-
 		basic := base64.StdEncoding.EncodeToString([]byte(auth))
 		H.Request.Header.Authorization = "Basic " + basic
-
 	}
 	return nil
 }
@@ -352,9 +354,12 @@ func (H *THttp) LoadPfx() (tls.Certificate, error) {
 }
 
 func (H *THttp) Send() (RES *Response, err error) {
+	// Recover intencional: THttp é usado em muitos pontos da aplicação e
+	// uma falha em uma chamada não pode derrubar as demais operações.
+	// O panic é convertido em erro para o caller registrar em log e tratar
+	// posteriormente — não remova sem alinhar antes.
 	defer func() {
 		if r := recover(); r != nil {
-			//fmt.Printf("Recuperado de um panic no método Send: %v\n", r)
 			RES = nil
 			err = fmt.Errorf("recuperado de um panic no método Send: %v", r)
 		}
@@ -433,10 +438,10 @@ func (H *THttp) Send() (RES *Response, err error) {
 	if strings.Contains(uri, "{{") || strings.Contains(uri, "}}") {
 		return nil, fmt.Errorf("erro ao validar URL, variáveis não substituídas: %s", uri)
 	}
+	var req *http.Request
 	switch H.EncType {
 	case ET_NONE:
-		//fmt.Println("CT_NONE:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, nil)
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, nil)
 
 	case ET_FORM_DATA:
 		//fmt.Println("CT_MULTIPART_FORM_DATA:")
@@ -455,13 +460,17 @@ func (H *THttp) Send() (RES *Response, err error) {
 						return nil, fmt.Errorf("erro ao escrever o arquivo %s: %s\n", v.FieldName, err)
 					}
 				} else {
-					multipartWriter.WriteField(v.FieldName, v.FieldValue)
+					if err := multipartWriter.WriteField(v.FieldName, v.FieldValue); err != nil {
+						return nil, fmt.Errorf("erro ao escrever campo %s: %v", v.FieldName, err)
+					}
 				}
 			}
 		}
 		if H.Request.ItensContentText != nil {
 			for _, v := range H.Request.ItensContentText {
-				multipartWriter.WriteField(v.Name, v.Value.Text())
+				if err := multipartWriter.WriteField(v.Name, v.Value.Text()); err != nil {
+					return nil, fmt.Errorf("erro ao escrever campo %s: %v", v.Name, err)
+				}
 			}
 		}
 		if H.Request.ItensContentBin != nil {
@@ -506,9 +515,12 @@ func (H *THttp) Send() (RES *Response, err error) {
 				}
 			}
 		}
-		multipartWriter.Close() //isso aqui nao fecha e sim escreve a ultima linha
+		// Close() aqui não fecha o buffer — apenas escreve o boundary final do multipart.
+		if err := multipartWriter.Close(); err != nil {
+			return nil, fmt.Errorf("erro ao finalizar multipart: %v", err)
+		}
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, &requestBody)
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, &requestBody)
 
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
 
@@ -520,10 +532,9 @@ func (H *THttp) Send() (RES *Response, err error) {
 				formData.Add(v.FieldName, v.FieldValue)
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(formData.Encode()))
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(formData.Encode()))
 	case ET_RAW:
-		//fmt.Println("CT_TEXT:")
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
 		//fmt.Println("CT_BINARY:")
 		fileBuffer := &bytes.Buffer{}
@@ -532,25 +543,18 @@ func (H *THttp) Send() (RES *Response, err error) {
 			for _, v := range H.Request.ItensContentBin {
 				_, err := fileBuffer.Write(v.Value)
 				if err != nil {
-					//fmt.Println("Erro ao copiar os dados para o buffer:", err)
-					return nil, fmt.Errorf("Erro ao copiar os dados para o buffer:", v.FileName, err)
+					return nil, fmt.Errorf("erro ao copiar os dados do arquivo %s para o buffer: %v", v.FileName, err)
 				}
 			}
 		}
-		H.req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, fileBuffer)
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, fileBuffer)
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar a requisição %s: %v", GetMethodStr(H.Metodo), err)
 	}
-	if H.AuthorizationType == AT_AutoDetect {
-		//	fmt.Println("passou aqui 1.1")
-		if H.Authorization != "" {
-			H.AuthorizationType = AT_Bearer
-		} else if H.UserName != "" && H.Password != "" {
-			H.AuthorizationType = AT_Basic
-		}
-	}
+	// Nota: o auto-detect (AT_AutoDetect → Bearer/Basic) acontece dentro de
+	// completAutorization a partir de variáveis locais, sem mutar H.AuthorizationType.
 	if H.AuthorizationType == AT_Auth2 && H.Auth2.AuthUrl != "" && (H.Auth2.AuthUrl == H.GetUrl() || H.GetUrl() == "") {
 		RES, err = H.Auth2.Send()
 		if err != nil {
@@ -560,9 +564,9 @@ func (H *THttp) Send() (RES *Response, err error) {
 		return RES, nil
 
 	} else {
-		H.completAutorization(H.req)
-		H.completHeader()
-		resp, err = client.Do(H.req)
+		H.completAutorization(req)
+		H.completHeader(req)
+		resp, err = client.Do(req)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
@@ -587,151 +591,103 @@ func (H *THttp) Send() (RES *Response, err error) {
 	return RES, nil
 }
 func (H *THttp) websocketClient() error {
-	var (
-		headers http.Header
-	)
-
-	headers = make(http.Header)
+	headers := make(http.Header)
 	H.completAutorizationSocket(headers)
-	if H.Request.Header.Accept != "" {
-		headers.Set("Accept", H.Request.Header.Accept)
-	}
-	if H.Request.Header.AcceptCharset != "" {
-		headers.Set("Accept-Charset", H.Request.Header.AcceptCharset)
-	}
-	if H.Request.Header.AcceptEncoding != "" {
-		headers.Set("Accept-Encoding", H.Request.Header.AcceptEncoding)
-	}
-	if H.Request.Header.AcceptLanguage != "" {
-		headers.Set("Accept-Language", H.Request.Header.AcceptLanguage)
-	}
-	if H.Request.Header.Authorization != "" {
-		headers.Set("Authorization", H.Request.Header.Authorization)
-	}
-	if H.Request.Header.Charset != "" {
-		headers.Set("Charset", H.Request.Header.Charset)
-	}
-	if H.Request.Header.ContentType != "" {
-		headers.Set("Content-Type", H.Request.Header.ContentType)
-	}
-	if H.Request.Header.ContentLength != "" {
-		headers.Set("Content-Length", H.Request.Header.ContentLength)
-	}
-	if H.Request.Header.ContentEncoding != "" {
-		headers.Set("Content-Encoding", H.Request.Header.ContentEncoding)
-	}
-	if H.Request.Header.ContentVersion != "" {
-		headers.Set("Content-Version", H.Request.Header.ContentVersion)
-	}
-	if H.Request.Header.ContentLocation != "" {
-		headers.Set("Content-Location", H.Request.Header.ContentLocation)
-	}
+	H.applyHeaders(headers)
 
-	if H.Request.Header.ExtraFields != nil {
-		for k, v := range H.Request.Header.ExtraFields {
-			for _, v2 := range v {
-				headers.Add(k, v2)
-			}
-		}
-	}
 	dialer := websocket.DefaultDialer
 	var (
-		//conn *websocket.Conn
-		//resp *http.Response
 		err  error
 		err2 error
 	)
 
-	H.ws, _, err = dialer.Dial(H.GetUrl(), headers)
+	conn, _, err := dialer.Dial(H.GetUrl(), headers)
 	if err != nil {
 		if H.OnSend != nil {
 			H.OnSend.Error("Erro na conexão: " + err.Error())
 		} else {
 			fmt.Printf("Erro na conexão: %v\n", err)
 		}
-		return fmt.Errorf("Erro na conexão: " + err.Error())
-	} else {
-		H.WebSocket.connect = OPEN
-		if H.OnSend != nil {
-			H.OnSend.Msg(MSG_CONECTADO)
-		} else {
-			fmt.Println(MSG_CONECTADO)
-		}
+		return fmt.Errorf("Erro na conexão: %v", err)
 	}
+	H.setConn(conn)
+	H.setStatus(OPEN)
+	if H.OnSend != nil {
+		H.OnSend.Msg(MSG_CONECTADO)
+	} else {
+		fmt.Println(MSG_CONECTADO)
+	}
+
 	go func() {
 		for {
+			ws := H.getConn()
 
-			//fmt.Println("################", err)
-			if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == true) {
-				H.WebSocket.connect = CONNECTING
+			if (ws == nil || err2 != nil) && H.WebSocket.AutoReconnect {
+				H.setStatus(CONNECTING)
 				if H.WebSocket.attempts >= H.WebSocket.NumberOfAttempts {
 					break
 				}
 				if H.OnSend != nil {
 					H.OnSend.Disconect(MSG_DISCONECT, false)
 					H.OnSend.Msg(MSG_RECONECTANDO)
-
 				} else {
 					fmt.Printf(MSG_RECONECTANDO)
 				}
-				H.ws, _, err = dialer.Dial(H.GetUrl(), headers)
-				if err != nil {
+				newConn, _, dialErr := dialer.Dial(H.GetUrl(), headers)
+				if dialErr != nil {
 					if H.OnSend != nil {
-						H.OnSend.Error("Erro na conexão: " + err.Error())
+						H.OnSend.Error("Erro na conexão: " + dialErr.Error())
 					} else {
-						fmt.Printf("Erro na conexão: %v\n", err)
+						fmt.Printf("Erro na conexão: %v\n", dialErr)
 					}
 					time.Sleep(5 * time.Second)
-					H.WebSocket.attempts++
+					H.incAttempts()
 					continue
 				}
-				H.WebSocket.connect = OPEN
-				H.WebSocket.attempts = 0
+				H.setConn(newConn)
+				H.setStatus(OPEN)
+				H.resetAttempts()
+				ws = newConn
 				if H.OnSend != nil {
 					H.OnSend.Msg(MSG_RECONECTADO)
 				} else {
 					fmt.Printf(MSG_RECONECTADO)
 				}
-
-			} else if ((H.ws == nil) || (err2 != nil)) && (H.WebSocket.AutoReconnect == false) {
-				H.WebSocket.connect = CLOSED
+			} else if (ws == nil || err2 != nil) && !H.WebSocket.AutoReconnect {
+				H.setStatus(CLOSED)
 				break
 			}
 			err2 = nil
 
 			for err2 == nil {
-				//fmt.Println("Conectado ao servidor WebSocket 2", err2)
-				msgtype, msg, err := H.ws.ReadMessage()
-				if err != nil {
-					if H.OnSend != nil {
-						H.OnSend.Error("Erro na leitura da mensagem: " + err.Error())
-
-					} else {
-						fmt.Printf("Erro na leitura da mensagem: %v\n", err)
-					}
-					H.ws.Close()
-					time.Sleep(5 * time.Second)
-					//fmt.Println("Conectado ao servidor WebSocket 4", err)
-					err2 = err
-					//break
+				ws = H.getConn()
+				if ws == nil {
+					err2 = errors.New("conexão WebSocket fechada")
 					continue
-				} else {
-					//fmt.Println("Conectado ao servidor WebSocket 3", err2)
-					if H.OnSend != nil {
-						H.OnSend.Read(msgtype, msg, err)
-					}
 				}
-				//fmt.Println("Conectado ao servidor WebSocket 5", err2)
-
+				msgtype, msg, readErr := ws.ReadMessage()
+				if readErr != nil {
+					if H.OnSend != nil {
+						H.OnSend.Error("Erro na leitura da mensagem: " + readErr.Error())
+					} else {
+						fmt.Printf("Erro na leitura da mensagem: %v\n", readErr)
+					}
+					ws.Close()
+					time.Sleep(5 * time.Second)
+					err2 = readErr
+					continue
+				}
+				if H.OnSend != nil {
+					H.OnSend.Read(msgtype, msg, readErr)
+				}
 			}
 		}
 		if H.OnSend != nil {
 			H.OnSend.Disconect(MSG_DISCONECT, true)
-
 		} else {
 			fmt.Printf("Erro na leitura da mensagem: %v\n", err)
 		}
-		H.WebSocket.connect = CLOSED
+		H.setStatus(CLOSED)
 	}()
 	return nil
 }
@@ -743,7 +699,7 @@ func (H *THttp) Conectar() error {
 			H.OnSend.Error("Erro na conexão: " + err.Error())
 			H.OnSend.Msg("Tentando reconectar em 5 segundos...")
 		} else {
-			fmt.Printf("Erro na conexão: " + err.Error())
+			fmt.Printf("Erro na conexão: %v\n", err)
 			fmt.Println("Tentando reconectar em 5 segundos...")
 		}
 		return err
@@ -752,41 +708,92 @@ func (H *THttp) Conectar() error {
 	//}
 	return nil
 }
-func (H *THttp) IsConect() bool {
-	if H.ws != nil {
-		return true
-	}
-	return false
+// getConn devolve um snapshot do *websocket.Conn atual sob lock de leitura.
+// Use o ponteiro retornado em vez de H.ws diretamente para evitar race
+// com Free()/Desconectar()/reconexão na goroutine de leitura.
+func (H *THttp) getConn() *websocket.Conn {
+	H.wsMu.RLock()
+	defer H.wsMu.RUnlock()
+	return H.ws
 }
+
+func (H *THttp) setConn(c *websocket.Conn) {
+	H.wsMu.Lock()
+	H.ws = c
+	H.wsMu.Unlock()
+}
+
+// setStatus / incAttempts / resetAttempts encapsulam mutações em
+// H.WebSocket feitas pela goroutine de leitura.
+func (H *THttp) setStatus(s Status) {
+	H.wsMu.Lock()
+	if H.WebSocket != nil {
+		H.WebSocket.connect = s
+	}
+	H.wsMu.Unlock()
+}
+
+func (H *THttp) incAttempts() {
+	H.wsMu.Lock()
+	if H.WebSocket != nil {
+		H.WebSocket.attempts++
+	}
+	H.wsMu.Unlock()
+}
+
+func (H *THttp) resetAttempts() {
+	H.wsMu.Lock()
+	if H.WebSocket != nil {
+		H.WebSocket.attempts = 0
+	}
+	H.wsMu.Unlock()
+}
+
+func (H *THttp) IsConect() bool {
+	return H.getConn() != nil
+}
+
 func (H *THttp) Desconectar() error {
-	if H.ws == nil {
+	H.wsMu.Lock()
+	ws := H.ws
+	H.ws = nil
+	H.wsMu.Unlock()
+	if ws == nil {
 		return fmt.Errorf("conexão WebSocket não inicializada")
 	}
-	return H.ws.Close()
+	return ws.Close()
 }
+
 func (H *THttp) EnviarBinario(messageType int, data []byte) error {
-	if H.ws == nil {
+	ws := H.getConn()
+	if ws == nil {
 		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
-	return H.ws.WriteMessage(messageType, data)
+	return ws.WriteMessage(messageType, data)
 }
+
 func (H *THttp) EnviarTexto(messageType int, data string) error {
-	if H.ws == nil {
+	ws := H.getConn()
+	if ws == nil {
 		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
-	return H.ws.WriteMessage(messageType, []byte(data))
+	return ws.WriteMessage(messageType, []byte(data))
 }
+
 func (H *THttp) EnviarTextTypeTextMessage(data []byte) error {
-	if H.ws == nil {
+	ws := H.getConn()
+	if ws == nil {
 		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
-	return H.ws.WriteMessage(websocket.TextMessage, data)
+	return ws.WriteMessage(websocket.TextMessage, data)
 }
+
 func (H *THttp) EnviarBinarioTypeBinaryMessage(data []byte) error {
-	if H.ws == nil {
+	ws := H.getConn()
+	if ws == nil {
 		return fmt.Errorf("erro ao enviar mensagem, conexão não estabelecida")
 	}
-	return H.ws.WriteMessage(websocket.BinaryMessage, data)
+	return ws.WriteMessage(websocket.BinaryMessage, data)
 }
 func (H *THttp) ConvertBodyInStruct(value any) error {
 	err := json.Unmarshal(H.Response.Body, value)

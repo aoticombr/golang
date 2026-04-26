@@ -106,38 +106,3 @@ func EncodePGPFile(secretString, NameFile string) (string, error) {
 
 	return EncodePGPKey(secretString, string(keyringBytes))
 }
-
-/*func EncodePGPFile(secretString, NameFile string) (string, error) {
-
-	keyringFileBuffer, err := os.Open(NameFile)
-	defer keyringFileBuffer.Close()
-
-	entityList, err := openpgp.ReadArmoredKeyRing(keyringFileBuffer)
-	if err != nil {
-		return "", err
-	}
-
-	// encrypt string
-	buf := new(bytes.Buffer)
-	w, err := openpgp.Encrypt(buf, entityList, nil, nil, nil)
-	if err != nil {
-		return "", err
-	}
-	_, err = w.Write([]byte(secretString))
-	if err != nil {
-		return "", err
-	}
-	err = w.Close()
-	if err != nil {
-		return "", err
-	}
-
-	// Encode to base64
-	bytes, err := ioutil.ReadAll(buf)
-	if err != nil {
-		return "", err
-	}
-	encStr := base64.StdEncoding.EncodeToString(bytes)
-
-	return encStr, nil
-}*/

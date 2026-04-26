@@ -50,34 +50,34 @@ func (H *Header) GetAllFields() map[string]string {
 	if H.Accept != "" {
 		headerValues["Accept"] = H.Accept
 	}
-	if H.Accept != "" {
+	if H.AcceptCharset != "" {
 		headerValues["Accept-Charset"] = H.AcceptCharset
 	}
-	if H.Accept != "" {
+	if H.AcceptEncoding != "" {
 		headerValues["Accept-Encoding"] = H.AcceptEncoding
 	}
-	if H.Accept != "" {
+	if H.AcceptLanguage != "" {
 		headerValues["Accept-Language"] = H.AcceptLanguage
 	}
-	if H.Accept != "" {
+	if H.Authorization != "" {
 		headerValues["Authorization"] = H.Authorization
 	}
-	if H.Accept != "" {
+	if H.Charset != "" {
 		headerValues["Charset"] = H.Charset
 	}
-	if H.Accept != "" {
+	if H.ContentType != "" {
 		headerValues["Content-Type"] = H.ContentType
 	}
-	if H.Accept != "" {
+	if H.ContentLength != "" {
 		headerValues["Content-Length"] = H.ContentLength
 	}
-	if H.Accept != "" {
+	if H.ContentEncoding != "" {
 		headerValues["Content-Encoding"] = H.ContentEncoding
 	}
-	if H.Accept != "" {
+	if H.ContentVersion != "" {
 		headerValues["Content-Version"] = H.ContentVersion
 	}
-	if H.Accept != "" {
+	if H.ContentLocation != "" {
 		headerValues["Content-Location"] = H.ContentLocation
 	}
 
