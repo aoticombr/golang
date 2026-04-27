@@ -332,7 +332,7 @@ func (tb *Table) SqlInsert() (string, error) {
 
 		var expr string
 		switch {
-		case col.TimeNow && col.Insert:
+		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
@@ -392,7 +392,7 @@ func (tb *Table) SqlUpdate() (string, error) {
 
 		var expr string
 		switch {
-		case col.TimeNow && col.Update:
+		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
