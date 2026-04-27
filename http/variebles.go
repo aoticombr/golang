@@ -39,7 +39,11 @@ func (v *Varibles) Values() []string {
 	return values
 }
 func (v *Varibles) ToMap() map[string]string {
-	return (*v)
+	out := make(map[string]string, len(*v))
+	for k, val := range *v {
+		out[k] = val
+	}
+	return out
 }
 func NewVaribles() Varibles {
 	return make(Varibles)

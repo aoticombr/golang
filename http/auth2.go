@@ -23,8 +23,6 @@ type auth2 struct {
 	ClientSecret            string
 	Scope                   string
 	ClientAuth              ClientAuth
-	Resp                    *Response
-	Erro                    error
 	UseSameCertificateOwner bool
 	InsecureSkipVerify      bool
 }
@@ -78,9 +76,7 @@ func (A *auth2) Send() (RES *Response, err error) {
 		}
 	}
 	HttpToken.EncType = ET_X_WWW_FORM_URLENCODED
-	//fmt.Println("send.. auth...token 1")
-	A.Resp, A.Erro = HttpToken.Send()
-	return A.Resp, A.Erro
+	return HttpToken.Send()
 }
 
 func (A *auth2) GetToken() (string, error) {

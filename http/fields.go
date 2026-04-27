@@ -8,8 +8,8 @@ func (f *Fields) Clear() {
 	}
 }
 func (f *Fields) Add(fieldName string, fieldValue string) {
-	if (*f)[fieldName] == nil {
-		(*f)[fieldName] = []string{}
+	if *f == nil {
+		*f = make(Fields)
 	}
 	(*f)[fieldName] = append((*f)[fieldName], fieldValue)
 }
