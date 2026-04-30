@@ -83,6 +83,33 @@ func (p *Params) SetInputParam(paramName string, paramValue any) *Params {
 	return p
 }
 
+func (p *Params) SetInputDateISO8601(paramName string, paramValue string) *Params {
+	// Converte o valor ISO 8601 para time.Time antes de passar ao driver.
+	// Tenta RFC 3339 (com hora/timezone) e, se falhar, formato data-only.
+	t, err := time.Parse(time.RFC3339, paramValue)
+	if err != nil {
+		t, err = time.Parse("2006-01-02", paramValue)
+		if err != nil {
+			fmt.Println("SetInputDateISO8601: data ISO 8601 inválida para", paramName, ":", err)
+		}
+	}
+
+	param := p.FindParamByName(paramName)
+
+	if param != nil {
+		param.Value.Value = t
+	} else {
+		param = &Param{
+			Name:      paramName,
+			Value:     &variant.Variant{Value: t},
+			ParamType: IN,
+		}
+		p.List = append(p.List, param)
+	}
+
+	return p
+}
+
 func (p *Params) SetInputParamClob(paramName string, paramValue string) *Params {
 	if p.Owner.Connection.Dialect == dbconnect.ORACLE {
 		p.SetInputParam(paramName, goOra.Clob{String: paramValue, Valid: StrNotEmpty(paramValue)})
