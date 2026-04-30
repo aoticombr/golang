@@ -34,6 +34,7 @@ type DS interface {
 	GetParams() []any
 	ParamByName(paramName string) *Param
 	SetInputParam(paramName string, paramValue any) *DataSet
+	SetInputDateISO8601(paramName string, paramValue string) *DataSet
 	SetOutputParam(paramName string, paramType any) *DataSet
 	FieldByName(fieldName string) *Field
 	Locate(key string, value any) bool
@@ -50,7 +51,7 @@ type DS interface {
 
 type DataSet struct {
 	Connection      *dbconnbase.Conn
-	Transaction      *dbconnbase.Transaction
+	Transaction     *dbconnbase.Transaction
 	Ctx             context.Context
 	Sql             stringlist.Strings
 	Fields          *Fields
@@ -578,6 +579,10 @@ func (ds *DataSet) MacroByName(macroName string) *Macro {
 
 func (ds *DataSet) SetInputParam(paramName string, paramValue any) *DataSet {
 	ds.Params.SetInputParam(paramName, paramValue)
+	return ds
+}
+func (ds *DataSet) SetInputDateISO8601(paramName string, paramValue string) *DataSet {
+	ds.Params.SetInputDateISO8601(paramName, paramValue)
 	return ds
 }
 
