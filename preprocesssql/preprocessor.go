@@ -1040,8 +1040,16 @@ func (pp *TPhysPreprocessor) Execute() error {
 	if pp.ConnMetadata != nil {
 		lista := TNameQuoteLevels{ncDefault, ncSecond, ncThird}
 		for _, eQuote := range lista {
-			pp.fNameDelims1 = Include(pp.fNameDelims1, pp.ConnMetadata.GetNameQuoteChar(eQuote, nsLeft))
-			pp.fNameDelims2 = Include(pp.fNameDelims2, pp.ConnMetadata.GetNameQuoteChar(eQuote, nsRight))
+			// GetNameQuoteChar devolve 0 (nullChar) para níveis não suportados.
+			// Não pode entrar na lista — senão `cPrevCh == 0` (início da SQL ou
+			// após substituições) seria interpretado como "depois de delimitador
+			// de nome" e o `:param` no início seria ignorado.
+			if d := pp.ConnMetadata.GetNameQuoteChar(eQuote, nsLeft); d != 0 {
+				pp.fNameDelims1 = Include(pp.fNameDelims1, d)
+			}
+			if d := pp.ConnMetadata.GetNameQuoteChar(eQuote, nsRight); d != 0 {
+				pp.fNameDelims2 = Include(pp.fNameDelims2, d)
+			}
 		}
 	}
 	pp.fDestinationIndex = 1
@@ -1093,31 +1101,7 @@ func PreprocessSQL(commandtext string, ACreateParams, ACreateMacros, AExpandMacr
 }
 
 func main() {
-	sql := `select
-   'S' AS GERAR_ENTIDADE_INTEGRADA
-  ,NULL AS ID_ENTIDADE_INTEGRADA
-  ,os.cod_empresa
-  ,nvl(os.numero_os_fabrica, os.numero_os) as numero_os_fabrica
-  ,trunc(os.data_encerrada) as data_encerrada
-  ,os.hora_encerrada as hora_encerrada
-  from os
-  where 1 = 1
-    &macroxxx
-	and os.cod_empresa = :COD_EMPRESA
-	and os.numero_os > 0
-	and os.status_os = 1
-	and nvl(os.orcamento, 'N') = 'N'
-	and rownum <= 10 
-	and trunc(os.data_encerrada) >= trunc(nvl('hh:mm:ss',sysdate))
-	and trunc(os.data_encerrada) >= trunc(nvl(:DT_INICIO,sysdate))
-	and trunc(os.data_encerrada) < trunc(sysdate + 1)
-	 and trunc(os.data_encerrada) = :data_encerrada
-	and not exists(SELECT 1 
-				  FROM FAB_EI_OP5_MB_MGT a1
-				  where a1.cod_empresa = os.cod_empresa
-					and a1.numero_os_fabrica = nvl(os.numero_os_fabrica, os.numero_os)
-					and trunc(a1.data_encerrada) = trunc(os.data_encerrada )
-					and a1.hora_encerrada = os.hora_encerrada)`
+	sql := ``
 
 	//sql = "select * from dual where id_xxx = :id_sss and xxx = :bbb_ff and yyy =:ccc_uu &hhhh');"
 	Params, MacrosUpd, MacrosRead, err := PreprocessSQL(sql, true, true, true, true, true)

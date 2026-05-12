@@ -259,9 +259,19 @@ func (tb *Table) fieldValue(col *Column) (reflect.Value, bool) {
 }
 
 func isEmpty(value reflect.Value) bool {
+	if !value.IsValid() {
+		return true
+	}
 	switch value.Kind() {
-	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map:
-		return value.IsNil()
+	case reflect.Ptr, reflect.Interface:
+		if value.IsNil() {
+			return true
+		}
+		// Desreferencia: *string para "" também conta como vazio,
+		// e interface segurando typed-nil cai aqui via Elem().
+		return isEmpty(value.Elem())
+	case reflect.Slice, reflect.Map:
+		return value.IsNil() || value.Len() == 0
 	case reflect.String:
 		return value.String() == ""
 	}

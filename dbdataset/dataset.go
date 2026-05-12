@@ -577,6 +577,14 @@ func (ds *DataSet) MacroByName(macroName string) *Macro {
 	return ds.Macros.MacroByName(macroName)
 }
 
+/*
+SetInputParam
+paramName: nome do parâmetro
+paramValue: valor do parâmetro, pode ser string, int, float,
+
+	bool, time.Time, []byte ou qualquer tipo que o driver de banco de dados suporte,
+	inclusive ele pode aceitar um tipo com valor nil, como *string, *int, *float, *bool, *time.Time ou *[]byte para representar um valor nulo.
+*/
 func (ds *DataSet) SetInputParam(paramName string, paramValue any) *DataSet {
 	ds.Params.SetInputParam(paramName, paramValue)
 	return ds
@@ -1172,11 +1180,16 @@ func replaceParamPG(sql, param string, paramNumber int) (string, int) {
 		ok = true
 
 	default:
-
-		switch string(sql[i+pSize]) {
-		case " ", ",", "(", ")", "=", "|", "[", "]":
-			ok = true
-		}
+		// Aceita boundary se o próximo char NÃO puder estender o identificador.
+		// Allow-list anterior quebrava em casos válidos: ::cast (Postgres),
+		// ;, +, -, *, /, \n, etc. Só rejeita se é continuação de identificador
+		// (ex.: :payload_extra não deve casar com :payload).
+		nextCh := sql[i+pSize]
+		isIdentifier := (nextCh >= 'a' && nextCh <= 'z') ||
+			(nextCh >= 'A' && nextCh <= 'Z') ||
+			(nextCh >= '0' && nextCh <= '9') ||
+			nextCh == '_' || nextCh == '$' || nextCh == '#'
+		ok = !isIdentifier
 	}
 
 	start := sql[:i]
