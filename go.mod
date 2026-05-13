@@ -1,6 +1,6 @@
 module github.com/aoticombr/golang
 
-go 1.26.0
+go 1.26.2
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
@@ -11,7 +11,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/joho/godotenv v1.5.1
 	github.com/kardianos/service v1.2.2
 	github.com/sijms/go-ora/v2 v2.7.6
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e

@@ -76,6 +76,7 @@ func NewConn(db config.Database) (*ConnDataSet, error) {
 		Dialect:  dbconnect.DialectLowFromString(db.Db),
 		DSN:      db.GetDsn(),
 		PoolSize: db.PoolSize,
+		Trace:    db.Trace,
 	}
 
 	fmt.Println("abrindo conexão")
