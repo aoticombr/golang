@@ -26,6 +26,7 @@ type auth2 struct {
 	UseSameCertificateOwner bool
 	InsecureSkipVerify      bool
 	Resp                    *Response
+	Erro                    error
 }
 
 func (A *auth2) Send() (RES *Response, err error) {
@@ -77,17 +78,17 @@ func (A *auth2) Send() (RES *Response, err error) {
 		}
 	}
 	HttpToken.EncType = ET_X_WWW_FORM_URLENCODED
-	return HttpToken.Send()
+	A.Resp, A.Erro = HttpToken.Send()
+	return A.Resp, A.Erro
 }
 
 func (A *auth2) GetToken() (string, error) {
-	var err error
-	A.Resp, err = A.Send()
+	Resp, err := A.Send()
 	if err != nil {
 		return "", err
 	}
 
-	return A.Resp.GetToken()
+	return Resp.GetToken()
 }
 
 func NewAuth2() *auth2 {
