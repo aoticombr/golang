@@ -25,6 +25,7 @@ type auth2 struct {
 	ClientAuth              ClientAuth
 	UseSameCertificateOwner bool
 	InsecureSkipVerify      bool
+	Resp                    *Response
 }
 
 func (A *auth2) Send() (RES *Response, err error) {
@@ -80,12 +81,13 @@ func (A *auth2) Send() (RES *Response, err error) {
 }
 
 func (A *auth2) GetToken() (string, error) {
-	Resp, err := A.Send()
+	var err error
+	A.Resp, err = A.Send()
 	if err != nil {
 		return "", err
 	}
 
-	return Resp.GetToken()
+	return A.Resp.GetToken()
 }
 
 func NewAuth2() *auth2 {
