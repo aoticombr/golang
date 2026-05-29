@@ -258,6 +258,16 @@ func (tb *Table) fieldValue(col *Column) (reflect.Value, bool) {
 	return v.Field(col.fieldIndex), true
 }
 
+func isBool(value reflect.Value) bool {
+	if !value.IsValid() {
+		return false
+	}
+	if value.Kind() == reflect.Ptr {
+		return value.Type().Elem().Kind() == reflect.Bool
+	}
+	return value.Kind() == reflect.Bool
+}
+
 func isEmpty(value reflect.Value) bool {
 	if !value.IsValid() {
 		return true
@@ -288,6 +298,10 @@ func (tb *Table) ValidateRequired() error {
 			continue
 		}
 		if isEmpty(value) {
+			// bool requerido nil não é erro: vira coalesce(:campo, false) no SQL.
+			if isBool(value) {
+				continue
+			}
 			return errors.New("column " + col.Name + " is required")
 		}
 	}
@@ -344,6 +358,8 @@ func (tb *Table) SqlInsert() (string, error) {
 		switch {
 		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
+		case col.Required && isBool(value) && isEmpty(value):
+			expr = "coalesce(:" + col.Name + ", false)"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
 		case col.AutoGuid && isEmpty(value):
@@ -404,6 +420,8 @@ func (tb *Table) SqlUpdate() (string, error) {
 		switch {
 		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
+		case col.Required && isBool(value) && isEmpty(value):
+			expr = "coalesce(:" + col.Name + ", false)"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
 		default:
