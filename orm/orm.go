@@ -73,6 +73,7 @@ type Column struct {
 	Upper       bool
 	Lower       bool
 	AutoGuid    bool
+	Coalesce    bool
 	Omitempty   bool
 	Nullempty   bool
 	ActionType  bool
@@ -133,6 +134,8 @@ func applyFlag(col *Column, item string) bool {
 	switch strings.TrimPrefix(item, "#") {
 	case "autoguid":
 		col.AutoGuid = true
+	case "coalesce":
+		col.Coalesce = true
 	case "insert":
 		col.Insert = true
 	case "update":
@@ -258,14 +261,43 @@ func (tb *Table) fieldValue(col *Column) (reflect.Value, bool) {
 	return v.Field(col.fieldIndex), true
 }
 
-func isBool(value reflect.Value) bool {
+// coalesceDefault devolve o literal default para coalesce conforme o tipo do
+// campo (desreferenciando ponteiros). Retorna "" para tipos não suportados.
+func coalesceDefault(value reflect.Value) string {
 	if !value.IsValid() {
-		return false
+		return ""
 	}
-	if value.Kind() == reflect.Ptr {
-		return value.Type().Elem().Kind() == reflect.Bool
+	t := value.Type()
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
-	return value.Kind() == reflect.Bool
+	switch t.Kind() {
+	case reflect.Bool:
+		return "false"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return "0"
+	case reflect.String:
+		return "''"
+	}
+	return ""
+}
+
+// isNil verifica nulidade real (ponteiro/interface/slice/map nil), sem tratar
+// string vazia ("") como nil. Usado pelo coalesce, que só deve disparar quando
+// o valor é de fato ausente.
+func isNil(value reflect.Value) bool {
+	if !value.IsValid() {
+		return true
+	}
+	switch value.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return value.IsNil()
+	case reflect.Slice, reflect.Map:
+		return value.IsNil()
+	}
+	return false
 }
 
 func isEmpty(value reflect.Value) bool {
@@ -282,8 +314,10 @@ func isEmpty(value reflect.Value) bool {
 		return isEmpty(value.Elem())
 	case reflect.Slice, reflect.Map:
 		return value.IsNil() || value.Len() == 0
-	case reflect.String:
-		return value.String() == ""
+
+		//string vazia não é nil, mas é considerada empty para omitempty e nullempty.
+		//case reflect.String:
+		//	return value.String() == ""
 	}
 	return false
 }
@@ -298,8 +332,8 @@ func (tb *Table) ValidateRequired() error {
 			continue
 		}
 		if isEmpty(value) {
-			// bool requerido nil não é erro: vira coalesce(:campo, false) no SQL.
-			if isBool(value) {
+			// required+coalesce com default conhecido não é erro: vira coalesce(:campo, default) no SQL.
+			if col.Coalesce && isNil(value) && coalesceDefault(value) != "" {
 				continue
 			}
 			return errors.New("column " + col.Name + " is required")
@@ -358,8 +392,8 @@ func (tb *Table) SqlInsert() (string, error) {
 		switch {
 		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
-		case col.Required && isBool(value) && isEmpty(value):
-			expr = "coalesce(:" + col.Name + ", false)"
+		case col.Required && col.Coalesce && coalesceDefault(value) != "":
+			expr = "coalesce(:" + col.Name + ", " + coalesceDefault(value) + ")"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
 		case col.AutoGuid && isEmpty(value):
@@ -420,8 +454,8 @@ func (tb *Table) SqlUpdate() (string, error) {
 		switch {
 		case col.TimeNow && (col.Update || col.Insert):
 			expr = "current_timestamp"
-		case col.Required && isBool(value) && isEmpty(value):
-			expr = "coalesce(:" + col.Name + ", false)"
+		case col.Required && col.Coalesce && coalesceDefault(value) != "":
+			expr = "coalesce(:" + col.Name + ", " + coalesceDefault(value) + ")"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
 		default:

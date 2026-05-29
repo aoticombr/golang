@@ -1087,6 +1087,8 @@ func (ds *DataSet) SqlParam() string {
 			replacement = strconv.FormatFloat(reflect.ValueOf(val).Float(), 'f', -1, 64)
 		case string:
 			replacement = "'" + val + "'"
+		case bool:
+			replacement = strconv.FormatBool(val)
 		case *int, *int8, *int16, *int32:
 			if val == nil {
 				replacement = "null"
