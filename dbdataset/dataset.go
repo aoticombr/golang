@@ -1062,6 +1062,7 @@ func (ds *DataSet) SqlParam() string {
 	for i := 0; i < len(ds.Params.List); i++ {
 		key := ds.Params.List[i].Name
 		value := ds.Params.List[i].Value
+		fmt.Println(key, value)
 
 		var replacement string
 		switch val := value.Value.(type) {
@@ -1079,17 +1080,50 @@ func (ds *DataSet) SqlParam() string {
 			replacement = "to_date('" + data + "','rrrr-mm-dd hh24:mi:ss')"
 		case int:
 			replacement = strconv.Itoa(val)
-		case int8, int16, int32, int64:
+		case int8:
 			replacement = strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
-		case uint, uint8, uint16, uint32, uint64:
+		case int16:
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
+		case int32:
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
+		case int64:
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Int(), 10)
+		case uint:
 			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
-		case float32, float64:
+		case uint8:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
+		case uint16:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
+		case uint32:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
+		case uint64:
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Uint(), 10)
+		case float32:
 			replacement = strconv.FormatFloat(reflect.ValueOf(val).Float(), 'f', -1, 64)
-		case string:
-			replacement = "'" + val + "'"
+		case float64:
+			replacement = strconv.FormatFloat(reflect.ValueOf(val).Float(), 'f', -1, 64)
+
 		case bool:
 			replacement = strconv.FormatBool(val)
-		case *int, *int8, *int16, *int32:
+		case *int:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
+		case *int8:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
+		case *int16:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
+		case *int32:
 			if val == nil {
 				replacement = "null"
 				break
@@ -1101,18 +1135,50 @@ func (ds *DataSet) SqlParam() string {
 				break
 			}
 			replacement = strconv.FormatInt(reflect.ValueOf(val).Elem().Int(), 10)
-		case *uint, *uint8, *uint16, *uint32, *uint64:
+		case *uint:
 			if val == nil {
 				replacement = "null"
 				break
 			}
 			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
-		case *float32, *float64:
+		case *uint8:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
+		case *uint16:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
+		case *uint32:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
+		case *uint64:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatUint(reflect.ValueOf(val).Elem().Uint(), 10)
+		case *float32:
 			if val == nil {
 				replacement = "null"
 				break
 			}
 			replacement = strconv.FormatFloat(reflect.ValueOf(val).Elem().Float(), 'f', -1, 64)
+		case *float64:
+			if val == nil {
+				replacement = "null"
+				break
+			}
+			replacement = strconv.FormatFloat(reflect.ValueOf(val).Elem().Float(), 'f', -1, 64)
+		case string:
+			replacement = "'" + val + "'"
 		case *string:
 			if val == nil {
 				replacement = "null"
