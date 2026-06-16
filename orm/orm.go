@@ -396,7 +396,7 @@ func (tb *Table) SqlInsert() (string, error) {
 			expr = "coalesce(:" + col.Name + ", " + coalesceDefault(value) + ")"
 		case col.Nullempty && isEmpty(value):
 			expr = "null"
-		case col.AutoGuid && isEmpty(value):
+		case col.AutoGuid && isNil(value):
 			expr = tb.autoGuidExpr()
 		default:
 			expr = ":" + col.Name

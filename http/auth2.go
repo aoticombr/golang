@@ -9,6 +9,16 @@ type TokenResponse struct {
 	Scope            string `json:"scope"`
 }
 
+type GrantType int
+
+const (
+	GT_ClientCredentials GrantType = iota
+	GT_PasswordCredentials
+	GT_Implicit
+	GT_AuthorizationCode
+	GT_AuthorizationCodeWithPKCE
+)
+
 type ClientAuth int
 
 const (
@@ -21,6 +31,7 @@ type auth2 struct {
 	AuthUrl                 string
 	ClientId                string
 	ClientSecret            string
+	GrantType               GrantType
 	Scope                   string
 	ClientAuth              ClientAuth
 	UseSameCertificateOwner bool

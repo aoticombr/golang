@@ -1065,6 +1065,8 @@ func (ds *DataSet) SqlParam() string {
 		fmt.Println(key, value)
 
 		var replacement string
+		/*não fazer case com varios tipos no mesmo case
+		pois da bug e ele nao reconhecer*/
 		switch val := value.Value.(type) {
 		case nil:
 			replacement = "null"
