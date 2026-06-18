@@ -35,6 +35,7 @@ type THttp struct {
 
 	/*publico*/
 	Auth2              *auth2
+	Aws                *aws4
 	Request            *Request
 	Response           *Response
 	Metodo             TMethod
@@ -67,6 +68,7 @@ func NewHttp() *THttp {
 		Varibles:          NewVaribles(),
 		Proxy:             NewProxy(),
 		Auth2:             NewAuth2(),
+		Aws:               NewAws4(),
 		WebSocket:         NewWebSocket(),
 		Metodo:            M_GET,
 		Timeout:           30,
@@ -91,6 +93,7 @@ func (H *THttp) Free() {
 	H.Request = nil
 	H.Response = nil
 	H.Auth2 = nil
+	H.Aws = nil
 	H.WebSocket = nil
 	H.Params = nil
 	H.Varibles = nil
@@ -439,6 +442,7 @@ func (H *THttp) Send() (RES *Response, err error) {
 		return nil, fmt.Errorf("erro ao validar URL, variáveis não substituídas: %s", uri)
 	}
 	var req *http.Request
+	var awsPayload []byte // corpo exato enviado, usado no hash da assinatura AWS SigV4
 	switch H.EncType {
 	case ET_NONE:
 		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, nil)
@@ -520,6 +524,7 @@ func (H *THttp) Send() (RES *Response, err error) {
 			return nil, fmt.Errorf("erro ao finalizar multipart: %v", err)
 		}
 		H.Request.Header.ContentType = multipartWriter.FormDataContentType()
+		awsPayload = requestBody.Bytes()
 		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, &requestBody)
 
 		// Defina o cabeçalho da requisição para indicar que está enviando dados com o formato multipart/form-data
@@ -532,8 +537,11 @@ func (H *THttp) Send() (RES *Response, err error) {
 				formData.Add(v.FieldName, v.FieldValue)
 			}
 		}
-		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(formData.Encode()))
+		awsFormEnc := formData.Encode()
+		awsPayload = []byte(awsFormEnc)
+		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, strings.NewReader(awsFormEnc))
 	case ET_RAW:
+		awsPayload = H.Request.Body
 		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, bytes.NewReader(H.Request.Body))
 	case ET_BINARY:
 		//fmt.Println("CT_BINARY:")
@@ -547,6 +555,7 @@ func (H *THttp) Send() (RES *Response, err error) {
 				}
 			}
 		}
+		awsPayload = fileBuffer.Bytes()
 		req, err = http.NewRequest(GetMethodStr(H.Metodo), uri, fileBuffer)
 	}
 
@@ -555,7 +564,7 @@ func (H *THttp) Send() (RES *Response, err error) {
 	}
 	// Nota: o auto-detect (AT_AutoDetect → Bearer/Basic) acontece dentro de
 	// completAutorization a partir de variáveis locais, sem mutar H.AuthorizationType.
-	if H.AuthorizationType == AT_Auth2 && H.Auth2.AuthUrl != "" && (H.Auth2.AuthUrl == H.GetUrl() || H.GetUrl() == "") {
+	if H.AuthorizationType == AT_Auth2 && H.Auth2.AccessTokenUrl != "" && (H.Auth2.AccessTokenUrl == H.GetUrl() || H.GetUrl() == "") {
 		RES, err = H.Auth2.Send()
 		if err != nil {
 			return nil, fmt.Errorf("erro ao fazer a requisição %s: %v", GetMethodStr(H.Metodo), err)
@@ -568,6 +577,13 @@ func (H *THttp) Send() (RES *Response, err error) {
 			return nil, err
 		}
 		H.completHeader(req)
+		// Assina por último: o header Authorization da AWS SigV4 deve prevalecer
+		// e o cálculo cobre host;x-amz-date (definidos aqui).
+		if H.AuthorizationType == AT_AwsSignature && H.Aws != nil {
+			if err = H.Aws.sign(req, awsPayload); err != nil {
+				return nil, err
+			}
+		}
 		resp, err = client.Do(req)
 	}
 	if err != nil {

@@ -8,4 +8,5 @@ const (
 	AT_Bearer
 	AT_Auth2
 	AT_Nenhum
+	AT_AwsSignature
 )

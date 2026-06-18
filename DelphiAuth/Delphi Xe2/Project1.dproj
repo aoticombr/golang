@@ -1,0 +1,147 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{E816EF9E-2DFC-439B-8987-2829ACF6631F}</ProjectGuid>
+			<ProjectVersion>13.4</ProjectVersion>
+			<FrameworkType>VCL</FrameworkType>
+			<MainSource>Project1.dpr</MainSource>
+			<Base>True</Base>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Platform Condition="'$(Platform)'==''">Win32</Platform>
+			<TargetedPlatforms>1</TargetedPlatforms>
+			<AppType>Application</AppType>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+			<Base_Win64>true</Base_Win64>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+			<Base_Win32>true</Base_Win32>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+			<Cfg_1_Win32>true</Cfg_1_Win32>
+			<CfgParent>Cfg_1</CfgParent>
+			<Cfg_1>true</Cfg_1>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_UsePackage>aseprovider160;FlexCel_Core;AnyDAC_PhysADS_D16;xdata;AnyDAC_Comp_D16;pgprovider160;DBXInterBaseDriver;DataSnapServer;DataSnapCommon;DbxCommonDriver;dbxcds;AnyDAC_PhysTDBX_D16;CustomIPTransport;dsnap;IndyCore;AnyDAC_PhysSQLITE_D16;CloudService;FMX_FlexCel_Core;FmxTeeUI;sbridge160;bindcompfmx;dbrtl;sparkle;bindcomp;inetdb;nbsbcl;xmlrtl;nbsdacfmx160;ibxpress;soaprtl;FMXTee;bindengine;FlexCel_Pdf;DBXInformixDriver;liteprovider160;DBXFirebirdDriver;inet;AnyDAC_PhysMSAcc_D16;ibprovider160;DBXSybaseASADriver;AnyDAC_GUIxForms_D16;FlexCel_XlsAdapter;dbexpress;odbcprovider160;myprovider160;fmx;AnyDAC_PhysPg_D16;IndySystem;AnyDAC_Phys_D16;DataSnapClient;AnyDAC_PhysDb2_D16;dacfmx160;FlexCel_Report;AnyDAC_PhysMSSQL_D16;DataSnapProviderClient;dac160;DBXOracleDriver;AnyDAC_PhysOracle_D16;fmxase;AnyDAC_PhysMySQL_D16;inetdbxpress;AnyDAC_PhysODBC_D16;rtl;DbxClientDriver;dbfprovider160;AnyDAC_PhysASA_D16;FlexCel_Render;oraprovider160;IndyProtocols;DBXMySQLDriver;nbsdac160;vquery160;orm;FMX_FlexCel_Components;AnyDAC_ComI_D16;tdsprovider160;fmxobj;AnyDAC_PhysIB_D16;fmxdae;DataSnapIndy10ServerTransport;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+			<DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+			<DCC_E>false</DCC_E>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win64)'!=''">
+			<DCC_UsePackage>mongoprovider160;clinetsuite_xe2;officeXPrt;VCL_FlexCel_Components;vclimg;vcldb;Diversos;mailchimpprovider160;db2provider160;accessprovider160;dynamicsprovider160;exacttargetprovider160;OrpheusNBSI;zohoprovider160;DBXOdbcDriver;SynEdit_RXE2;magentoprovider160;vclactnband;bindcompvcl;vclie;NBSI;dacvcl160;freshbooksprovider160;salesforceprovider160;ipstudiowinclient;dsnapcon;vclx;quickbooksprovider160;Utilities_DXE2;nbsdacvcl160;TeeDB;NBSIFireDAC;vclib;adsprovider160;DBXSybaseASEDriver;vcldsnap;netsuiteprovider160;DBXDb2Driver;EControlTI;vclribbon;vcl;DBXMSSQLDriver;gtDocEngD16;webdsnap;adortl;TMSDiagram;crcontrols160;Tee;fcstudiowin;TeeUI;VCL_FlexCel_Core;ipstudiowin;vcltouch;QR5RunNBDEDXE2;websnap;sugarprovider160;VclSmp;DataSnapConnectors;bigcommerceprovider160;$(DCC_UsePackage)</DCC_UsePackage>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win32)'!=''">
+			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+			<VerInfo_Locale>1033</VerInfo_Locale>
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<DCC_UsePackage>fsADO16;nbVerticalGridRS16;ACBr_BoletoFR;ipstudiowindataset;gtRichVwExpD16;ncPSncDBOCLnkRS16;mongoprovider160;ACBr_BoletoRL;gtAceExpD16;ACBr_GNRE;dclRBBDE1716;gtQRExpD16;ACBr_NFeDanfeFR;clinetsuite_xe2;frxBDE16;rbIBE1716;ACBre_Social;ACBr_BlocoX;ncOrgCRS16;officeXPrt;fsIBX16;VCL_FlexCel_Components;vclimg;ncRibbonRS16;ACBr_NF3e;fmi;ACBr_Comum;ACBr_GTIN;nbSchedulerGridRS16;vcldb;ACBr_OpenDelivery;ncPSnbPivotGridLnkRS16;ACBr_MDFeDamdfeRL;ACBr_SATExtratoESCPOS;Diversos;mailchimpprovider160;ACBr_PagFor;db2provider160;ncBarRS16;rbADO1716;ACBr_MDFe;nbTreeListncBarPopupMenuRS16;ncPSnbSchedulerLnkRS16;ncRichEditDocumentModelRS16;rbBDE1716;accessprovider160;ACBr_SAT;ipstudiowinwordxp;ACBr_CTeDacteFR;rbDIDE1716;ncFlowChartRS16;ncSpreadSheetConditionalFormattingDialogsRS16;gtRaveExpD16;rbRCL1716;ACBr_Ponto;ncSpreadSheetReportDesignerRS16;ACBR_DeSTDA;ncmdsRS16;ncGaugeControlRS16;ACBr_BoletoFPDF;rbIDE1716;dynamicsprovider160;gtRBExpD16;exacttargetprovider160;rbDBE1716;NBSParsiDataset_XE2;ACBr_SEF2;ACBr_PAF;vcldbx;gtFRExpD16;ncWizardControlRS16;nbPivotGridRS16;ncPSCoreRS16;ACBr_PAFNFCe;OrpheusNBSI;ACBr_NFe;zohoprovider160;DBXOdbcDriver;nbSchedulerRibbonStyleEventEditorRS16;ncBarExtItemsRS16;ncPSRichEditControlLnkRS16;ncPSncFCLnkRS16;ncMapControlRS16;SynEdit_RXE2;fsBDE16;frxDB16;intrawebdb_120_160;nbPivotGridChartRS16;magentoprovider160;fs16;vclactnband;ACBr_CTeDacteRL;ncCloudServiceLibraryRS16;bindcompvcl;ACBr_BPe;frxcs16;ncPSnbCommonRS16;vclie;ncSpellCheckerRS16;NBSI;ncComnRS16;dacvcl160;ACBr_TEFD;ACBr_Integrador;nbPivotGridOLAPRS16;rbUSERDesign1716;freshbooksprovider160;salesforceprovider160;ncSpreadSheetCoreDialogsRS16;ACBr_SATExtratoRL;ipstudiowinclient;dsnapcon;ACBr_NFSeXDanfseRL;ncPSncLCLnkRS16;rbDBDE1716;ncPSLnksRS16;ACBr_SATExtratoFR;vclx;ACBr_SPEDImportar;ncSpreadSheetRS16;quickbooksprovider160;ncNavBarRS16;frxIBX16;ncServerModeRS16;ncADOEMFRS16;NBSDelphiPlugin;ncPSncMapControlLnkRS16;ACBr_Convenio115;ACBr_OFX;rbUSER1716;ACBr_LCDPR;ncPSnbExtCommonRS16;Utilities_DXE2;rbDAD1716;nbsdacvcl160;ACBr_EDI;ncRibbonCustomizationFormRS16;dclRBE1716;ACBr_Diversos;ncRichEditControlCoreRS16;TeeDB;NBSIFireDAC;dclRBIBE1716;ACBr_CIOT;ncHttpIndyRequestRS16;vclib;inetdbbde;Rave100VCL;ACBr_NFeDanfeESCPOS;ncPSncOCLnkRS16;adsprovider160;DBXSybaseASEDriver;rbTC1716;ACBr_MDFeDamdfeFR;rbRIDE1716;rbTCUI1716;ACBr_NFSeDanfseFR;ACBr_ONE;gtAdvGridExpD16;ACBr_BPeDabpeESCPOS;vcldsnap;nbLibraryRS16;netsuiteprovider160;DBXDb2Driver;Intraweb_120_160;EControlTI;ncDBOrRS16;frxADO16;vclribbon;frxe16;ACBr_Serial;ACBr_SPED;ACBr_DebitoAutomatico;vcl;rbRAP1716;ACBr_NFSeDanfseRL;gtXPressExpD16;DBXMSSQLDriver;CodeSiteExpressPkg;NativeExcelXE2;NBS_PainelSuite;ACBr_NF3eDANF3eESCPOS;ACBr_Boleto;gtDocEngD16;fsTee16;ACBr_Sintegra;ncRichEditCoreRS16;ncRichEditControlRS16;webdsnap;ACBr_NFSe;acexe2run;nbSchedulerWebServiceStorageRS16;dclRBDBE1716;ACBr_LFD;ncPSnbTLLnkRS16;adortl;ACBr_TCP;ncCoreRS16;gtHtmVwExpD16;TMSDiagram;ncRichEditInplaceRS16;frxDBX16;nbSchedulerRS16;ACBr_NFSeX;ncSpreadSheetInplaceRichEditRS16;DbxDevartOracleDriver160;frx16;crcontrols160;ACBr_MTER;Tee;ACBr_CTe;ACBr_ANe;ACBr_NFCeECFVirtual;svnui;fcstudiowin;ACBr_NFeDanfeRL;TeeUI;VCL_FlexCel_Core;ipstudiowin;ncSpreadSheetCoreRS16;ACBr_OpenSSL;vcltouch;QR5RunNBDEDXE2;ACBr_Reinf;websnap;ncEMFRS16;ncPSPrVwRibbonRS16;sugarprovider160;ACBr_ADRCST;ACBr_SATWS;VclSmp;ACBr_NFSeXDANFSeFR;rbDB1716;fsDB16;ACBr_PIXCD;dclRBADO1716;ncPSncPDFViewerLnkRS16;DataSnapConnectors;ACBr_SATECFVirtual;bigcommerceprovider160;nbExportRS16;ncGDIPlusRS16;ncPDFViewerRS16;gtScaleRichVwExpD16;ncSpreadSheetCoreConditionalFormattingDialogsRS16;svn;ncPSPrVwAdvRS16;rbCIDE1716;nbTreeListRS16;bdertl;ncPSnbPCProdRS16;nbGridRS16;$(DCC_UsePackage)</DCC_UsePackage>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+			<DCC_RemoteDebug>false</DCC_RemoteDebug>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="$(MainSource)">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="Unit1.pas">
+				<Form>frmAuth</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1046</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">Project1.dpr</Source>
+					</Source>
+				</Delphi.Personality>
+				<Deployment/>
+				<Platforms>
+					<Platform value="Win64">False</Platform>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+	</Project>

@@ -187,7 +187,7 @@ h := http.NewHttp()
 h.SetUrl("https://api.exemplo.com/recurso")
 h.SetMetodo(http.M_POST)
 h.AuthorizationType = http.AT_Auth2
-h.Auth2.AuthUrl = "https://idp/oauth/token"
+h.Auth2.AccessTokenUrl = "https://idp/oauth/token"
 h.Auth2.ClientId = "..."
 h.Auth2.ClientSecret = "..."
 

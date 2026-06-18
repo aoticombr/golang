@@ -12,7 +12,7 @@ func main() {
 	cp1.AuthorizationType = http.AT_Auth2
 	cp1.Auth2.ClientId = "ddddddddd"
 	cp1.Auth2.ClientSecret = "fffffff"
-	cp1.Auth2.AuthUrl = "http://100.0.66.81:3003/token"
+	cp1.Auth2.AccessTokenUrl = "http://100.0.66.81:3003/token"
 	cp1.Auth2.Scope = "downloaded"
 	cp1.Auth2.ClientAuth = http.CA_SendBasicAuthHeader
 	cp1.Metodo = http.M_GET
