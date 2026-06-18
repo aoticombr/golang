@@ -1,3 +1,5 @@
 .env
 *.exe
 *.jpg
+
+DelphiAuth/
