@@ -350,13 +350,13 @@ func TestAuth2_AuthorizationCode_Url(t *testing.T) {
 	cp := http.NewHttp()
 	cp.AuthorizationType = http.AT_Auth2
 	cp.Auth2.GrantType = http.GT_AuthorizationCode
-	cp.Auth2.AuthUrl = "https://login.microsoftonline.com/cc2dba5e-b8a0-415c-bfe0-ece6b2fff759/oauth2/v2.0/authorize"
-	cp.Auth2.AccessTokenUrl = "https://login.microsoftonline.com/cc2dba5e-b8a0-415c-bfe0-ece6b2fff759/oauth2/v2.0/token"
-	cp.Auth2.CallBackUrl = "https://mockserver.aoti.com.br/cb"
+	cp.Auth2.AuthUrl = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+	cp.Auth2.AccessTokenUrl = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+	cp.Auth2.CallBackUrl = "https://dominio.com.br/callback"
 
-	cp.Auth2.Code = "1.AWMBXrotzKC4XEG_4Ozmsv_3WZ6g24VhUKtFslTTh7Q6ZqsAAABjAQ.BQABBAIAAAADAOz_BQD0_0V2b1N0c0FydGlmYWN0cwIAAAAAAGRoKF9oxiDk0inOequ71tYuzEdjgLfoEryJXqPxDHm43IDQC-sw16tuFwP1Kpp7Jc4LgPjPOGpGbpflMZqTyuRjkPnON2wAybE-VU8HDD-w3z6xkjMzTp1e8WjiE24XNPzh7g36dnWPWsn7Bvk4EdiV0XWOEmbuZq9oTyAd0OWRlzJUa_oaIWbAk24zG2g88GVcRxPkw-EW3P2BDtPe2Nz07O8BE6L3pCqx5o4QiKGwI7BYltxHlT-XGMeUnhCsM6BIn7EpncrkCVGrAyl6a180TFSx77L1KXKEw8jt9AbHynldi3aepbDqkiLXrg8Ndyq__GHpAPASIhRht1DtM9nDTuJoZSZzR5xCv0PUBbkyuSUGsoPGN8sgxq6Vyt8Sbbj8K7PNuyheFm4QJf7qyQt2M47lXLQiIg02e-GgM-8BbMP834zC23DZTg_GhyGcKuGZ26kUG8S_jH16HIi1aDfUEegP2GbUxSJiSENUbGHfIR_1Dm1w7W2W8Ejf35a2mS5F1AGB6flH2uKkWfLQ3aWbgHyHqa2uudvBtP_2SFCk6ELw-W7DU9NRPdts9254Io25xIA-4Vy3_VpJNfSR4kIaLU8Wa_6-JxW1IX5x4FtWSAEhlHgTpXibNIhDE4dmDdhABSX0Emi4ET0yBlEW5f2wBkWyBn3fDvPy_Pxbit9Ar7T8XbTXInJ5LXqrHLL8e0qHffzjJfxTziU9t7cUbKSjam0uNoeWfawZWPMmvc67ZGhItOU3V4e_fv5o1xMz3thGLP3XHEcVKPBY1yZA5fGgLeSei7OpbSv8gddCpqyboOZ91ccvXfm0RLhnHNIdLOAP3JwDic9D89vJY9Wsm11nyr6jvK_6aH7lsU-lAtFBej4dAxvVpu_1Gusi0U2mfdomEcMXKNXdYWaHWJLC2Lf4A188FoZbrmXX3inPd-VB9Nluqg40vC00Dcfy_j4v9vV31e84rsIGOfyKH-k38qlY4avc9zfhPQmD1JPjUMrOIx2dKqHMraw_0erVYoU_I8DIkqLOmZWPHHPTQCYuNi0Ic_d14bxn5d9yUFxfVZ6AJDTIoPa3DwCQpF0A1Rn41jnVH87kDwC32NwE6pjcrqvQMZAI-fS-D0CeQB5YXmsZV9-bW5_hdoNa72Z377Vx5aEsMV9SsyK1m5OkWkWbacttC6kcKYNJhbkFHJT603C6IcdfcAtv5huchHdMTybfM_p7I6MESGNJe7A_-GpnSRwnCIBXmGdEHYiY-Z1qrkiTrZWdlXP-OG14fudZYUxBJUPmcuOoLLbDuhOhKgxBe0Au07UlF_IuTN6tSzQGVAXM_Uwv0gK-9kkYdWVvAPlXd-5hyI8HJTXCCP36G0F6gRg3Cjcw6gt9WOwnnzkRJpJxrBRGw5tCLYv9EgZWnWMh5f30yxuRIR4ag4TWYtTrwpzk3DUrqTozHhgnrgfsvToNYsxH8erFK-2Mrx0ANALAA3eq6BWr9Ke7XfgA34M1latjjyrg8oBAA6-NXrPX-tC1hG_NKsSBtma1esZrDVLiDgLRJfz5QPL15rMu5VEgW92ncZ1TPC2kVl928f-YcxyWCPGoBwpk-W4wFuAL8iWrWFEDOtWWTB7MUKwT_cOreCsiPz2N8c3OO7N4Px5V973GK3-7GNbzzuFbHIrB4E0E2XdxujEI6M9pldBpMOPmB4DvwDtwIa7tLIieJhHtIxnQYqTE0OWViNe7n4S7awF4RFJt9QDg1zAJPmVcVKI7IqsN7R-KtlrJHOimsDmoeIG9GBEUQx-1QYo1zl5AsTeEmnxAiLkh1GvRzDHWqBnn0o-fJe-HYaVS1i0lP7LuHMQYPntZY3xsbMBC0gek6SunFmiz_3NmA_gpylrz7EJda8lB1siX3SSIoBg_JwmTobDPzbDrk9MdPisnkojSnjmU35XEsYJbXio_EV1ImHJ"
-	cp.Auth2.ClientId = "85dba09e-5061-45ab-b254-d387b43a66ab"
-	cp.Auth2.ClientSecret = os.Getenv("AZURE_CLIENT_SECRET")
+	cp.Auth2.Code = ""
+	cp.Auth2.ClientId = ""
+	cp.Auth2.ClientSecret = ""
 	cp.Auth2.Scope = "mail.read"
 
 	loginURL, err := cp.Auth2.GetAuthorizationUrl("teste-state-123")
@@ -383,19 +383,19 @@ func TestAuth2_AuthorizationCode_Token(t *testing.T) {
 	cp := http.NewHttp()
 	cp.AuthorizationType = http.AT_Auth2
 	cp.Auth2.GrantType = http.GT_AuthorizationCode
-	cp.Auth2.AuthUrl = "https://login.microsoftonline.com/cc2dba5e-b8a0-415c-bfe0-ece6b2fff759/oauth2/v2.0/authorize"
-	cp.Auth2.AccessTokenUrl = "https://login.microsoftonline.com/cc2dba5e-b8a0-415c-bfe0-ece6b2fff759/oauth2/v2.0/token"
-	cp.Auth2.CallBackUrl = "https://mockserver.aoti.com.br/cb"
-	cp.Auth2.ClientId = "85dba09e-5061-45ab-b254-d387b43a66ab"
-	cp.Auth2.ClientSecret = os.Getenv("AZURE_CLIENT_SECRET")
+	cp.Auth2.AuthUrl = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+	cp.Auth2.AccessTokenUrl = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+	cp.Auth2.CallBackUrl = "https://dominio.com.br/callback"
+	cp.Auth2.ClientId = ""
+	cp.Auth2.ClientSecret = ""
 	cp.Auth2.Scope = "mail.read"
 	cp.Auth2.State = "teste-state-123"
 
 	// Azure AD envia client_id/secret no corpo no fluxo authorization_code.
 	cp.Auth2.ClientAuth = http.CA_SendClientCredentialsInBody
-	cp.Auth2.Code = "1.AWMBXrotzKC4XEG_4Ozmsv_3WZ6g24VhUKtFslTTh7Q6ZqsAAABjAQ.BQABBAIAAAADAOz_BQD0_0V2b1N0c0FydGlmYWN0cwIAAAAAAE78wtV1xvDl0_Da-w9EpaOlqqDtUazgsVH1_LMFldOAxfbmVrmJe1s2EVXfcFtO5_zVlASKMWnnBTw76hvubB16kzYtPF5teZrIZYkM60tCZanD4WQks8oGKITaHVed5ks25Dt2RmEDq3o4rmd70HzMNHyvzas1cnDwXuvjjMgpJFSZKwGnq4CwLUTzTXImr7BfkjH6QUElGzdm9Ap0iC3jA7SPFDfCh45dvYUwz5fJcX98n6XK0oGec7XfzisDR3d-GlCgAYsgRVYp9DQ4MtetRxFvIBskTWEn5R_H7EtXQ7h0Nk2h4m_qLYiKpMIUiDocqvozSVYlL63utTJZac2k7iifdw6RNz7uk8hkCOT4SCx3tGLz--tf1cIifUEKT2CPNq8ZAHIoNbVDWRaoxi0-i_DRNGlLQyICCS3JxST1WRp2ksBt-E4Hi6LZw0OJ49YPdYOJazTPc4lYqQRO1OFAgle_peHI2JHNpA3PAKjQnnz_IXgQjwxtk_QfjAmWLR7XISa83Q6Zx_fKyap4uPDrtFazRMjZ-Mlwjo25OFJ0fECKrhpnBBdbPHKKK2oGPFGax86trscP11surcRuyGZcElmq7BDyBQ9_VbECgMiLMNOUUS_TvK022hNto8W0gSTYGHcGjl5iyngJ73gaoOgiBFfBP4hIDEgQaQaldnjZLg8mefAVlxAd5ycUURXkzv6-P0NjxV04lfJsXgzg_I4bz4ovk6gEbzoBC2BFn6wCFifsFWmZNgojNBrjJ1Og7TskjAnu8ogigzVz4p0L8Isx16ZZ1FZJorS-glCvNDLyyikm5vQBhqxUgrajcjFGqUNmBj5DPg3o_q6Y53hERXSqHF-3BBONjAoyPlh52op5YpfFyy-JxI4o1UD2_PHbhOSsXY_SQdToNtwO06hlDOSn6Ba81sL6N49T1nBFT3ZvsB90if8Gam5RSGaCV2zc9Snz3uhq-RB2g_2UMIlWOZjG6HvNVk7YyJM7SlYbLrOzV9TgZc6gTWTANgAd7o25rd4zrnDcqQysGgTZ6kDQfNlqtq2_7LFo6MLyfILk3JWny0_zv7elmLRxf9xKM_P3Xig7f8IsXr1iQfYSs1Bn1VKU8F1J1a6VsXL1V6oXNRhaq9PyJvw6iz4OgXGZp4pgGzntHau6kiInLNDJkDJ776C7AuUau25F8MWYAF_hziAnFJTeGRQ1MoPNI9S8pDMZqX9GLILMocVgSOQ1AKkwO2zXlMM7UAv2xhqMcdkZWMvPeric11IvzXyI9Xk55a0777FYjLkIpIrll1LmAUOswpwGr4Z_CdhplhSukb6w1tibfkEF7dPEhot17HR7QH4CEyBqdpS3EkNZ99yIUGRipaBPwO_d4omo0dd1KbBrVv1TkVM3MfEtf5jII3my92sAWnzynMKiYs9qu9lYAwZe1BvNqWSPkBJ0clXIPcKQb2-0uVOf978o2tx60q-bNUK9JcXgwwfYotXBvB_7JAPEygEjJzny-Pfezmj93gDLRGd0_AWECCg2wbvOnrOchEBI78c5_v7Lcsuu43RnCCtpz6oOx7qeY2C-Mqng5J9TkQO7xxtTJW2UeByFa4OYk2bwZvxNqOshmVBEkNQ6e0--hj4qwPM-bRw9nd_j9EqVpSHHQvotH7kjFCNbpqA3pAwwTLW8SUvqP9e7uMVfwFNvlE1-m8n-Utv8s04wijOlxZQaL4MTiYVJZV4tkQ4WET11xaxFADKdi5MxGB4Dnm4Xw1miha1-qROb91vwdTc83tpwuT1p72ihUHbNzSAdd5zNrCzDdc9yWK4GdNuR_47pBIvTtAkA-UcWDFhOVHVkBnYGoSqTJy-vOCtuCQtM4JwLl44KeRLh4V2EFRqPHNo94JEfCNFHm05T7CFYiVyB0EcUX2JM_3XFpKos1nNTqv3CTwe7PGffbmjXN2_wNGU"
+	cp.Auth2.Code = ""
 
-	const tenantID = "cc2dba5e-b8a0-415c-bfe0-ece6b2fff759"
+	const tenantID = ""
 
 	token, err := cp.Auth2.GetToken()
 	if err != nil {
