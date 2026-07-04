@@ -47,6 +47,7 @@ type auth2 struct {
 	AccessTokenUrl string
 	AuthUrl        string
 	CallBackUrl    string
+	State          string
 
 	ClientId     string
 	ClientSecret string
@@ -138,7 +139,9 @@ func (A *auth2) Send() (RES *Response, err error) {
 // para CallBackUrl com o parâmetro ?code=..., que deve ser preenchido em A.Code para então
 // chamar GetToken() (grant_type=authorization_code).
 //
-// state é opcional (proteção CSRF / correlação); passe "" para omitir.
+// state é opcional (proteção CSRF / correlação); se passar "", usa A.State
+// como fallback. O state efetivo é guardado em A.State para validar o valor
+// devolvido no callback. Passe "" e deixe A.State vazio para omitir.
 //
 // Para GrantType = GT_AuthorizationCodeWithPKCE: se A.CodeVerifier estiver vazio, um é
 // gerado e guardado em A.CodeVerifier; o code_challenge correspondente (S256 por padrão)
@@ -157,6 +160,12 @@ func (A *auth2) GetAuthorizationUrl(state string) (string, error) {
 	if A.Scope != "" {
 		q.Set("scope", A.Scope)
 	}
+	// fallback: usa A.State quando o parâmetro vier vazio; guarda o state
+	// efetivo em A.State para validação posterior no callback (CSRF).
+	if state == "" {
+		state = A.State
+	}
+	A.State = state
 	if state != "" {
 		q.Set("state", state)
 	}
