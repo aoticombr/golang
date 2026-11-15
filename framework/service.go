@@ -34,6 +34,9 @@ type App struct {
 	options []OptionsApp
 	Ctx     context.Context
 	cancel  context.CancelFunc
+	// OnApiErro (opcional) é chamado quando o servidor HTTP de AddApiPrefixo
+	// termina com erro (ex.: porta ocupada). Útil para encerrar o processo.
+	OnApiErro func(error)
 }
 
 func NewApp() *App {
@@ -95,6 +98,8 @@ func (app *App) Execute(options ...OptionsApp) {
 		DisplayName: lib.GetApplicationName() + " Go lang application AOTI",
 		Description: lib.GetApplicationName() + " Go lang application AOTI",
 	}
+	// Configuração opcional do serviço (AddServiceConfig / App.ServiceConfig)
+	app.aplicarServiceOptions(svcConfig)
 
 	// Instancia o serviço de execução de uma SRV ou API
 	s, err := service.New(app, svcConfig)
@@ -103,21 +108,16 @@ func (app *App) Execute(options ...OptionsApp) {
 		log.Fatal(err)
 	}
 
-	if len(os.Args) > 1 {
-		emTeste := false
-		for i := 0; i < len(os.Args); i++ {
-			if os.Args[i] != "-test.run" {
-				emTeste = true
-			}
+	// Verbos de controle do serviço: install, uninstall, start, stop, restart, status.
+	// Só são tratados quando o processo foi iniciado por um usuário (terminal);
+	// quando quem iniciou foi o gerenciador de serviços (SCM/systemd/launchd)
+	// o processo sempre roda normalmente — assim units antigas com
+	// "ExecStart=... start" continuam funcionando.
+	if verbo, ok := VerboServico(os.Args); ok && service.Interactive() {
+		if err := controlarServico(s, verbo); err != nil {
+			log.Fatal(err)
 		}
-		// Evita problemas no modo teste do VSCODE
-		if !emTeste {
-			err = service.Control(s, os.Args[1])
-			if err != nil {
-				log.Fatal(err)
-			}
-			return
-		}
+		return
 	}
 
 	logOS, err = s.Logger(nil)

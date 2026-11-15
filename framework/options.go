@@ -45,6 +45,38 @@ func AddApi() OptionsApp {
 		}
 	}
 }
+// AddApiPrefixo sobe a API com um prefixo fixo no lugar de "/{db}"
+// (ex.: AddApiPrefixo("backup") → rotas em /backup/...). Indicado para apps
+// que não usam banco de tenant: "apis[].dbs" pode ficar vazio. Se houver dbs
+// configurados, eles continuam sendo abertos como tenants (CoreApi.Processo).
+// AddApi() continua existindo e inalterado.
+func AddApiPrefixo(prefixo string) OptionsApp {
+	return func(app *App) {
+		ok, apiConfig := app.Config.GetApi(app.Name)
+		if !ok {
+			lib.NewLog().Info(app.Name, "Servidor de Api não sera iniciado, sem configuração!!!")
+			return
+		}
+		lib.NewLog().Info(app.Name, "Iniciando CoresAPI (prefixo", prefixo+")...")
+		CoreApi = api.NewCoreApi(app.Config.Certs, app.Config.Dbs, apiConfig, app.Config.Parans)
+		for i, dbname := range apiConfig.Dbs {
+			_, conn := app.dbconn(dbname)
+			if i == 0 {
+				CoreApi.Processo.Carregar(conn)
+			}
+			CoreApi.Processo.Tenants.Add(dbname, conn)
+		}
+		go func() {
+			if err := CoreApi.StartPrefixo(prefixo); err != nil {
+				lib.NewLog().Error(app.Name, "CoreApi.StartPrefixo finalizou com erro:", err.Error())
+				if app.OnApiErro != nil {
+					app.OnApiErro(err)
+				}
+			}
+		}()
+	}
+}
+
 func AddBot() OptionsApp {
 	return func(app *App) {
 		bot.GetRegistraBotInstance().PrintRegisterClass()

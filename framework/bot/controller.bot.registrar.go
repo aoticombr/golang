@@ -3,13 +3,30 @@ package bot
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/aoticombr/golang/lib"
 )
 
 type BotClass struct {
 	Classe reflect.Type
-	Tempo  int
+	// Tempo é o intervalo em minutos (RegistrarBot).
+	Tempo int
+	// Intervalo, quando > 0, tem precedência sobre Tempo (RegistrarBotIntervalo).
+	Intervalo time.Duration
+}
+
+// Ciclo devolve o intervalo efetivo do bot. Zero/negativo vira 1 minuto
+// (antes um Tempo 0 causava panic em time.NewTicker).
+func (b BotClass) Ciclo() time.Duration {
+	d := b.Intervalo
+	if d <= 0 {
+		d = time.Duration(b.Tempo) * time.Minute
+	}
+	if d <= 0 {
+		d = time.Minute
+	}
+	return d
 }
 
 type RegisterBotClasses map[string]BotClass
@@ -67,4 +84,20 @@ func GetRegistraBotInstance() *RegistraBotController {
 
 func RegistrarBot(key string, clazz any, tempo_minuto int) {
 	GetRegistraBotInstance().RegisterClass(key, clazz, tempo_minuto)
+}
+
+// RegistrarBotIntervalo registra um bot com intervalo livre (ex.: 30*time.Second).
+// Mesmas regras de RegistrarBot: passe um VALOR (MeuBot{}) e implemente
+// Executar() ou ExecutarCtx(ctx) no ponteiro.
+func RegistrarBotIntervalo(key string, clazz any, intervalo time.Duration) {
+	GetRegistraBotInstance().RegisteredClasses[key] = BotClass{
+		Classe:    reflect.TypeOf(clazz),
+		Intervalo: intervalo,
+	}
+}
+
+// NovaInstancia cria a instância do bot sem exigir IControllerBot, permitindo
+// bots que implementam apenas IControllerBotCtx.
+func (r *RegistraBotController) NovaInstancia(key string) (any, error) {
+	return CriarStruct(key, r.RegisteredClasses)
 }

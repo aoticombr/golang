@@ -2,6 +2,8 @@ package bot
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/aoticombr/golang/config"
@@ -44,13 +46,18 @@ func NewCoreBot(certs []*config.Cert, dbs []*config.Database, bot *config.Bot) *
 
 func (c *CoreBot) Executar(ctx context.Context) error {
 	for name, bot := range GetRegistraBotInstance().RegisteredClasses {
-		controller, err := GetRegistraBotInstance().FindBotClassByKeyAndNewAsObject(name)
+		instancia, err := GetRegistraBotInstance().NovaInstancia(name)
 		if err != nil {
 			return err
 		}
+		_, temCtx := instancia.(IControllerBotCtx)
+		_, temClassico := instancia.(IControllerBot)
+		if !temCtx && !temClassico {
+			return fmt.Errorf("bot %s não implementa Executar() nem ExecutarCtx(ctx) no ponteiro", name)
+		}
 
-		go func(name string, tempo int, cl IControllerBot) {
-			ticker := time.NewTicker(time.Duration(tempo) * time.Minute)
+		go func(name string, ciclo time.Duration, cl any) {
+			ticker := time.NewTicker(ciclo)
 			defer ticker.Stop()
 			for {
 				select {
@@ -59,16 +66,31 @@ func (c *CoreBot) Executar(ctx context.Context) error {
 					return
 				default:
 				}
-				lib.NewLog().Debug("[Bot]", "Core.Bot.Executar(", name, ")", "Ciclo:", tempo, "minutos")
-				cl.Executar()
+				lib.NewLog().Debug("[Bot]", "Core.Bot.Executar(", name, ")", "Ciclo:", ciclo.String())
+				// Ciclos são sequenciais (o próximo só começa depois que este termina),
+				// então não há sobreposição; um panic é registrado e o bot continua.
+				executarCiclo(ctx, name, cl)
 				select {
 				case <-ctx.Done():
 					return
 				case <-ticker.C:
 				}
 			}
-		}(name, bot.Tempo, controller)
+		}(name, bot.Ciclo(), instancia)
 	}
 
 	return nil
+}
+
+func executarCiclo(ctx context.Context, name string, cl any) {
+	defer func() {
+		if r := recover(); r != nil {
+			lib.NewLog().Error("[Bot]", "Core.Bot.Executar(", name, ") panic:", fmt.Sprint(r), string(debug.Stack()))
+		}
+	}()
+	if c, ok := cl.(IControllerBotCtx); ok {
+		c.ExecutarCtx(ctx)
+		return
+	}
+	cl.(IControllerBot).Executar()
 }

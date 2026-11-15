@@ -351,13 +351,13 @@ plain := lib.RemoveAcentos("João José")
 
 ## framework
 
-Bootstrap de aplicação com pattern Options — registra APIs, bots, monitor e serviços de uma vez. Integra com `github.com/kardianos/service` para rodar como serviço Windows/systemd.
+Bootstrap de aplicação com pattern Options — registra APIs, bots, monitor e serviços de uma vez. Integra com `github.com/kardianos/service` para rodar como serviço Windows/systemd/launchd. **Guia completo: [framework/README.md](framework/README.md).**
 
 ```go
-app := framework.NewApp()
+app := core.NewApp() // import core "github.com/aoticombr/golang/framework"
 app.Execute(
-    framework.AddApi(),
-    framework.AddMonitor(),
+    core.AddApi(),
+    core.AddMonitor(),
 )
 ```
 
