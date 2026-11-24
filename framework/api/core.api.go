@@ -8,7 +8,6 @@ import (
 	"github.com/aoticombr/golang/config"
 	"github.com/aoticombr/golang/dbconndataset"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -40,9 +39,9 @@ func NewCoreApi(
 
 func (ca *CoreApi) Start() error {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	//r.Use(middleware.RequestID)
+	//r.Use(middleware.Logger)
+	//r.Use(middleware.Recoverer)
 	if ca.Api.Cors.Ativo {
 		r.Use(cors.Handler(cors.Options{
 
@@ -51,7 +50,7 @@ func (ca *CoreApi) Start() error {
 			AllowedHeaders:   ca.Api.Cors.AllowHeaders,     //[]string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 			ExposedHeaders:   ca.Api.Cors.ExposedHeaders,   //[]string{"Link"},
 			AllowCredentials: ca.Api.Cors.AllowCredentials, //true,
-			MaxAge:           ca.Api.Cors.MaxAge,           //300, // Maximum value not to check for CORS request again (in seconds)
+			//	MaxAge:           ca.Api.Cors.MaxAge,           //300, // Maximum value not to check for CORS request again (in seconds)
 		}))
 	}
 
@@ -101,12 +100,12 @@ func (ca *CoreApi) Start() error {
 
 	addr := ":" + ca.Api.GetPortStr()
 	srv := &http.Server{
-		Addr:              addr,
-		Handler:           r,
-		ReadHeaderTimeout: ca.Api.Timeouts.ReadHeader(),
-		ReadTimeout:       ca.Api.Timeouts.Read(),
-		WriteTimeout:      ca.Api.Timeouts.Write(),
-		IdleTimeout:       ca.Api.Timeouts.Idle(),
+		Addr:    addr,
+		Handler: r,
+		// ReadHeaderTimeout: ca.Api.Timeouts.ReadHeader(),
+		// ReadTimeout:       ca.Api.Timeouts.Read(),
+		// WriteTimeout:      ca.Api.Timeouts.Write(),
+		// IdleTimeout:       ca.Api.Timeouts.Idle(),
 	}
 	ca.server = srv
 

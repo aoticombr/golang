@@ -86,14 +86,14 @@ type Timeouts struct {
 
 func (t Timeouts) ReadHeader() time.Duration {
 	if t.ReadHeaderTimeout <= 0 {
-		return 10 * time.Second
+		return 60 * time.Second
 	}
 	return time.Duration(t.ReadHeaderTimeout) * time.Second
 }
 
 func (t Timeouts) Read() time.Duration {
 	if t.ReadTimeout <= 0 {
-		return 30 * time.Second
+		return 60 * time.Second
 	}
 	return time.Duration(t.ReadTimeout) * time.Second
 }
@@ -114,7 +114,7 @@ func (t Timeouts) Idle() time.Duration {
 
 func (t Timeouts) Shutdown() time.Duration {
 	if t.ShutdownTimeout <= 0 {
-		return 10 * time.Second
+		return 60 * time.Second
 	}
 	return time.Duration(t.ShutdownTimeout) * time.Second
 }
